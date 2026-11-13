@@ -1,0 +1,15 @@
+# Other open-data portals (extra/portal_consumption.py). Code-Point Open (os_codepoint) is registered in lv.yaml.
+sources:
+  - id: desnz_postcode_elec
+    operator: DESNZ
+    portal: govuk
+    base_url: "https://www.gov.uk"
+    dataset: "/government/statistics/postcode-level-electricity-statistics-2024"
+    params: {content_type: "text/csv"}
+    format: file
+    category: lv_usage
+    cadence: 30d
+    max_mb: 150
+    licence: "Open Government Licence v3.0"
+    attribution: "Contains public sector information from DESNZ Postcode level electricity statistics 2024, licensed under the Open Government Licence v3.0. Contains OS data (c) Crown copyright and database right."
+    note: "All domestic meters, calendar 2024, published Dec 2025 (80 MB CSV). The 2025 edition will have a new slug; update dataset when published (Dec 2026). First CSV attachment = all domestic meters."

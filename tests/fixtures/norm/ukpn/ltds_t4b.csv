@@ -1,0 +1,11 @@
+gridsupplypoint;substation;nodename;voltage_level_kv;system_impedance_r_percent;system_impedance_x_percent;existing_system_fault_currents_peak_make_ka;existing_system_fault_currents_rms_break_ka;fault_rating_peak_make_ka;fault_rating_peak_break_ka;sitefunctionallocation;licencearea;id
+Amersham;EPN 0009;BTPR31;33;97.496167;56.106507;2.290378;1.565948;62.5;25.0;;Eastern Power Networks (EPN);6
+Amersham;EPN 0009;BTPR32;33;93.59808;39.959128;2.513762;1.731799;62.5;25.0;;Eastern Power Networks (EPN);7
+Bramford;Clacton Grid 33kV;CLTN31;33;84.33367;4.377574;2.838925;1.967866;62.5;25.0;EPN-S0000000D3027;Eastern Power Networks (EPN);77
+Bramford;Diss Grid 33kV;DSSS31;33;30.091202;40.377791;6.350329;3.341195;44.625;17.5;EPN-S0000000D1014;Eastern Power Networks (EPN);87
+Bramford;Diss Grid 33kV;DSSS32;33;183.60845;79.621519;1.269172;0.864523;62.5;25.0;EPN-S0000000D1014;Eastern Power Networks (EPN);88
+Burwell;Arbury Grid 11kV;ARBY51;11;9.463132;480.807946;2.980015;1.070918;50.0;20.0;EPN-S0000000H4001;Eastern Power Networks (EPN);266
+Burwell;Arbury Grid 33kV;ARBY31;33;12.431292;110.164795;3.920133;1.567933;62.5;25.0;EPN-S0000000H4001;Eastern Power Networks (EPN);269
+Burwell;Burwell Local Grid 33kV;BURL31;33;90.7378;9.095941;2.681233;1.853026;78.75;31.5;EPN-S0000000D4033;Eastern Power Networks (EPN);273
+Elstree;Abbots Central Primary 11kV;ABBO51;11;12.429404;516.636485;2.790584;1.008794;33.404999;13.1;EPN-S0000000H8151;Eastern Power Networks (EPN);374
+Pelham;Acrows Primary 11kV;ACRO51;11;54.388225;1019.883591;1.355306;0.509832;33.404999;13.1;EPN-S0000000H4048;Eastern Power Networks (EPN);565

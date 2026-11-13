@@ -1,0 +1,21 @@
+﻿technology;status;contracted_ders_mw
+Solar;Connected, cancelled, CMP446 or reduced capacity since the opening of the window;1637
+Battery;Connected, cancelled, CMP446 or reduced capacity since the opening of the window;4067
+UKPN;Connected, cancelled, CMP446 or reduced capacity since the opening of the window;6157
+Onshore Wind;Connected, cancelled, CMP446 or reduced capacity since the opening of the window;298
+Solar;Gate 1 - Failed Detailed Checks or Queue Formation;1802
+Battery;Gate 1 - Failed Detailed Checks or Queue Formation;5571
+UKPN;Gate 1 - Failed Detailed Checks or Queue Formation;7431
+Onshore Wind;Gate 1 - Failed Detailed Checks or Queue Formation;0
+Onshore Wind;Gate 1 - Self Elected, Failed to Submit or Failed Initial Checks;509
+UKPN;Gate 1 - Self Elected, Failed to Submit or Failed Initial Checks;3779
+Solar;Gate 1 - Self Elected, Failed to Submit or Failed Initial Checks;1431
+Battery;Gate 1 - Self Elected, Failed to Submit or Failed Initial Checks;1706
+Onshore Wind;Gate 2 to Whole Queue - Phase  2;130
+UKPN;Gate 2 to Whole Queue - Phase  2;5015
+Battery;Gate 2 to Whole Queue - Phase  2;2432
+Solar;Gate 2 to Whole Queue - Phase  2;2442
+Solar;Gate 2 to Whole Queue - Phase 1;2859
+UKPN;Gate 2 to Whole Queue - Phase 1;4902
+Battery;Gate 2 to Whole Queue - Phase 1;1563
+Onshore Wind;Gate 2 to Whole Queue - Phase 1;6

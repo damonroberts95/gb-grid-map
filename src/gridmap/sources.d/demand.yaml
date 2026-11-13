@@ -1,0 +1,11 @@
+# Demand, LCT & forecasts extras (dem_lct.py, dem_dfes.py). Open Charge Map is NOT registered here: it needs an
+# X-API-Key header and bounding-box pagination, so it is fetched by `python -I -m gridmap.extra.dem_ev --fetch`
+# into data/raw/ocm_gb_poi/<ts>/ (same snapshot layout).
+defaults:
+  spen: &spen {operator: SPEN, portal: opendatasoft, base_url: "https://spenergynetworks.opendatasoft.com", auth_env: SPEN_API_KEY, licence: "CC BY 4.0", attribution: "Contains data from the SP Energy Networks open data portal, licensed under CC BY 4.0."}
+
+sources:
+  # Same datasets as spen_dfes_site_forecasts_* in sources.yaml (marked large there); own copies so the extra can
+  # fetch them. dem_dfes streams them with polars scan_csv and only keeps 3 years x 1 scenario x 2 technologies.
+  - {<<: *spen, id: dem_spen_dfes_spd, dataset: spd-dfes-site-forecasts, category: dfes, cadence: 7d, gated: true, note: "554k rows long format; streamed, never loaded whole"}
+  - {<<: *spen, id: dem_spen_dfes_spm, dataset: spm-dfes-site-forecasts, category: dfes, cadence: 7d, gated: true, note: "430k rows long format; streamed, never loaded whole"}

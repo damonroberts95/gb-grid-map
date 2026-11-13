@@ -1,0 +1,4 @@
+license_area;asset_description;asset_number;voltage;asset_type;year_of_manufacture;serial_number;nominal_rating;nominal_rating_unit_of_measurement;rated_primary_voltage;rated_primary_voltage_unit_of_measurement;site_functional_location;site_name;site_street;site_town_city;site_county;site_postcode;site_longitude_x_irish_grid;site_latitude_y_irish_grid;site_geopoint
+NIE;TX;1;11kV;Transformer;1990;S1;500;kVA;11;kV;S-1;TEST SEC;;Belfast;Antrim;BT1 1AA;333800;374000;54.6,-5.93
+NIE;TX;2;11kV;Transformer;1990;S2;0.315;MVA;11;kV;S-1;TEST SEC;;Belfast;Antrim;BT1 1AA;333800;374000;54.6,-5.93
+NIE;TX;3;11kV;Transformer;1990;S3;;kVA;11;kV;S-2;NO RATING;;Belfast;Antrim;BT1 1AA;;;54.61,-5.9

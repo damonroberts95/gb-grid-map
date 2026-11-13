@@ -1,0 +1,13 @@
+data/
+*.pmtiles
+.venv/
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+keys.env
+*.local.env
+build/
+*.spec.bak

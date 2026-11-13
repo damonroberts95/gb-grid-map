@@ -1,0 +1,172 @@
+{
+ "aliasName": "SS7420121206222.feeder1.i1_max, SS7420121206222.feeder1.i1, SS7420121206222.feeder1.i2, SS7420121206222.feeder1.i3_max, SS7420121206222.feeder1.in_max, SS7420121206222.feeder1.i3, SS7420121206222.feeder1.v1_min, SS7420121206222.feeder1.v2_min, SS7420121206222.feeder1.v3_min, SS7420121206222.feeder1.i1_min, SS7420121206222.feeder1.i3_min, SS7420121206222.feeder1.in_min, SS7420121206222.feeder1.i2_max, SS7420121206222.feeder1.in, SS7420121206222.feeder1.i2_min",
+ "AnalogValues": [
+  {
+   "aliasName": "SS7420121206222.feeder1.i1_max",
+   "value_history": [],
+   "name": "6100_007_120_01 A",
+   "__cid": "66a622ed-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "66a622ed-0bb8-11f0-a6bd-a6e6718f8846"
+  },
+  {
+   "aliasName": "SS7420121206222.feeder1.i1",
+   "value_history": [],
+   "name": "6100_007_120_01 A",
+   "__cid": "66a66ed7-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "66a66ed7-0bb8-11f0-a6bd-a6e6718f8846"
+  },
+  {
+   "aliasName": "SS7420121206222.feeder1.i2",
+   "value_history": [],
+   "name": "6100_007_120_01 A",
+   "__cid": "6a5fe49c-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "6a5fe49c-0bb8-11f0-a6bd-a6e6718f8846"
+  },
+  {
+   "aliasName": "SS7420121206222.feeder1.i3_max",
+   "value_history": [],
+   "name": "6100_007_120_01 A",
+   "__cid": "6a5fe5f9-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "6a5fe5f9-0bb8-11f0-a6bd-a6e6718f8846"
+  },
+  {
+   "timeStamp": "2026-11-12T17:20:00Z",
+   "aliasName": "SS7420121206222.feeder1.in_max",
+   "value_history": [
+    {
+     "__ts": "2026-11-12T17:20:00Z",
+     "value": 33.8
+    }
+   ],
+   "name": "6100_007_120_01 A",
+   "__cid": "6b8dc684-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "6b8dc684-0bb8-11f0-a6bd-a6e6718f8846",
+   "value": 33.8
+  },
+  {
+   "aliasName": "SS7420121206222.feeder1.i3",
+   "value_history": [],
+   "name": "6100_007_120_01 A",
+   "__cid": "6d9963af-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "6d9963af-0bb8-11f0-a6bd-a6e6718f8846"
+  },
+  {
+   "timeStamp": "2026-11-12T17:20:00Z",
+   "aliasName": "SS7420121206222.feeder1.v1_min",
+   "value_history": [
+    {
+     "__ts": "2026-11-12T17:20:00Z",
+     "value": 238.1
+    }
+   ],
+   "name": "6100_007_120_01 A",
+   "__cid": "6de46298-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "6de46298-0bb8-11f0-a6bd-a6e6718f8846",
+   "value": 238.1
+  },
+  {
+   "timeStamp": "2026-11-12T17:20:00Z",
+   "aliasName": "SS7420121206222.feeder1.v2_min",
+   "value_history": [
+    {
+     "__ts": "2026-11-12T17:20:00Z",
+     "value": 237.1
+    }
+   ],
+   "name": "6100_007_120_01 A",
+   "__cid": "6de4632c-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "6de4632c-0bb8-11f0-a6bd-a6e6718f8846",
+   "value": 237.1
+  },
+  {
+   "timeStamp": "2026-11-12T17:20:00Z",
+   "aliasName": "SS7420121206222.feeder1.v3_min",
+   "value_history": [
+    {
+     "__ts": "2026-11-12T17:20:00Z",
+     "value": 239.1
+    }
+   ],
+   "name": "6100_007_120_01 A",
+   "__cid": "6de464dd-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "6de464dd-0bb8-11f0-a6bd-a6e6718f8846",
+   "value": 239.1
+  },
+  {
+   "timeStamp": "2026-11-12T17:20:00Z",
+   "aliasName": "SS7420121206222.feeder1.i1_min",
+   "value_history": [
+    {
+     "__ts": "2026-11-12T17:20:00Z",
+     "value": 22.5
+    }
+   ],
+   "name": "6100_007_120_01 A",
+   "__cid": "6f0f2610-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "6f0f2610-0bb8-11f0-a6bd-a6e6718f8846",
+   "value": 22.5
+  },
+  {
+   "aliasName": "SS7420121206222.feeder1.i3_min",
+   "value_history": [],
+   "name": "6100_007_120_01 A",
+   "__cid": "6f0f2a27-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "6f0f2a27-0bb8-11f0-a6bd-a6e6718f8846"
+  },
+  {
+   "timeStamp": "2026-11-12T17:20:00Z",
+   "aliasName": "SS7420121206222.feeder1.in_min",
+   "value_history": [
+    {
+     "__ts": "2026-11-12T17:20:00Z",
+     "value": 19.7
+    }
+   ],
+   "name": "6100_007_120_01 A",
+   "__cid": "6f4c3324-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "6f4c3324-0bb8-11f0-a6bd-a6e6718f8846",
+   "value": 19.7
+  },
+  {
+   "timeStamp": "2026-11-12T17:10:00Z",
+   "aliasName": "SS7420121206222.feeder1.i2_max",
+   "value_history": [
+    {
+     "__ts": "2026-11-12T17:10:00Z",
+     "value": 34
+    }
+   ],
+   "name": "6100_007_120_01 A",
+   "__cid": "70454d65-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "70454d65-0bb8-11f0-a6bd-a6e6718f8846",
+   "value": 34
+  },
+  {
+   "aliasName": "SS7420121206222.feeder1.in",
+   "value_history": [],
+   "name": "6100_007_120_01 A",
+   "__cid": "7068c1e4-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "7068c1e4-0bb8-11f0-a6bd-a6e6718f8846"
+  },
+  {
+   "timeStamp": "2026-11-12T17:20:00Z",
+   "aliasName": "SS7420121206222.feeder1.i2_min",
+   "value_history": [
+    {
+     "__ts": "2026-11-12T17:20:00Z",
+     "value": 19.6
+    }
+   ],
+   "name": "6100_007_120_01 A",
+   "__cid": "708b65f3-0bb8-11f0-a6bd-a6e6718f8846",
+   "UUID": "708b65f3-0bb8-11f0-a6bd-a6e6718f8846",
+   "value": 19.6
+  }
+ ],
+ "unitMultiplier": "none",
+ "measurementType": "LineCurrent",
+ "name": "6100_007_120_01 A",
+ "__cid": "3487e8a7-2fed-4df5-92c3-05922c54dfb3",
+ "unitSymbol": "A",
+ "UUID": "3487e8a7-2fed-4df5-92c3-05922c54dfb3"
+}

@@ -1,0 +1,11 @@
+lct_connections;category;type;import;export;licencearea;functionallocation;secondarysubstationalias;status;primary_functionallocation;primaryfeeder;latitude;longitude;geopoint;localauthority
+8;Demand;EV Charging Point;56.69;0;South Eastern Power Networks (SPN);SPN-S000000501078;1501078;Connected;SPN-S000000008396;EAST GRINSTEAD 33/11KV;51.129864;-0.023664;51.129864, -0.023664;Mid Sussex
+6;Generation;Solar PV;0.0;34;Eastern Power Networks (EPN);EPN-R00000000E15C-000-090Z;4R3907;Connected;EPN-S0000000H1028;NEWMARKET PRIMARY;52.195581;0.422692;52.195581, 0.422692;East Cambridgeshire
+10;Generation;Solar PV;0.0;30;Eastern Power Networks (EPN);EPN-S0000007U1362;7U1362;Connected;EPN-S0000000H7099;KINGSWOOD PRIMARY;51.570431;0.450205;51.570431, 0.450205;Basildon
+9;Generation;Solar PV;0.0;26;South Eastern Power Networks (SPN);SPN-S000000501078;1501078;Connected;SPN-S000000008396;EAST GRINSTEAD 33/11KV;51.129864;-0.023664;51.129864, -0.023664;Mid Sussex
+7;Demand;EV Charging Point;49.31;0;South Eastern Power Networks (SPN);SPN-S000000172005;1172005;Connected;SPN-S000000008482;SHALFORD 33/11KV;51.18811;-0.548277;51.18811, -0.548277;Waverley
+6;Generation;Solar PV;0.0;12;Eastern Power Networks (EPN);EPN-R00000000C18B-000-143Z;6R1347;Connected;EPN-S0000000H6029;MARCH PRIMARY;52.616769;0.157505;52.616769, 0.157505;Fenland
+7;Demand;EV Charging Point;49.34;0;Eastern Power Networks (EPN);EPN-S0000006U1627;6U1627;Connected;EPN-S0000000H6076;ORTON PRIMARY;52.552056;-0.301047;52.552056, -0.301047;Peterborough
+8;Demand;Heat Pump;45.12;0;Eastern Power Networks (EPN);EPN-R00000000C18B-000-143Z;6R1347;Connected;EPN-S0000000H6029;MARCH PRIMARY;52.616769;0.157505;52.616769, 0.157505;Fenland
+7;Generation + Demand;Battery Storage;38.84;53;Eastern Power Networks (EPN);EPN-S0000006U1627;6U1627;Connected;EPN-S0000000H6076;ORTON PRIMARY;52.552056;-0.301047;52.552056, -0.301047;Peterborough
+35;Generation;Solar PV;0.0;159;Eastern Power Networks (EPN);EPN-S0000006U1627;6U1627;Connected;EPN-S0000000H6076;ORTON PRIMARY;52.552056;-0.301047;52.552056, -0.301047;Peterborough

@@ -1,0 +1,121 @@
+# Offshore extras (extra/offshore_wind.py, extra/offshore_cables.py). OSM comes from osm_gb_pbf (lines.yaml); interconnector register and REPD from sources.yaml.
+sources:
+  - id: tce_wind_sites
+    operator: OTHER
+    portal: http
+    base_url: "https://services2.arcgis.com/PZklK9Q45mfMFuZs/arcgis/rest/services/WindSite_EngWalNI_TheCrownEstate/FeatureServer/0/query"
+    params: {where: "1=1", outFields: "*", outSR: "4326", f: geojson, resultRecordCount: "2000"}
+    format: json
+    rows_path: features
+    category: planning
+    cadence: 7d
+    licence: "The Crown Estate Open Data Licence (GIS) v1.1"
+    attribution: "Contains data provided by The Crown Estate that is protected by copyright and database rights."
+    note: "Offshore wind site agreements (England, Wales, NI): lease/option areas with status (72). ArcGIS FeatureServer, keyless."
+  - id: tce_wind_cables
+    operator: OTHER
+    portal: http
+    base_url: "https://services2.arcgis.com/PZklK9Q45mfMFuZs/arcgis/rest/services/WindCable_EngWalNI_TheCrownEstate/FeatureServer/0/query"
+    params: {where: "1=1", outFields: "*", outSR: "4326", f: geojson, resultRecordCount: "2000"}
+    format: json
+    rows_path: features
+    category: lines
+    cadence: 7d
+    licence: "The Crown Estate Open Data Licence (GIS) v1.1"
+    attribution: "Contains data provided by The Crown Estate that is protected by copyright and database rights."
+    note: "Wind cable agreement corridors (66). ArcGIS FeatureServer, keyless."
+  - id: tce_r4_preferred
+    operator: OTHER
+    portal: http
+    base_url: "https://services2.arcgis.com/PZklK9Q45mfMFuZs/arcgis/rest/services/OffshoreWindLeasingRound4PreferredProjects_EnglandWalesNI_TheCrownEstate/FeatureServer/0/query"
+    params: {where: "1=1", outFields: "*", outSR: "4326", f: geojson, resultRecordCount: "2000"}
+    format: json
+    rows_path: features
+    category: planning
+    cadence: 7d
+    licence: "The Crown Estate Open Data Licence (GIS) v1.1"
+    attribution: "Contains data provided by The Crown Estate that is protected by copyright and database rights."
+    note: "Round 4 preferred projects (6; bidder, MW). ArcGIS FeatureServer, keyless."
+  - id: tce_r5_pdas
+    operator: OTHER
+    portal: http
+    base_url: "https://services2.arcgis.com/PZklK9Q45mfMFuZs/arcgis/rest/services/OffshoreWindLeasingRound5_PDAs_EngWal_TheCrownEstate/FeatureServer/0/query"
+    params: {where: "1=1", outFields: "*", outSR: "4326", f: geojson, resultRecordCount: "2000"}
+    format: json
+    rows_path: features
+    category: planning
+    cadence: 7d
+    licence: "The Crown Estate Open Data Licence (GIS) v1.1"
+    attribution: "Contains data provided by The Crown Estate that is protected by copyright and database rights."
+    note: "Round 5 floating project development areas (3). ArcGIS FeatureServer, keyless."
+  - id: tce_r6_pdas
+    operator: OTHER
+    portal: http
+    base_url: "https://services2.arcgis.com/PZklK9Q45mfMFuZs/arcgis/rest/services/OffshoreWindLeasing_Round6_PDAZones_WGS84/FeatureServer/0/query"
+    params: {where: "1=1", outFields: "*", outSR: "4326", f: geojson, resultRecordCount: "2000"}
+    format: json
+    rows_path: features
+    category: planning
+    cadence: 7d
+    licence: "The Crown Estate Open Data Licence (GIS) v1.1"
+    attribution: "Contains data provided by The Crown Estate that is protected by copyright and database rights."
+    note: "Round 6 PDA zones (6). ArcGIS FeatureServer, keyless."
+  - id: ces_offshore_wind
+    operator: OTHER
+    portal: http
+    base_url: "https://services3.arcgis.com/nGV4jiurzcahJ9LV/arcgis/rest/services/Offshore_Wind_Crown_Estate_Scotland/FeatureServer/0/query"
+    params: {where: "1=1", outFields: "*", outSR: "4326", f: geojson, resultRecordCount: "2000"}
+    format: json
+    rows_path: features
+    category: planning
+    cadence: 7d
+    licence: "Open Government Licence v3.0"
+    attribution: "Contains public sector information, licensed under the Open Government Licence v3.0, from Crown Estate Scotland"
+    note: "Scottish offshore wind sites, OFTO and substation leases with phase and MW (58). ArcGIS FeatureServer, keyless."
+  - id: ces_scotwind_offers
+    operator: OTHER
+    portal: http
+    base_url: "https://services3.arcgis.com/nGV4jiurzcahJ9LV/arcgis/rest/services/ScotWind_Offers_Crown_Estate_Scotland/FeatureServer/0/query"
+    params: {where: "1=1", outFields: "*", outSR: "4326", f: geojson, resultRecordCount: "2000"}
+    format: json
+    rows_path: features
+    category: planning
+    cadence: 7d
+    licence: "Open Government Licence v3.0"
+    attribution: "Contains public sector information, licensed under the Open Government Licence v3.0, from Crown Estate Scotland"
+    note: "ScotWind option areas (20; lead applicant, MW). ArcGIS FeatureServer, keyless."
+  - id: ces_intog
+    operator: OTHER
+    portal: http
+    base_url: "https://services3.arcgis.com/nGV4jiurzcahJ9LV/arcgis/rest/services/INTOG_Application_Areas/FeatureServer/0/query"
+    params: {where: "1=1", outFields: "*", outSR: "4326", f: geojson, resultRecordCount: "2000"}
+    format: json
+    rows_path: features
+    category: planning
+    cadence: 7d
+    licence: "Open Government Licence v3.0"
+    attribution: "Contains public sector information, licensed under the Open Government Licence v3.0, from Crown Estate Scotland"
+    note: "INTOG application areas (13). ArcGIS FeatureServer, keyless."
+  - id: emodnet_windfarms
+    operator: OTHER
+    portal: http
+    base_url: "https://ows.emodnet-humanactivities.eu/wfs"
+    params: {service: WFS, version: "2.0.0", request: GetFeature, typeNames: "emodnet:windfarmspoly", outputFormat: "application/json", srsName: "EPSG:4326", CQL_FILTER: "country='United Kingdom'"}
+    format: json
+    rows_path: features
+    category: planning
+    cadence: 30d
+    licence: "EMODnet Human Activities (open, free re-use with attribution)"
+    attribution: "Offshore wind farm polygons from EMODnet Human Activities (https://emodnet.ec.europa.eu/en/human-activities), funded by the European Commission."
+    note: "213 UK wind farm polygons with MW, turbines, status; used to add MW to Crown Estate areas"
+  - id: neso_ssep_offshore
+    operator: NESO
+    portal: ckan
+    base_url: "https://api.neso.energy"
+    dataset: ssep-onshore-publication-zone-shapefile
+    category: boundary
+    cadence: 30d
+    select: {name_regex: "offshore_publication_zones", latest: true}
+    licence: "NESO Open Data Licence"
+    attribution: "Supported by National Energy SO Open Data"
+    note: "SSEP offshore publication zones (shapefile zip, BNG)"

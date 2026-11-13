@@ -1,0 +1,14 @@
+# OS Open Names: streets, places and postcode units for offline map search (server/places.py, build via scripts/build_places.py).
+sources:
+  - id: os_open_names
+    operator: OTHER
+    portal: http
+    base_url: "https://api.os.uk/downloads/v1/products/OpenNames/downloads"
+    params: {area: GB, format: CSV, redirect: ""}
+    format: file
+    category: context
+    cadence: 90d
+    max_mb: 400
+    licence: "Open Government Licence v3.0"
+    attribution: "Contains OS data © Crown copyright and database right 2026. OS Open Names, OGL v3."
+    note: "Roads, places and postcode units in BNG (zip of ~3M CSV rows). Filtered into data/derived/places.parquet for map search."

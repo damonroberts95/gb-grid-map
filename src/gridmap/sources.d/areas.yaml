@@ -1,0 +1,22 @@
+# Sources for the area_* extras (supply areas, flexibility zones, curtailment / constraints).
+# The supply-area and UKPN/ENW/SPEN/NPG flex polygon sources are already registered in sources.yaml.
+defaults:
+  ukpn: &ukpn {operator: UKPN, portal: opendatasoft, base_url: "https://ukpowernetworks.opendatasoft.com", auth_env: UKPN_API_KEY, licence: "CC BY 4.0", attribution: "Contains data from the UK Power Networks Open Data Portal, licensed under CC BY 4.0."}
+  npg: &npg {operator: NPG, portal: opendatasoft, base_url: "https://northernpowergrid.opendatasoft.com", auth_env: NPG_API_KEY, licence: "Northern Powergrid Open Data Licence v1.0", attribution: "Contains data (c) Northern Powergrid, used under the Northern Powergrid Open Data Licence v1.0."}
+  enw: &enw {operator: ENW, portal: opendatasoft, base_url: "https://electricitynorthwest.opendatasoft.com", auth_env: ENW_API_KEY, licence: "CC BY 4.0 (some datasets: SP ENW Shared Licence)", attribution: "Contains data from SP Energy Networks (Electricity North West) open data portal, licensed under CC BY 4.0."}
+  spen: &spen {operator: SPEN, portal: opendatasoft, base_url: "https://spenergynetworks.opendatasoft.com", auth_env: SPEN_API_KEY, licence: "CC BY 4.0", attribution: "Contains data from the SP Energy Networks open data portal, licensed under CC BY 4.0."}
+  ssen: &ssen {operator: SSEN, portal: ckan, base_url: "https://data-api.ssen.co.uk", auth_env: null, licence: "CC BY 4.0", attribution: "Contains data from the SSEN Distribution data portal, licensed under CC BY 4.0."}
+
+sources:
+  - {<<: *ukpn, id: ukpn_curtailment_events, dataset: ukpn-curtailment-events-site-specific, category: constraint, cadence: 1d, gated: true, note: "44k events by DER; no coordinates"}
+  - {<<: *ukpn, id: ukpn_constraint_breaches, dataset: ukpn-constraint-breaches-history, category: constraint, cadence: 1d, gated: true}
+  - {<<: *ukpn, id: ukpn_constraints_meter, dataset: ukpn-constraints-real-time-meter-readings, category: constraint, cadence: 5m, gated: true, strict_rows: false, note: "catalog records_count includes non-public rows (986 vs ~258 exported); 1-minute readings"}
+  - {<<: *npg, id: npg_curtailment_events, dataset: curtailment-events-site-specific, category: constraint, cadence: 1d, gated: true}
+  - {<<: *ssen, id: ssen_anm_orkney, dataset: orkney_active_network_management, category: constraint, cadence: 7d, select: {format: CSV}}
+  - {<<: *ssen, id: ssen_anm_iow, dataset: isle_of_wight_active_network_management, category: constraint, cadence: 7d, select: {format: CSV}}
+  - {<<: *spen, id: spen_flex_polygons_spd, dataset: flexibility_substation_polygons_spd, category: flex, cadence: 7d, format: geojson}
+  - {<<: *spen, id: spen_flex_polygons_spm, dataset: flexibility_substation_polygons_spm, category: flex, cadence: 7d, format: geojson}
+  - {<<: *spen, id: spen_flex_polygons_spd_opflex, dataset: flexibility_substation_polygons_spd_opflexibility, category: flex, cadence: 7d, format: geojson}
+  - {<<: *spen, id: spen_flex_competition_polygons, dataset: flex_competition_polygons, category: flex, cadence: 7d, format: geojson}
+  - {<<: *spen, id: spen_non_firm_insight, dataset: non-firm-connections-insight, category: constraint, cadence: 7d}
+  - {<<: *enw, id: enw_flex_biannual_tender, dataset: enwl-flexibility-tender-site-requirements, category: flex, cadence: 7d, format: geojson}

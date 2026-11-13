@@ -1,0 +1,9 @@
+﻿Project Name,Customer Name,Connection Site,Stage,MW Import - Current,MW Export - Current,MW Import - Increase / Decrease,MW Export - Increase / Decrease,MW Import - Total,MW Export - Total,MW Effective From,Project Status,HOST TO,Project Number,Gate
+Alverdiscott,XLINKS 1 LTD,Alverdiscott 400kV Substation,,0.00,0.00,1800.00,1800.00,1800.00,1800.00,2030-08-30,Scoping,NGET,PRO-001344,
+Auchencrosh (interconnector CCT),MOYLE INTERCONNECTOR LIMITED,Auchencrosh 275kV,,500.00,500.00,0.00,0.00,500.00,500.00,,Built,SPT,PRO-001292,
+Britned,BRITNED DEVELOPMENT LIMITED,Grain 400kV Substation,,1200.00,1200.00,0.00,0.00,1200.00,1200.00,,Built,NGET,PRO-000280,
+Greenlink,GREENLINK INTERCONNECTOR LIMITED,Pembroke 400kV Substation,,504.00,524.00,0.00,0.00,504.00,524.00,,Built,NGET,PRO-000279,
+IFA Interconnector,NATIONAL GRID INTERCONNECTORS LIMITED,Sellindge 400kV Substation,,1988.00,1988.00,0.00,0.00,1988.00,1988.00,,Built,NGET,PRO-000282,
+IFA2 Interconnector,NATIONAL GRID IFA 2 LIMITED,Chilling 400kV Substation,,1100.00,1150.00,0.00,0.00,1100.00,1150.00,,Built,NGET,PRO-000283,
+Nemo Link,NEMO LINK LIMITED,Richborough 400kV Substation,,1020.00,1046.00,0.00,0.00,1020.00,1046.00,,Built,NGET,PRO-000974,
+NS Link,NATIONAL GRID NORTH SEA LINK LIMITED,Blyth GSP,,1400.00,1480.00,0.00,0.00,1400.00,1480.00,,Built,NGET,PRO-000975,

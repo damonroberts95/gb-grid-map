@@ -1,0 +1,13 @@
+# Transmission extra (extra/transmission.py). SSEN-T site polygons + ETYS fault levels are already registered in
+# sources.yaml (ssent_sites_supergrid, ssent_sites_grid, ssent_etys_fault_levels_winter_y1, ssent_etys_substation_codes).
+sources:
+  - id: neso_etys_boundaries
+    operator: NESO
+    portal: ckan
+    base_url: "https://api.neso.energy"
+    dataset: etys-gb-transmission-system-boundaries
+    category: boundary
+    cadence: 30d
+    licence: "NESO Open Data Licence"
+    attribution: "Supported by National Energy SO Open Data"
+    note: "ETYS 2024 study boundary lines (shapefile zip); context for the transmission layer"

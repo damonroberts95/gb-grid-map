@@ -1,0 +1,20 @@
+# SSEN NeRDA (extra/nerda_sites.py, server/nerda.py). The API wants a GET *body* ({"username","apiKey"}), which the
+# generic fetcher cannot send, so this source is fetched by extra/nerda_client.py (weekly, from the server's NeRDA
+# thread or `python -m gridmap.extra.nerda_client --fetch-static`), never by refresh: large: true keeps it out.
+sources:
+  - id: ssen_nerda_static
+    operator: SSEN
+    portal: http
+    base_url: "https://nerda-prod-apis-v2.azurewebsites.net/api"
+    path: "ApiNerdaStatic"
+    format: json
+    category: sites
+    cadence: 7d
+    large: true
+    gated: true
+    auth_env: NERDA_API_KEY
+    keep: 2
+    max_mb: 400
+    licence: "SSEN NeRDA terms and conditions (internal use; check before sharing)"
+    attribution: "Contains data from SSEN NeRDA (Network Rich Data Access)"
+    note: "All 4,628 SEPD substations with line/measurement ids, 133 MB. Fetched by gridmap.extra.nerda_client (GET with JSON body)."

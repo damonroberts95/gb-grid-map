@@ -1,0 +1,14 @@
+Project Name,Customer Name,Connection Site,Stage,MW Connected,MW Increase / Decrease,Cumulative Total Capacity (MW),MW Effective From,Project Status,Agreement Type,HOST TO,Plant Type,Project ID,Project Number,Gate
+012 NEP Coventry West,NEW ENERGY PARTNERSHIP LIMITED,Berkswell GSP,,0.00,92.40,92.40,2034-10-31,Scoping,Embedded,NGET,Energy Storage System,a0l8e000000f3zXAAQ,PRO-003804,
+Hunterston,NUCLEAR RESTORATION SERVICES LIMITED,Hunterston 400/132kV,,0.00,0.00,0.00,,Built,Direct Connection,SPT,Nuclear,a0l4L0000005ioOQAQ,PRO-000143,
+Hunterston Hydrogen,STATKRAFT HYDROGEN UK HOLDING LIMITED,Hunterston 400/132kV,,0.00,5.00,5.00,2033-10-31,Scoping,Direct Connection,SPT,Hydrogen,a0l8e000000f65UAAQ,PRO-003957,
+Hunterston PARC BESS,PULSE CLEAN ENERGY LIMITED,Hunterston 400/132kV,,0.00,250.00,250.00,2033-10-31,Scoping,Direct Connection,SPT,Energy Storage System,a0l8e000000f4mlAAA,PRO-003865,1
+Hunterston Wind Farm,GALILEO 01 LIMITED,Hunterston 400/132kV,,0.00,70.00,70.00,2033-04-30,Scoping,Direct Connection,SPT,Energy Storage System;Wind Onshore,a0l8e000000TP9yAAG,PRO-003165,1
+Kingsfold,GREENTECH PROJECTS HOLDING UK LIMITED,Bolney GSP,,0.00,49.90,49.90,2037-10-30,Scoping,Embedded,NGET,Energy Storage System;PV Array (Photo Voltaic/solar),a0l8e0000012kcTAAQ,PRO-004710,
+Aberarder Extension Wind Farm,Renewable Energy Systems Limited,Aberarder Extension Wind Farm 132/33kV Substation,,0.00,138.00,138.00,2031-04-30,Scoping,Direct Connection,SHET,Energy Storage System;Wind Onshore,a0l8e0000010wQ0AAI,PRO-002589,1
+Aberarder Wind Farm,ABERARDER WIND FARM LLP,Aberarder Wind Farm 132/33kV Substation,,0.00,49.99,49.99,2026-08-31,Consents Approved,Direct Connection,SHET,Wind Onshore,a0l4L0000005ilHQAQ,PRO-000368,
+Abhainn Dubh Wind Farm,E Power Limited,Abhainn Dubh Wind Farm 132kV Substation,,0.00,75.00,75.00,2029-05-31,Scoping,Direct Connection,SHET,Wind Onshore,a0l4L0000005ivFQAQ,PRO-002272,1
+A'Chruach Wind Farm,A'CHRUACH WIND FARM LIMITED,A'Chruach Wind Farm 275kV Substation,,43.00,0.00,43.00,,Built,Direct Connection,SHET,Wind Onshore,a0l4L0000005itEQAQ,PRO-000005,
+Abedare,UK POWER RESERVE LIMITED,Upperboat 132kV Substation,,10.00,0.00,10.00,,Built,Embedded,NGET,CCGT (Combined Cycle Gas Turbine),a0l4L0000005iWRQAY,PRO-000001,
+Aberdeen Offshore Wind Farm,ABERDEEN OFFSHORE WIND FARM LIMITED,Aberdeen Bay 132kV Substation,,95.50,0.00,95.50,,Built,Direct Connection,SHET,Wind Offshore,a0l4L0000005itBQAQ,PRO-000002,
+Afton Wind Farm,AFTON WIND FARM LIMITED,Blackhill 132/33kV,,50.00,0.00,50.00,,Built,Direct Connection,SPT,Wind Onshore,a0l4L0000005ipiQAA,PRO-000558,

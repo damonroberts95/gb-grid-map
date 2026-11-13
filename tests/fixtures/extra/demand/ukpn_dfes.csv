@@ -1,0 +1,17 @@
+category;substation_name;voltage_kv;sitefunctionallocation;bulksupplypoint;gridsupplypoint;scenario;year;headroom_mw;licencearea;headroom_percent;demand_rag;physical_level;spatial_coordinates
+Demand Headroom;Whetstone Primary 11kV;11.0;EPN-S0000000H8084;Barnet Grid 33;Brimsdown (EPN);Holistic Transition;2025;7.67;Eastern Power Networks (EPN);37.29;Green (over 5% headroom);PRIMARY;51.634362, -0.177228
+Demand Headroom;Chartham 11kV;11.0;SPN-S000000008560;Canterbury South;Canterbury SGT;Holistic Transition;2025;6.04;South Eastern Power Networks (SPN);56.98;Green (over 5% headroom);PRIMARY;51.25633, 1.023713
+Demand Headroom;Hailsham 11kV;11.0;SPN-S000000008361;Polegate Grid;Ninfield SGT;Holistic Transition;2025;1.12;South Eastern Power Networks (SPN);8.67;Green (over 5% headroom);PRIMARY;50.858545, 0.245169
+Demand Headroom;Warren Springs Primary 11kV;11.0;EPN-S0000000H8044;Stevenage Grid 33;Pelham and Wymondley;Holistic Transition;2035;6.9;Eastern Power Networks (EPN);39.88;Green (over 5% headroom);PRIMARY;51.881299, -0.202347
+Demand Headroom;Hailsham 11kV;11.0;SPN-S000000008361;Polegate Grid;Ninfield SGT;Holistic Transition;2035;-3.48;South Eastern Power Networks (SPN);-24.2;Red (More than 5% overloaded);PRIMARY;50.858545, 0.245169
+Demand Headroom;Brogborough Primary 11kV;11.0;EPN-S0000000H4061;Westoning Grid;Sundon;Holistic Transition;2025;3.6;Eastern Power Networks (EPN);25.0;Green (over 5% headroom);PRIMARY;52.041405, -0.588889
+Demand Headroom;Warren Springs Primary 11kV;11.0;EPN-S0000000H8044;Stevenage Grid 33;Pelham and Wymondley;Holistic Transition;2025;6.4;Eastern Power Networks (EPN);36.99;Green (over 5% headroom);PRIMARY;51.881299, -0.202347
+Demand Headroom;Eltham Grid 11kV;11.0;LPN-S000000000728;Direct;Beddington 132kV Hurst 132kV;Holistic Transition;2025;7.36;London Power Networks (LPN);13.11;Green (over 5% headroom);PRIMARY;51.459681, 0.078448
+Demand Headroom;Brogborough Primary 11kV;11.0;EPN-S0000000H4061;Westoning Grid;Sundon;Holistic Transition;2035;0.4;Eastern Power Networks (EPN);2.78;Yellow (Between 5% overloaded and 5% headroom);PRIMARY;52.041405, -0.588889
+Demand Headroom;Whetstone Primary 11kV;11.0;EPN-S0000000H8084;Barnet Grid 33;Brimsdown (EPN);Holistic Transition;2035;5.07;Eastern Power Networks (EPN);24.65;Green (over 5% headroom);PRIMARY;51.634362, -0.177228
+Demand Headroom;Chartham 11kV;11.0;SPN-S000000008560;Canterbury South;Canterbury SGT;Holistic Transition;2035;3.0;South Eastern Power Networks (SPN);28.3;Green (over 5% headroom);PRIMARY;51.25633, 1.023713
+Demand Headroom;City Rd B 11kV;11.0;LPN-S000000000415;Direct;City Road 132kV;Holistic Transition;2035;61.75;London Power Networks (LPN);49.94;Green (over 5% headroom);PRIMARY;51.530448, -0.095885
+Demand Headroom;Eltham Grid 11kV;11.0;LPN-S000000000728;Direct;Beddington 132kV Hurst 132kV;Holistic Transition;2035;-11.74;London Power Networks (LPN);-20.9;Red (More than 5% overloaded);PRIMARY;51.459681, 0.078448
+Demand Headroom;Stewarts Rd 11kV;11.0;LPN-S000000000922;Direct;Wimbledon Grid South 3/4;Holistic Transition;2035;64.6;London Power Networks (LPN);77.83;Green (over 5% headroom);PRIMARY;51.475968, -0.141745
+Demand Headroom;City Rd B 11kV;11.0;LPN-S000000000415;Direct;City Road 132kV;Holistic Transition;2025;66.55;London Power Networks (LPN);53.82;Green (over 5% headroom);PRIMARY;51.530448, -0.095885
+Demand Headroom;Stewarts Rd 11kV;11.0;LPN-S000000000922;Direct;Wimbledon Grid South 3/4;Holistic Transition;2025;71.6;London Power Networks (LPN);86.27;Green (over 5% headroom);PRIMARY;51.475968, -0.141745

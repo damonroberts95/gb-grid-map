@@ -1,0 +1,62 @@
+# LV extras (lv_monitored, lv_smart, lv_headroom_forecast). Same schema as sources.yaml; anchors are not
+# shared across files, so the portal defaults are repeated. Sources already in sources.yaml (enw_lv_headroom_*,
+# spen_lv_monitor, ukpn_smart_meter_*, enw_smart_meter_installation, spen_smart_meter_transformer) are reused.
+sources:
+  - id: npg_lv_monitor_deployment
+    operator: NPG
+    portal: opendatasoft
+    base_url: "https://northernpowergrid.opendatasoft.com"
+    dataset: lv-monitor-deployment-strategy
+    category: lv_usage
+    cadence: 7d
+    gated: true
+    auth_env: NPG_API_KEY
+    licence: "Northern Powergrid Open Data Licence v1.0"
+    attribution: "Contains data (c) Northern Powergrid, used under the Northern Powergrid Open Data Licence v1.0."
+    note: "15k LV substations with monitor deployment status / utilisation / geopoint"
+  - id: nged_lv_monitor_list
+    operator: NGED
+    portal: http
+    base_url: "https://connecteddata.nationalgrid.co.uk/api/3/action/package_show"
+    params: {id: lv-load-monitor-data}
+    format: json
+    rows_path: result.resources
+    category: lv_usage
+    cadence: 7d
+    licence: "NGED (WPD) Open Data Licence"
+    attribution: "Contains data (c) National Grid Electricity Distribution, used under the NGED (WPD) Open Data Licence."
+    note: "CKAN package metadata only: each resource is named by the monitored secondary substation number. The half-hourly CSVs themselves are not downloaded."
+  - id: enw_lv_peak_demand_monitored
+    operator: ENW
+    portal: opendatasoft
+    base_url: "https://electricitynorthwest.opendatasoft.com"
+    dataset: dfes-lv-peak-demand-monitored
+    category: lv_usage
+    cadence: 7d
+    gated: true
+    auth_env: ENW_API_KEY
+    licence: "CC BY 4.0 (some datasets: SP ENW Shared Licence)"
+    attribution: "Contains data from SP Energy Networks (Electricity North West) open data portal, licensed under CC BY 4.0."
+  - id: ssen_sm_gql
+    operator: SSEN
+    portal: http
+    base_url: "https://gql.internal.datopian.com/v1/graphql"
+    format: json
+    category: lv_usage
+    cadence: 30d
+    large: true
+    licence: "CC BY 4.0"
+    attribution: "Contains data from the SSEN Distribution data portal, licensed under CC BY 4.0."
+    note: "SSEN smart-meter LV feeder consumption via GraphQL (POST, Hasura over BigQuery); the generic GET fetcher cannot read it, so large: true keeps it out of refresh. Fetched by scripts/lv_fetch_ssen_gql.py: lookup (feeder x postcode) + half-hourly usage for one day. Uses the ssen_smart_meter_dev_* tables (data ends 2024-09-05); the ssen_smart_meter_prod_* tables return BigQuery 403."
+  - id: os_codepoint
+    operator: OTHER
+    portal: http
+    base_url: "https://api.os.uk/downloads/v1/products/CodePointOpen/downloads"
+    params: {area: GB, format: CSV, redirect: ""}
+    format: file
+    category: context
+    cadence: 90d
+    max_mb: 100
+    licence: "Open Government Licence v3.0"
+    attribution: "Contains OS data (c) Crown copyright and database right. Code-Point Open, OGL v3."
+    note: "Postcode unit centroids (BNG eastings/northings), used to place SSEN smart-meter feeders (lv_smart)."

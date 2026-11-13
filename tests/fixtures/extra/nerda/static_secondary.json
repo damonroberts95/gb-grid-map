@@ -1,0 +1,82 @@
+[
+ {
+  "transformers": [],
+  "sds_site_id": "37 HOLLYBANK ROAD",
+  "latitude": "50.865562",
+  "switches": [],
+  "sds_nrn": "6100_007_120_00",
+  "longitude": "-1.409657",
+  "lines": [
+   {
+    "feeder_name": "feeder2",
+    "limit": 0,
+    "line_name": "6100_007_120_02",
+    "nerda_line_uuid": "2a25137a-f11b-4bf5-840e-1ec6a57fd824",
+    "measurements": [
+     {
+      "nerda_measurement_id": "4b2acbde-2f4e-41d7-af9b-e216bd2d4135",
+      "unitMultiplier": "k",
+      "measurementType": "SinglePhaseApparentPower",
+      "unitSymbol": "VA"
+     },
+     {
+      "nerda_measurement_id": "7244d557-1614-43b3-9583-64bd35a92912",
+      "unitMultiplier": "none",
+      "measurementType": "PowerFactor",
+      "unitSymbol": "none"
+     },
+     {
+      "nerda_measurement_id": "5764227c-9f35-407b-92aa-ccfc8f08887f",
+      "unitMultiplier": "none",
+      "measurementType": "LineCurrent",
+      "unitSymbol": "A"
+     },
+     {
+      "nerda_measurement_id": "18ef0f7c-25be-4bfc-85f0-5bb489544167",
+      "unitMultiplier": "k",
+      "measurementType": "PhaseVoltage",
+      "unitSymbol": "V"
+     },
+     {
+      "nerda_measurement_id": "d09c3908-c51e-4a96-ac0c-8c31675fd4d8",
+      "unitMultiplier": "k",
+      "measurementType": "SinglePhaseActivePower",
+      "unitSymbol": "W"
+     },
+     {
+      "nerda_measurement_id": "5764227c-9f35-407b-92aa-ccfc8f08887f",
+      "unitMultiplier": "k",
+      "measurementType": "PhaseVoltage",
+      "unitSymbol": "V"
+     }
+    ]
+   },
+   {
+    "feeder_name": "feeder1",
+    "limit": 0,
+    "line_name": "6100_007_120_01",
+    "nerda_line_uuid": "3dc18577-3554-491c-b487-76364abada19",
+    "measurements": [
+     {
+      "nerda_measurement_id": "14beb20f-7480-4a85-9adc-fad3aaae66f4",
+      "unitMultiplier": "k",
+      "measurementType": "SinglePhaseApparentPower",
+      "unitSymbol": "VA"
+     },
+     {
+      "nerda_measurement_id": "3487e8a7-2fed-4df5-92c3-05922c54dfb3",
+      "unitMultiplier": "none",
+      "measurementType": "LineCurrent",
+      "unitSymbol": "A"
+     },
+     {
+      "nerda_measurement_id": "dd2565e1-6e53-4fe2-bf8d-cb09b163975a",
+      "unitMultiplier": "k",
+      "measurementType": "SinglePhaseActivePower",
+      "unitSymbol": "W"
+     }
+    ]
+   }
+  ]
+ }
+]

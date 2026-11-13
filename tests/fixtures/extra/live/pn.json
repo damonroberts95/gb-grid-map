@@ -1,0 +1,68 @@
+[
+{
+"dataset": "PN",
+"settlementDate": "2026-11-12",
+"settlementPeriod": 34,
+"timeFrom": "2026-11-12T16:30:00Z",
+"timeTo": "2026-11-12T17:00:00Z",
+"levelFrom": 9,
+"levelTo": 9,
+"nationalGridBmUnit": "ABERU-1",
+"bmUnit": "E_ABERDARE"
+},
+{
+"dataset": "PN",
+"settlementDate": "2026-11-12",
+"settlementPeriod": 34,
+"timeFrom": "2026-11-12T16:30:00Z",
+"timeTo": "2026-11-12T17:00:00Z",
+"levelFrom": 25,
+"levelTo": 25,
+"nationalGridBmUnit": "BLHLB-1",
+"bmUnit": "T_BLHLB-1"
+},
+{
+"dataset": "PN",
+"settlementDate": "2026-11-12",
+"settlementPeriod": 34,
+"timeFrom": "2026-11-12T16:30:00Z",
+"timeTo": "2026-11-12T17:00:00Z",
+"levelFrom": 0,
+"levelTo": 0,
+"nationalGridBmUnit": "BREDB-1",
+"bmUnit": "T_BREDB-1"
+},
+{
+"dataset": "PN",
+"settlementDate": "2026-11-12",
+"settlementPeriod": 34,
+"timeFrom": "2026-11-12T16:30:00Z",
+"timeTo": "2026-11-12T17:00:00Z",
+"levelFrom": 0,
+"levelTo": 0,
+"nationalGridBmUnit": "CARR-1",
+"bmUnit": "T_CARR-1"
+},
+{
+"dataset": "PN",
+"settlementDate": "2026-11-12",
+"settlementPeriod": 34,
+"timeFrom": "2026-11-12T16:30:00Z",
+"timeTo": "2026-11-12T17:00:00Z",
+"levelFrom": 150,
+"levelTo": 150,
+"nationalGridBmUnit": "FOYE-2",
+"bmUnit": "T_FOYE-2"
+},
+{
+"dataset": "PN",
+"settlementDate": "2026-11-12",
+"settlementPeriod": 34,
+"timeFrom": "2026-11-12T16:30:00Z",
+"timeTo": "2026-11-12T17:00:00Z",
+"levelFrom": 267,
+"levelTo": 267,
+"nationalGridBmUnit": "RCBKO-2",
+"bmUnit": "T_RCBKO-2"
+}
+]

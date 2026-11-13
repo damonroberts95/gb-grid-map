@@ -1,0 +1,23 @@
+owner_name,type,class,number,status,data_confidence,fence_type,operating_area,locality,location_x_m,location_y_m,location_x_mm,location_y_mm
+SEPD,Pole Mounted Distribution,11kV/LV,P54A,Existing,Surveyed,Pole Mounted,Melksham,MONKTON FARLEIGH,380217.82,166158.479,380217820.0,166158479.0
+SEPD,Ground Mounted Distribution,11kV/LV,6333486,Existing,Surveyed,Outdoor,Oxford South,TUBNEY,445042.417,200196.296,445042417.0,200196296.0
+SEPD,Pole Mounted Distribution,11kV/LV,P10,Existing,Surveyed,Pole Mounted,Yeovil,CORTON DENHAM,359914.482,118726.2,359914482.0,118726200.0
+SEPD,Ground Mounted Distribution,11kV/LV,6133873,Existing,Surveyed,Outdoor,Melksham,CALNE,400061.567,170024.594,400061567.0,170024594.0
+SEPD,Pole Mounted Distribution,11kV/LV,P15,Existing,Surveyed,Pole Mounted,Yeovil,YEOVIL,373229.09,138537.341,373229090.0,138537341.0
+SEPD,Ground Mounted Distribution,11kV/LV,8437248,Existing,Surveyed,Outdoor,New Forest,"CRAWLEY, HANTS",444282.013,135910.536,444282013.0,135910536.0
+SEPD,Ground Mounted Distribution,11kV/LV,7301397,Existing,Surveyed,Outdoor,Basingstoke,ALTON,472505.26,139942.115,472505260.0,139942115.0
+SEPD,Ground Mounted Distribution,11kV/LV,6233044,Existing,Surveyed,Outdoor,Newbury,"HUNGERFORD, BERKS",432550.901,164712.707,432550901.0,164712707.0
+SEPD,Ground Mounted Distribution,11kV/LV,8311996,Existing,Surveyed,Outdoor,Southampton,HEDGE END,448969.165,113520.609,448969165.0,113520609.0
+SEPD,Ground Mounted Distribution,11kV/LV,8330625,Existing,Surveyed,Outdoor,Southampton,HEDGE END,449039.68,115294.425,449039680.0,115294425.0
+SHEPD,Ground Mounted Distribution,11kV/LV,,Existing,Surveyed,Outdoor,North East District,BUCKIE,341985.635,865014.495,341985635.0,865014495.0
+SHEPD,Ground Mounted Distribution,11kV/LV,,Existing,Surveyed,Outdoor,Western Isles,"AIRD, SOUTH DELL",76785.205,855332.675,76785205.0,855332675.0
+SHEPD,Primary,33kV/11kV,,Existing,Surveyed,Outdoor,North East District,DUFFTOWN,332056.38,839724.632,332056380.0,839724632.0
+SHEPD,Primary,33kV/11kV,0090,Existing,Surveyed,Outdoor,Tayside and Central,"LEOCH, DUNDEE",335945.358,736285.759,335945358.0,736285759.0
+SHEPD,Pole Mounted Distribution,11kV/LV,,Abandoned,Surveyed,Pole Mounted,,,137793.887,751545.907,137793887.0,751545907.0
+SHEPD,Pole Mounted Distribution,11kV/LV,,Abandoned,Surveyed,Pole Mounted,,,287451.969,710722.965,287451969.0,710722965.0
+SHEPD,Pole Mounted Distribution,33kV/LV,P2,Existing,Surveyed,Pole Mounted,Orkney,"SCORRADALE, ORKNEY",331508.894,1005886.568,331508894.0,1005886568.0
+SHEPD,Pole Mounted Distribution,33kV/LV,P132,Existing,Surveyed,Pole Mounted,Highland District,NAIRN,276345.934,849565.932,276345934.0,849565932.0
+SEPD,Ground Mounted Distribution,6.6kV/LV,1328004,Existing,Surveyed,Outdoor,Egham,FELTHAM,510473.925,172759.09,510473925.0,172759090.0
+SEPD,Ground Mounted Distribution,6.6kV/LV,5634196,Existing,Surveyed,Outdoor,Slough,GERRARDS CROSS,500901.776,186614.097,500901776.0,186614097.0
+SEPD,Pole Mounted Distribution,11kV/LV,P54A,Existing,Surveyed,Pole Mounted,Melksham,MONKTON FARLEIGH,380217.82,166158.479,380217820.0,166158479.0
+SEPD,Ground Mounted Distribution,11kV/LV,BADXY,Existing,Surveyed,Outdoor,Oxford South,TUBNEY,99999999,0,445042417.0,200196296.0

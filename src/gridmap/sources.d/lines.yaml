@@ -1,0 +1,202 @@
+# Network lines extra (extra/lines.py): OSM power infrastructure + DNO-published overhead line GIS.
+sources:
+  - id: osm_gb_pbf
+    operator: OSM
+    portal: http
+    base_url: "https://download.geofabrik.de/europe/great-britain-latest.osm.pbf"
+    format: file
+    category: lines
+    cadence: 30d
+    large: false
+    max_mb: 4000
+    keep: 1
+    licence: "ODbL 1.0"
+    attribution: "© OpenStreetMap contributors (ODbL)"
+    note: "Geofabrik Great Britain extract (2.2 GB). Uses max_mb: 4000 to exceed the default 200 MB fetch cap; refreshes monthly. Only power=* features are used (osmium tags-filter)."
+  - id: ukpn_oh_132kv
+    operator: UKPN
+    portal: opendatasoft
+    base_url: "https://ukpowernetworks.opendatasoft.com"
+    dataset: ukpn-132kv-overhead-lines
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: UKPN_API_KEY
+    licence: "CC BY 4.0"
+    attribution: "Contains data from the UK Power Networks Open Data Portal, licensed under CC BY 4.0."
+    note: "132 kV overhead line routes"
+  - id: ukpn_oh_66kv
+    operator: UKPN
+    portal: opendatasoft
+    base_url: "https://ukpowernetworks.opendatasoft.com"
+    dataset: ukpn-66kv-overhead-lines-shapefile
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: UKPN_API_KEY
+    licence: "CC BY 4.0"
+    attribution: "Contains data from the UK Power Networks Open Data Portal, licensed under CC BY 4.0."
+    note: "66 kV overhead (4 rows)"
+  - id: ukpn_oh_33kv
+    operator: UKPN
+    portal: opendatasoft
+    base_url: "https://ukpowernetworks.opendatasoft.com"
+    dataset: ukpn-33kv-overhead-lines
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: UKPN_API_KEY
+    licence: "CC BY 4.0"
+    attribution: "Contains data from the UK Power Networks Open Data Portal, licensed under CC BY 4.0."
+    note: "33 kV overhead"
+  - id: ukpn_oh_hv
+    operator: UKPN
+    portal: opendatasoft
+    base_url: "https://ukpowernetworks.opendatasoft.com"
+    dataset: ukpn-hv-overhead-lines-shapefile
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: UKPN_API_KEY
+    large: true
+    licence: "CC BY 4.0"
+    attribution: "Contains data from the UK Power Networks Open Data Portal, licensed under CC BY 4.0."
+    note: "11 kV overhead (103k)"
+  - id: ukpn_oh_lv
+    operator: UKPN
+    portal: opendatasoft
+    base_url: "https://ukpowernetworks.opendatasoft.com"
+    dataset: ukpn-lv-overhead-lines-shapefile
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: UKPN_API_KEY
+    large: true
+    licence: "CC BY 4.0"
+    attribution: "Contains data from the UK Power Networks Open Data Portal, licensed under CC BY 4.0."
+    note: "LV overhead (215k)"
+  - id: npg_oh_ehv
+    operator: NPG
+    portal: opendatasoft
+    base_url: "https://northernpowergrid.opendatasoft.com"
+    dataset: npg-ehv-overhead-feeders
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: NPG_API_KEY
+    licence: "Northern Powergrid Open Data Licence v1.0"
+    attribution: "Contains data (c) Northern Powergrid, used under the Northern Powergrid Open Data Licence v1.0."
+    note: "EHV overhead feeders (853)"
+  - id: npg_oh_hv
+    operator: NPG
+    portal: opendatasoft
+    base_url: "https://northernpowergrid.opendatasoft.com"
+    dataset: npg_hv_oh_feeders
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: NPG_API_KEY
+    large: true
+    licence: "Northern Powergrid Open Data Licence v1.0"
+    attribution: "Contains data (c) Northern Powergrid, used under the Northern Powergrid Open Data Licence v1.0."
+    note: "HV overhead feeders (21k)"
+  - id: npg_oh_lv
+    operator: NPG
+    portal: opendatasoft
+    base_url: "https://northernpowergrid.opendatasoft.com"
+    dataset: lv_oh_feeders
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: NPG_API_KEY
+    large: true
+    licence: "Northern Powergrid Open Data Licence v1.0"
+    attribution: "Contains data (c) Northern Powergrid, used under the Northern Powergrid Open Data Licence v1.0."
+    note: "LV overhead feeders (27k)"
+  - id: enw_oh_132kv
+    operator: ENW
+    portal: opendatasoft
+    base_url: "https://electricitynorthwest.opendatasoft.com"
+    dataset: enwl-132kv-overhead-conductors
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: ENW_API_KEY
+    licence: "CC BY 4.0"
+    attribution: "Contains data from SP Energy Networks (Electricity North West) open data portal, licensed under CC BY 4.0."
+    note: "132 kV overhead"
+  - id: enw_oh_33kv
+    operator: ENW
+    portal: opendatasoft
+    base_url: "https://electricitynorthwest.opendatasoft.com"
+    dataset: enwl-33kv-overhead-conductors
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: ENW_API_KEY
+    licence: "CC BY 4.0"
+    attribution: "Contains data from SP Energy Networks (Electricity North West) open data portal, licensed under CC BY 4.0."
+    note: "33 kV overhead"
+  - id: enw_oh_11kv
+    operator: ENW
+    portal: opendatasoft
+    base_url: "https://electricitynorthwest.opendatasoft.com"
+    dataset: enwl-11kv-overhead-conductors
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: ENW_API_KEY
+    large: true
+    licence: "CC BY 4.0"
+    attribution: "Contains data from SP Energy Networks (Electricity North West) open data portal, licensed under CC BY 4.0."
+    note: "11 kV overhead"
+  - id: enw_oh_66kv
+    operator: ENW
+    portal: opendatasoft
+    base_url: "https://electricitynorthwest.opendatasoft.com"
+    dataset: enwl-6-6kv-overhead-conductors
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: ENW_API_KEY
+    licence: "CC BY 4.0"
+    attribution: "Contains data from SP Energy Networks (Electricity North West) open data portal, licensed under CC BY 4.0."
+    note: "6.6 kV overhead"
+  - id: enw_oh_lv
+    operator: ENW
+    portal: opendatasoft
+    base_url: "https://electricitynorthwest.opendatasoft.com"
+    dataset: enwl-lv-overhead-conductors
+    category: lines
+    cadence: 30d
+    format: geojson
+    gated: true
+    auth_env: ENW_API_KEY
+    large: true
+    licence: "CC BY 4.0"
+    attribution: "Contains data from SP Energy Networks (Electricity North West) open data portal, licensed under CC BY 4.0."
+    note: "LV overhead (33k)"
+  - id: ssen_overhead_lines_routes
+    operator: SSEN
+    portal: ckan
+    base_url: "https://data-api.ssen.co.uk"
+    dataset: ssen_overhead_lines
+    category: lines
+    cadence: 30d
+    auth_env: null
+    select: {format: ZIP}
+    licence: "CC BY 4.0"
+    attribution: "Contains data from the SSEN Distribution data portal, licensed under CC BY 4.0."
+    note: "EHV/EHVP/HV overhead route shapefiles for SEPD and SHEPD (5 zips). gis_network_line_data is request-form gated: not usable."

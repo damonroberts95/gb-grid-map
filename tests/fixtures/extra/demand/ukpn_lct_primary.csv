@@ -1,0 +1,14 @@
+lct_connections;category;type;importrating;exportrating;licencearea;primary;primaryname;sitefunctionallocation;connectionstatus;spatial_coordinates;exportrating_mw
+30;Generation + Demand;Solar & Battery;0.0;47;South Eastern Power Networks (SPN);008400;EWELL 33/11KV;SPN-S000000008400;Connected;-0.250286, 51.349628;0.04764
+874;Generation;Solar PV;0.0;4290;South Eastern Power Networks (SPN);008400;EWELL 33/11KV;SPN-S000000008400;Connected;-0.250286, 51.349628;4.29035
+813;Demand;EV Charging Point;5797.42;0;South Eastern Power Networks (SPN);008400;EWELL 33/11KV;SPN-S000000008400;Connected;-0.250286, 51.349628;0.0
+504;Generation;Solar PV;0.0;2654;Eastern Power Networks (EPN);0H8127;SOUTH HITCHIN PRIMARY;EPN-S0000000H8127;Connected;-0.268073, 51.943024;2.6543699999999997
+165;Generation + Demand;Battery Storage;667.12;872;Eastern Power Networks (EPN);0H8127;SOUTH HITCHIN PRIMARY;EPN-S0000000H8127;Connected;-0.268073, 51.943024;0.87202
+13;Demand;Heat Pump;66.1;0;Eastern Power Networks (EPN);0H7071;PONDERS END PRIMARY;EPN-S0000000H7071;Connected;-0.042262, 51.64235;0.0
+95;Demand;Heat Pump;718.75;0;Eastern Power Networks (EPN);0H8127;SOUTH HITCHIN PRIMARY;EPN-S0000000H8127;Connected;-0.268073, 51.943024;0.0
+102;Demand;Heat Pump;732.77;0;South Eastern Power Networks (SPN);008400;EWELL 33/11KV;SPN-S000000008400;Connected;-0.250286, 51.349628;0.0
+291;Demand;EV Charging Point;2059.81;20;Eastern Power Networks (EPN);0H8127;SOUTH HITCHIN PRIMARY;EPN-S0000000H8127;Connected;-0.268073, 51.943024;0.0206
+135;Generation;Solar PV;0.0;667;Eastern Power Networks (EPN);0H7071;PONDERS END PRIMARY;EPN-S0000000H7071;Connected;-0.042262, 51.64235;0.6679700000000001
+67;Demand;EV Charging Point;575.18;0;Eastern Power Networks (EPN);0H7071;PONDERS END PRIMARY;EPN-S0000000H7071;Connected;-0.042262, 51.64235;0.0
+288;Generation + Demand;Battery Storage;945.46;1347;South Eastern Power Networks (SPN);008400;EWELL 33/11KV;SPN-S000000008400;Connected;-0.250286, 51.349628;1.34706
+20;Generation + Demand;Battery Storage;47.58;92;Eastern Power Networks (EPN);0H7071;PONDERS END PRIMARY;EPN-S0000000H7071;Connected;-0.042262, 51.64235;0.09284

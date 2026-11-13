@@ -1,0 +1,11 @@
+gridsupplypoint;substation;season;functional_location;licencearea;substation_mrid
+Burwell;Arbury Grid 11kV;Winter;EPN-S0000000H4001;Eastern Power Networks (EPN);_0a7f689f-1943-4730-bc09-8030743d31ef
+Burwell;Arbury Grid 11kV;Summer;EPN-S0000000H4001;Eastern Power Networks (EPN);_0a7f689f-1943-4730-bc09-8030743d31ef
+Elstree;Abbots Central Primary 11kV;Winter;EPN-S0000000H8151;Eastern Power Networks (EPN);_52fc0b96-1acc-4d70-8afc-eb1bdc278eee
+Elstree;Abbots Central Primary 11kV;Summer;EPN-S0000000H8151;Eastern Power Networks (EPN);_52fc0b96-1acc-4d70-8afc-eb1bdc278eee
+Pelham;Acrows Primary 11kV;Winter;EPN-S0000000H4048;Eastern Power Networks (EPN);_c7f3a201-367f-4e02-931e-737a79b7fb83
+Pelham;Acrows Primary 11kV;Summer;EPN-S0000000H4048;Eastern Power Networks (EPN);_c7f3a201-367f-4e02-931e-737a79b7fb83
+Rayleigh;Abberton Grid 33kV;Winter;EPN-S0000000D3031;Eastern Power Networks (EPN);_6a1d7a3c-ddd9-4fde-81a4-d401bf8d44e1
+Rayleigh;Abberton Grid 33kV;Summer;EPN-S0000000D3031;Eastern Power Networks (EPN);_6a1d7a3c-ddd9-4fde-81a4-d401bf8d44e1
+Wymondley;Bassingbourn Primary 11kV;Winter;EPN-S0000000H4002;Eastern Power Networks (EPN);_c3c1f7d4-6cc1-4972-84b3-5f39d268af6e
+Wymondley;Bassingbourn Primary 11kV;Summer;EPN-S0000000H4002;Eastern Power Networks (EPN);_c3c1f7d4-6cc1-4972-84b3-5f39d268af6e

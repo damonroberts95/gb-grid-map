@@ -1,0 +1,207 @@
+{
+ "contributor": "UK Power Networks",
+ "coverage": "Eastern Power Network",
+ "creator": "UK Power Networks",
+ "date": "2025-03-01T00:00:00Z",
+ "description": "A heatmaps dataset for Eastern Power Networks of UK Power Networks",
+ "format": "application/json",
+ "identifier": "ukpn-capacity-heatmap",
+ "issued": "2026-05-29T00:00:00Z",
+ "language": "en",
+ "publisher": "UK Power Networks",
+ "rights": "https://creativecommons.org/licenses/by/4.0/",
+ "title": "UK Power Networks - Eastern Power Networks (EPN) Heatmap Data",
+ "valid": [
+  "2025-03-01T00:00:00Z",
+  "2026-11-30T00:00:00Z"
+ ],
+ "Substations": [
+  {
+   "mRID": "f3f97f72-f5c3-5af5-82d0-f79b7b5b5ada",
+   "name": "Abberton Grid 33kV",
+   "type": "Primary",
+   "area": "EPN",
+   "description": "Transmission Impact assessment threshold (TIA) for generation at this site = 1  MW.",
+   "longitude": 0.8857417592727553,
+   "latitude": 51.84460025846185,
+   "demandFirmCapacity": 114.3,
+   "demandAvailableCapacity": 42.6,
+   "demandMaximum": 65.9,
+   "demandMinimum": 21.9,
+   "demandConstraint": "GREEN",
+   "demandConstraintLimitingFactor": "Thermal",
+   "generationFirmCapacity": 158.2,
+   "generationAvailableCapacity": 77.5,
+   "generationConstraint": "GREEN",
+   "generationConstraintLimitingFactor": "Thermal",
+   "reversePowerFlowTotalCapacity": 114.3,
+   "reversePowerFlowAvailableCapacity": 114.3,
+   "voltages": [
+    33
+   ],
+   "GSP": "Rayleigh",
+   "BSP": "Abberton Grid 33",
+   "PastConnectionActivity": [
+    {
+     "voltage": 33,
+     "loadBudgetEstimatesProvidedCapacity": 25,
+     "loadBudgetEstimatesProvidedCount": 2
+    }
+   ]
+  },
+  {
+   "mRID": "d74b1286-ce07-521a-950b-784f8d2ca720",
+   "name": "Arbury Grid 11kV",
+   "type": "Primary",
+   "area": "EPN",
+   "description": "Transmission Impact assessment threshold (TIA) for generation at this site = 5  MW.",
+   "longitude": 0.1315263982659725,
+   "latitude": 52.23558693934513,
+   "demandFirmCapacity": 38.1,
+   "demandAvailableCapacity": 14.4,
+   "demandMaximum": 11.2,
+   "demandMinimum": 4.3,
+   "demandConstraint": "GREEN",
+   "demandConstraintLimitingFactor": "Thermal",
+   "generationFirmCapacity": 35.8,
+   "generationAvailableCapacity": 30.4,
+   "generationConstraint": "GREEN",
+   "generationConstraintLimitingFactor": "Thermal",
+   "reversePowerFlowTotalCapacity": 38.1,
+   "reversePowerFlowAvailableCapacity": 38.1,
+   "voltages": [
+    11
+   ],
+   "GSP": "Burwell",
+   "BSP": "Arbury Grid",
+   "PastConnectionActivity": [
+    {
+     "voltage": 11,
+     "loadConnectionOffersAcceptedCount": 1,
+     "loadConnectionOffersAcceptedCapacity": 1.4
+    }
+   ]
+  },
+  {
+   "mRID": "8f2323e0-1f02-5bde-9724-ee3336e831cb",
+   "name": "Bassingbourn Primary 11kV",
+   "type": "Primary",
+   "area": "EPN",
+   "description": "Transmission Impact assessment threshold (TIA) for generation at this site = 5  MW.",
+   "longitude": -0.03939419135278864,
+   "latitude": 52.06016204482032,
+   "demandFirmCapacity": 15,
+   "demandAvailableCapacity": 7.5,
+   "demandMaximum": 6.6,
+   "demandMinimum": 1.4,
+   "demandConstraint": "GREEN",
+   "demandConstraintLimitingFactor": "Thermal",
+   "generationFirmCapacity": -13.3,
+   "generationAvailableCapacity": -16.3,
+   "generationConstraint": "RED",
+   "generationConstraintLimitingFactor": "Thermal",
+   "reversePowerFlowTotalCapacity": 7.5,
+   "reversePowerFlowAvailableCapacity": 7.5,
+   "voltages": [
+    11
+   ],
+   "GSP": "Wymondley",
+   "BSP": "Melbourn Grid 33"
+  },
+  {
+   "mRID": "51d33718-9621-51d4-bc08-f03a0d1ee0de",
+   "name": "Abbots Central Primary 11kV",
+   "type": "Primary",
+   "area": "EPN",
+   "description": "Transmission Impact assessment threshold (TIA) for generation at this site = 5  MW.",
+   "longitude": -0.4166385023127208,
+   "latitude": 51.70565153693533,
+   "demandFirmCapacity": 15.2,
+   "demandAvailableCapacity": 5.3,
+   "demandMaximum": 9.9,
+   "demandMinimum": 3.4,
+   "demandConstraint": "GREEN",
+   "demandConstraintLimitingFactor": "Thermal",
+   "generationFirmCapacity": 11.4,
+   "generationAvailableCapacity": 9.6,
+   "generationConstraint": "GREEN",
+   "generationConstraintLimitingFactor": "Thermal",
+   "reversePowerFlowTotalCapacity": 7.6,
+   "reversePowerFlowAvailableCapacity": 7.6,
+   "voltages": [
+    11
+   ],
+   "GSP": "Elstree",
+   "BSP": "Bushey Mill Grid 33",
+   "PastConnectionActivity": [
+    {
+     "voltage": 11,
+     "loadConnectionOffersMadeCount": 4,
+     "loadConnectionOffersMadeCapacity": 4.4,
+     "loadConnectionOffersAcceptedCount": 1,
+     "loadConnectionOffersAcceptedCapacity": 1.2
+    }
+   ]
+  },
+  {
+   "mRID": "65aa491f-f093-511b-9bc3-e7fe9490237b",
+   "name": "Acrows Primary 11kV",
+   "type": "Primary",
+   "area": "EPN",
+   "description": "Transmission Impact assessment threshold (TIA) for generation at this site = 5  MW.",
+   "longitude": 0.2614842402715933,
+   "latitude": 52.02910828474167,
+   "demandFirmCapacity": 24,
+   "demandAvailableCapacity": 15.4,
+   "demandMaximum": 6.5,
+   "demandMinimum": 2.1,
+   "demandConstraint": "GREEN",
+   "demandConstraintLimitingFactor": "Thermal",
+   "generationFirmCapacity": 4.7,
+   "generationAvailableCapacity": 3.1,
+   "generationConstraint": "GREEN",
+   "generationConstraintLimitingFactor": "Thermal",
+   "reversePowerFlowTotalCapacity": 24,
+   "reversePowerFlowAvailableCapacity": 24,
+   "voltages": [
+    11
+   ],
+   "GSP": "Pelham",
+   "BSP": "Thaxted Grid 33"
+  },
+  {
+   "mRID": "aa87ce96-2aec-5526-9ccf-4fbf314e20df",
+   "name": "Luton St Marys Primary 11kV",
+   "type": "Primary",
+   "area": "EPN",
+   "description": "Transmission Impact assessment threshold (TIA) for generation at this site = 1  MW.",
+   "longitude": -0.407499,
+   "latitude": 51.879095,
+   "demandFirmCapacity": 19.5,
+   "demandAvailableCapacity": 4.7,
+   "demandMaximum": 14.8,
+   "demandMinimum": 3.9,
+   "demandConstraint": "GREEN",
+   "demandConstraintLimitingFactor": "Thermal",
+   "generationFirmCapacity": 12.8,
+   "generationAvailableCapacity": 12.1,
+   "generationConstraint": "GREEN",
+   "generationConstraintLimitingFactor": "Thermal",
+   "reversePowerFlowTotalCapacity": 9.7,
+   "reversePowerFlowAvailableCapacity": 9.7,
+   "voltages": [
+    11
+   ],
+   "GSP": "Sundon",
+   "BSP": "Luton South Grid",
+   "PastConnectionActivity": [
+    {
+     "voltage": 11,
+     "loadConnectionOffersMadeCount": 2,
+     "loadConnectionOffersMadeCapacity": 8.9
+    }
+   ]
+  }
+ ],
+ "Circuits": []
+}

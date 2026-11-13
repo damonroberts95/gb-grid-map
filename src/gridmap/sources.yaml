@@ -1,0 +1,232 @@
+# Source registry for the fetch framework. Dataset ids come from docs/sources/*.md and are
+# checked against live catalogs (never invent ids). Fields:
+#   gated: known to need an account key -> skipped with 'needs_key' when auth_env is unset
+#          (Opendatasoft also checks catalog `data_visible` at run time, so this is only a hint).
+#   large: skipped unless --include-large (>200 MB or millions of rows).
+#   cadence: how often to re-check; change detection (portal `modified`) applies at >= 1d.
+defaults:
+  ukpn: &ukpn {operator: UKPN, portal: opendatasoft, base_url: "https://ukpowernetworks.opendatasoft.com", auth_env: UKPN_API_KEY, licence: "CC BY 4.0", attribution: "Contains data from the UK Power Networks Open Data Portal, licensed under CC BY 4.0."}
+  npg: &npg {operator: NPG, portal: opendatasoft, base_url: "https://northernpowergrid.opendatasoft.com", auth_env: NPG_API_KEY, licence: "Northern Powergrid Open Data Licence v1.0", attribution: "Contains data (c) Northern Powergrid, used under the Northern Powergrid Open Data Licence v1.0."}
+  enw: &enw {operator: ENW, portal: opendatasoft, base_url: "https://electricitynorthwest.opendatasoft.com", auth_env: ENW_API_KEY, licence: "CC BY 4.0 (some datasets: SP ENW Shared Licence)", attribution: "Contains data from SP Energy Networks (Electricity North West) open data portal, licensed under CC BY 4.0."}
+  spen: &spen {operator: SPEN, portal: opendatasoft, base_url: "https://spenergynetworks.opendatasoft.com", auth_env: SPEN_API_KEY, licence: "CC BY 4.0", attribution: "Contains data from the SP Energy Networks open data portal, licensed under CC BY 4.0."}
+  nged: &nged {operator: NGED, portal: ckan, base_url: "https://connecteddata.nationalgrid.co.uk", auth_env: NGED_API_KEY, licence: "NGED (WPD) Open Data Licence", attribution: "Contains data (c) National Grid Electricity Distribution, used under the NGED (WPD) Open Data Licence."}
+  ssen: &ssen {operator: SSEN, portal: ckan, base_url: "https://data-api.ssen.co.uk", auth_env: null, licence: "CC BY 4.0", attribution: "Contains data from the SSEN Distribution data portal, licensed under CC BY 4.0."}
+  ssent: &ssent {operator: SSEN-T, portal: opendatasoft, base_url: "https://ssentransmission.opendatasoft.com", auth_env: SSENT_API_KEY, licence: "CC BY 4.0", attribution: "Contains data from the SSEN Transmission open data portal, licensed under CC BY 4.0."}
+  neso: &neso {operator: NESO, portal: ckan, base_url: "https://api.neso.energy", licence: "NESO Open Data Licence", attribution: "Supported by National Energy SO Open Data"}
+  elexon: &elexon {operator: ELEXON, portal: http, base_url: "https://data.elexon.co.uk/bmrs/api/v1", format: json, rows_path: data, licence: "BSC open licence (Elexon)", attribution: "Contains BMRS data (c) Elexon Limited copyright and database right."}
+  carbon: &carbon {operator: CARBON, portal: http, base_url: "https://api.carbonintensity.org.uk", format: json, rows_path: data, licence: "CC BY 4.0", attribution: "Carbon Intensity API (carbonintensity.org.uk), National Energy SO, CC BY 4.0."}
+
+sources:
+  # ---------------------------------------------------------------- UKPN
+  - {<<: *ukpn, id: ukpn_heatmap, portal: json_attachment, dataset: ukpn-capacity-heatmap, category: headroom, cadence: 1d, select: {mimetype: application/json}, rows_path: Substations, as_of_path: issued, note: "JSON attachments per licence area (EPN/LPN/SPN) are anonymous; ids change per release. Units/basis: see heatmap commentary PDF."}
+  - {<<: *ukpn, id: ukpn_grid_primary_sites, dataset: grid-and-primary-sites, category: sites, cadence: 1d, gated: true}
+  - {<<: *ukpn, id: ukpn_grid_transformers, dataset: ukpn-grid-transformers, category: sites, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_primary_transformers, dataset: ukpn-primary-transformers, category: sites, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_primary_areas, dataset: ukpn_primary_postcode_area, category: boundary, cadence: 7d, gated: true, format: geojson}
+  - {<<: *ukpn, id: ukpn_grid_areas, dataset: ukpn-grid-postcode-area, category: boundary, cadence: 7d, gated: true, format: geojson}
+  - {<<: *ukpn, id: ukpn_gsp_areas, dataset: ukpn-grid-supply-points, category: boundary, cadence: 7d, gated: true, format: geojson}
+  - {<<: *ukpn, id: ukpn_secondary_areas, dataset: ukpn_secondary_postcode_area, category: boundary, cadence: 7d, gated: true, format: geojson, large: true, note: "74k polygons"}
+  - {<<: *ukpn, id: ukpn_secondary_sites, dataset: ukpn-secondary-sites, category: lv_sites, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_secondary_utilisation, dataset: ukpn-secondary-site-utilisation, category: lv_usage, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_secondary_transformers, dataset: ukpn-secondary-site-transformers, category: lv_sites, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ltds_t4a_fault_3ph, dataset: ukpn-ltds-table-4a-3ph-fault-level, category: ltds_fault, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ltds_t4b_fault_earth, dataset: ukpn-ltds-table-4b-earth-fault-level, category: ltds_fault, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_grid_primary_fault_levels, dataset: ukpn-grid-and-primary-sites-fault-level-data, category: ltds_fault, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ltds_t1_circuits, dataset: ukpn-ltds-table-1-circuit-data, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ltds_t2a_transformers, dataset: ukpn-ltds-table-2a-transformer-2w, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ltds_t2b_transformers, dataset: ukpn-ltds-table-2b-transformer-data-3w, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ltds_t3a_load_observed, dataset: ukpn-ltds-table-3a-load-data-observed, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ltds_t3b_load_true, dataset: ukpn-ltds-table-3b-load-data-true, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ltds_t5_generation, dataset: ukpn-ltds-table-5-generation, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ltds_t6_connections_interest, dataset: ukpn-ltds-table-6-interest-connections, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ltds_t7_restrictions, dataset: ukpn-ltds-table-7-operational-restrictions, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ltds_t8_fault_gt95, dataset: ukpn-ltds-table-8-gt-95-perc-fault-data, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_ecr_part2_1mw_plus, dataset: ukpn-embedded-capacity-register, category: ecr, cadence: 1d, gated: true}
+  - {<<: *ukpn, id: ukpn_ecr_part1_under_1mw, dataset: ukpn-embedded-capacity-register-1-under-1mw, category: ecr, cadence: 1d, gated: true}
+  - {<<: *ukpn, id: ukpn_queue_overall_insights, dataset: ukpn-overall-queue-insights, category: queue, cadence: 1d, note: "aggregate MW by technology/status"}
+  - {<<: *ukpn, id: ukpn_queue_wide_planning_status, dataset: ukpn-wide-planning-status, category: queue, cadence: 1d}
+  - {<<: *ukpn, id: ukpn_connections_reform_la, dataset: ukpn-connections-reform-local-authority, category: queue, cadence: 1d}
+  - {<<: *ukpn, id: ukpn_appendix_g, dataset: ukpn-appendix-g, category: queue, cadence: 1d, gated: true}
+  - {<<: *ukpn, id: ukpn_large_demand_list, dataset: ukpn-large-demand-list, category: queue, cadence: 1d, gated: true}
+  - {<<: *ukpn, id: ukpn_smart_meter_lv_feeder, dataset: ukpn-smart-meter-consumption-lv-feeder, category: lv_usage, cadence: 7d, gated: true, note: "catalog count is exactly 30000 - probably a capped extract"}
+  - {<<: *ukpn, id: ukpn_smart_meter_substation, dataset: ukpn-smart-meter-consumption-substation, category: lv_usage, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_lct_secondary, dataset: ukpn-low-carbon-technologies-secondary, category: lct, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_lct_primary, dataset: low-carbon-technologies, category: lct, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_dfes_network_headroom, dataset: ukpn-dfes-network-headroom-report, category: dfes, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_dfes_local_authority, dataset: ukpn-dfes-by-local-authorities, category: dfes, cadence: 7d, gated: true}
+  - {<<: *ukpn, id: ukpn_live_faults, dataset: ukpn-live-faults, category: outage, cadence: 5m}
+  - {<<: *ukpn, id: ukpn_neo_outages, dataset: ukpn-national-energy-outage, category: outage, cadence: 5m, note: "ENA NEO format"}
+  - {<<: *ukpn, id: ukpn_ehv_outages, dataset: ukpn-ehv-network-outages, category: outage, cadence: 1d, gated: true}
+  - {<<: *ukpn, id: ukpn_flex_lv_zones, dataset: ukpn-lv-flex-zones, category: flex, cadence: 7d, format: geojson}
+  - {<<: *ukpn, id: ukpn_flex_hv_zones, dataset: ukpn-hv-flex-zones, category: flex, cadence: 7d, gated: true, format: geojson}
+
+  # ---------------------------------------------------------------- NPG
+  - {<<: *npg, id: npg_heatmap_table, dataset: heatmapdatatable, category: headroom, cadence: 1d, note: "headroom + fault level + firm cap; no stable id (join by name)"}
+  - {<<: *npg, id: npg_heatmap_areas, dataset: heatmapsubstationareas, category: boundary, cadence: 1d, format: geojson}
+  - {<<: *npg, id: npg_ltds_heatmap, dataset: ltds-capacity-heatmap, category: headroom, cadence: 7d, gated: true}
+  - {<<: *npg, id: npg_ltds_ehv_sites, dataset: ltds_ehv_sites, category: sites, cadence: 7d, gated: true}
+  - {<<: *npg, id: npg_sites_list, dataset: substation_sites_list, category: sites, cadence: 1d, note: "57k rows incl. ~57k distribution (secondary) substations; many Redacted/Not Applicable values"}
+  - {<<: *npg, id: npg_service_areas, dataset: substation_combined_service_areas, category: boundary, cadence: 7d, format: geojson}
+  - {<<: *npg, id: npg_ltds_app3_circuits, dataset: ltds-appendix-3, category: ltds_other, cadence: 30d, gated: true, note: "LTDS appendix 3 circuit data; registered, not mapped (no schema table)"}
+  - {<<: *npg, id: npg_ltds_app4_transformers, dataset: ltds-appendix-4, category: ltds_other, cadence: 30d, gated: true, note: "LTDS appendix 4 transformer data; registered, not mapped (no schema table)"}
+  - {<<: *npg, id: npg_ltds_app5_load, dataset: ltds-appendix-5, category: ltds_other, cadence: 30d, gated: true, note: "LTDS appendix 5 load information; registered, not mapped"}
+  - {<<: *npg, id: npg_ltds_app6_fault, dataset: ltds-appendix-6, category: ltds_fault, cadence: 30d, gated: true, note: "LTDS appendix 6 fault level data -> fault_level"}
+  - {<<: *npg, id: npg_ltds_app7_generation, dataset: ltds-appendix-7, category: ltds_other, cadence: 30d, gated: true, note: "LTDS appendix 7 generation (connected/contracted) -> queue_project"}
+  - {<<: *npg, id: npg_ecr_1mw_plus, dataset: embedded-capacity-register, category: ecr, cadence: 1d}
+  - {<<: *npg, id: npg_ecr_under_1mw, dataset: embedded-capacity-register-part-2, category: ecr, cadence: 1d}
+  - {<<: *npg, id: npg_queue, dataset: connection-queue-information, category: queue, cadence: 1d}
+  - {<<: *npg, id: npg_gsp_connection_info, dataset: grid-supply-point-connection-information, category: queue, cadence: 7d}
+  - {<<: *npg, id: npg_gsp_appendix_g, dataset: gsp-appendix-g-information, category: queue, cadence: 7d}
+  - {<<: *npg, id: npg_large_scale_demand, dataset: large-scale-demand, category: queue, cadence: 7d}
+  - {<<: *npg, id: npg_historical_peak_demand, dataset: historical-peak-demand, category: ltds_other, cadence: 7d}
+  - {<<: *npg, id: npg_load_indices, dataset: northern-powergrid-load-indices, category: ltds_other, cadence: 7d}
+  - {<<: *npg, id: npg_ndp_demand_headroom, dataset: npg_ndp_demand_headroom, category: dfes, cadence: 7d}
+  - {<<: *npg, id: npg_ndp_generation_headroom, dataset: npg_ndp_generation_headroom, category: dfes, cadence: 7d}
+  - {<<: *npg, id: npg_dfes_wide, dataset: northern-powergrid-dfes, category: dfes, cadence: 7d}
+  - {<<: *npg, id: npg_dfes_long, dataset: northern-powergrid-dfes-portalformat, category: dfes, cadence: 7d, large: true, note: "2.39M rows long format"}
+  - {<<: *npg, id: npg_lct_postal_district, dataset: lct-datasets, category: lct, cadence: 7d}
+  - {<<: *npg, id: npg_lct_postal_sector, dataset: lct-datasets-ps-upload, category: lct, cadence: 7d}
+  - {<<: *npg, id: npg_live_power_cuts, dataset: live-power-cuts-data, category: outage, cadence: 5m}
+  - {<<: *npg, id: npg_flex_procurement, dataset: slc31e-procurement, category: flex, cadence: 7d}
+  - {<<: *npg, id: npg_flex_procurement_locational, dataset: slc31e-procurement-locational, category: flex, cadence: 7d}
+  - {<<: *npg, id: npg_flex_dispatch, dataset: slc31e-dispatch, category: flex, cadence: 7d}
+  - {<<: *npg, id: npg_flex_upcoming, dataset: npg-network-development-report-upcoming-flexibility-services, category: flex, cadence: 7d}
+  - {<<: *npg, id: npg_dnoa, dataset: distribution-network-options-assessment-dnoa, category: flex, cadence: 7d}
+  - {<<: *npg, id: npg_dno_boundaries, dataset: all_dno_boundaries, category: boundary, cadence: 7d, format: geojson}
+
+  # ---------------------------------------------------------------- ENW
+  - {<<: *enw, id: enw_gsp_heatmap, dataset: enwl-gsp-heatmap, category: headroom, cadence: 1d, gated: true, format: geojson}
+  - {<<: *enw, id: enw_bsp_heatmap, dataset: enwl-bsp-heatmap, category: headroom, cadence: 1d, gated: true, format: geojson}
+  - {<<: *enw, id: enw_primary_heatmap, dataset: enwl-pry-heatmap, category: headroom, cadence: 1d, gated: true, format: geojson}
+  - {<<: *enw, id: enw_ndp_pry_bsp_headroom, dataset: ndp-pry-bsp-headroom, category: dfes, cadence: 7d, gated: true}
+  - {<<: *enw, id: enw_substations_gis, dataset: enwl-substation, category: sites, cadence: 7d, gated: true, note: "41k rows incl. distribution; 6-digit number key"}
+  - {<<: *enw, id: enw_gsp_polygons, dataset: enwl-substation-gsp-polygons, category: boundary, cadence: 7d, gated: true, format: geojson}
+  - {<<: *enw, id: enw_bsp_polygons, dataset: enwl-substation-bsp-polygons, category: boundary, cadence: 7d, gated: true, format: geojson}
+  - {<<: *enw, id: enw_primary_polygons, dataset: enwl-substation-primary-polygons, category: boundary, cadence: 7d, gated: true, format: geojson}
+  - {<<: *enw, id: enw_ecr_1mw_plus, dataset: enwl-embedded-capacity-register-2-1mw-and-above, category: ecr, cadence: 1d, gated: true}
+  - {<<: *enw, id: enw_ecr_under_1mw, dataset: enwl-embedded-capacity-register-1-under-1mw, category: ecr, cadence: 1d, gated: true}
+  - {<<: *enw, id: enw_lv_headroom_monitored, dataset: dfes-lv-headroom-monitored, category: lv_usage, cadence: 7d, gated: true}
+  - {<<: *enw, id: enw_lv_headroom_unmonitored, dataset: dfes-lv-headroom-unmonitored, category: lv_usage, cadence: 7d, gated: true}
+  - {<<: *enw, id: enw_lv_load_duration, dataset: lv_load_duration, category: lv_usage, cadence: 7d, gated: true}
+  - {<<: *enw, id: enw_capacity_distribution_tx, dataset: sp-enw-capacity-distribution-tx, category: lv_sites, cadence: 7d, gated: true, note: "per distribution transformer utilisation/headroom"}
+  - {<<: *enw, id: enw_smart_meter_installation, dataset: smart-meter-installation, category: lv_usage, cadence: 7d, gated: true}
+  - {<<: *enw, id: enw_mcs_lct_per_substation, dataset: mcs-lct-per-enwl-substation, category: lct, cadence: 7d, gated: true}
+  - {<<: *enw, id: enw_lct_readiness_checker, dataset: sp-enw-lct-low-carbon-technology-readiness-checker, category: lct, cadence: 7d, large: true, note: "2.1M per-property rows (UPRNs, personal-data-adjacent); property -> LV substation lookup"}
+  - {<<: *enw, id: enw_dfes_primary, dataset: dfes-2023-primary-data0, category: dfes, cadence: 7d, gated: true, note: "id says 2023, content is 2026 release"}
+  - {<<: *enw, id: enw_flex_monthly_tender, dataset: sp-enw-flexibility-monthly-tender-site-requirements, category: flex, cadence: 7d, format: geojson}
+  - {<<: *enw, id: enw_flex_historical_tender, dataset: enwl-historical-flexibility-tender-site-requirements, category: flex, cadence: 30d, gated: true, format: geojson, note: "site_number + substation_name: used to name ENW number-only sites"}
+  - {<<: *enw, id: enw_live_incidents, dataset: live_incidents, category: outage, cadence: 15m, gated: true}
+  - {<<: *enw, id: enw_live_neo, dataset: sp-enw-live-neop, category: outage, cadence: 15m, gated: true, note: "NEO format, shared licence"}
+
+  # ---------------------------------------------------------------- SPEN
+  - {<<: *spen, id: spen_heatmap_spd, dataset: distribution-capacity-heatmaps-spd, category: headroom, cadence: 1d, gated: true}
+  - {<<: *spen, id: spen_heatmap_spm, dataset: distribution-capacity-heatmaps-spm, category: headroom, cadence: 1d, gated: true}
+  - {<<: *spen, id: spen_transmission_gen_heatmap, dataset: transmission-generation-heat-map0, category: headroom, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_polygons_spd, dataset: polygon_spd, category: boundary, cadence: 7d, gated: true, format: geojson}
+  - {<<: *spen, id: spen_polygons_spm, dataset: polygon_spm, category: boundary, cadence: 7d, gated: true, format: geojson}
+  - {<<: *spen, id: spen_dfes_polygons_spd_gsp, dataset: spd-dfes-substation-polygons-gsp, category: boundary, cadence: 7d, format: geojson}
+  - {<<: *spen, id: spen_dfes_polygons_spd_pss, dataset: spd-dfes-substation-polygons-pss, category: boundary, cadence: 7d, format: geojson}
+  - {<<: *spen, id: spen_dfes_polygons_spm_gsp, dataset: spm-dfes-substation-polygons-gsp, category: boundary, cadence: 7d, format: geojson}
+  - {<<: *spen, id: spen_dfes_polygons_spm_pss, dataset: spm-dfes-substation-polygons-pss, category: boundary, cadence: 7d, format: geojson}
+  - {<<: *spen, id: spen_dfes_polygons_spm_grid_group, dataset: spm-dfes-substation-polygons-grid-group, category: boundary, cadence: 7d, format: geojson}
+  - {<<: *spen, id: spen_naming_spd, dataset: spd-substation-naming-reference-table, category: sites, cadence: 7d, gated: true, note: "name crosswalk across datasets"}
+  - {<<: *spen, id: spen_naming_spm, dataset: spm-substation-naming-reference-table, category: sites, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_ltds_fault_spd, dataset: spd-ltds-appendix-4-fault-levels-table-4, category: ltds_fault, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_ltds_fault_spm_132kv_3ph, dataset: spm-ltds-appendix-4-fault-levels-table-4-132kv-3ph, category: ltds_fault, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_ltds_fault_spm_132kv_1ph, dataset: spm-ltds-appendix-4-fault-levels-table-4-132kv-1ph, category: ltds_fault, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_ltds_fault_spm_33kv_3ph, dataset: spm-ltds-appendix-4-fault-levels-table-4-33kv-3ph, category: ltds_fault, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_ltds_fault_spm_hv, dataset: spm-ltds-appendix-4-fault-levels-table-4-hv, category: ltds_fault, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_ltds_transformers_spd, dataset: spd-ltds-appendix-2-transformer-data-table-2, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_ltds_loads_spd, dataset: spd-ltds-appendix-3-system-loads-table-3, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_ltds_connection_activity_spd, dataset: spd-ltds-appendix-6-connection-activity-table-6, category: ltds_other, cadence: 7d}
+  - {<<: *spen, id: spen_historic_utilisation_spd, dataset: historic_substation_utilisation_spd, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_historic_utilisation_spm, dataset: historic_substation_utilisation_spm, category: ltds_other, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_ecr_1mw_plus, dataset: embedded-capacity-register, category: ecr, cadence: 1d, gated: true}
+  - {<<: *spen, id: spen_ecr_50kw_1mw, dataset: embedded-capacity-register-50kv-1mw, category: ecr, cadence: 1d, note: "coordinates rounded to 1 km, ~49% missing; do not use for site matching"}
+  - {<<: *spen, id: spen_queue_gsp_position, dataset: gsp-queue-position, category: queue, cadence: 1d, gated: true}
+  - {<<: *spen, id: spen_lv_monitor, dataset: lv_monitor, category: lv_usage, cadence: 7d, gated: true, large: true, note: "105k monthly rows per transformer; secondary utilisation"}
+  - {<<: *spen, id: spen_smart_meter_transformer, dataset: smart-meter-penetration-by-transformer-level, category: lv_usage, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_customer_connections_lv_tx, dataset: customer_connections_profile_lv_transformer, category: lv_usage, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_feeder_utilisation_spd, dataset: spd-historic-feeder-utilisation, category: lv_usage, cadence: 7d}
+  - {<<: *spen, id: spen_feeder_utilisation_spm, dataset: historic-feeder-utilisation-spm, category: lv_usage, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_lct_spd, dataset: lct-connections-data-spd, category: lct, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_lct_spm, dataset: lct-connections-data-spm, category: lct, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_dfes_site_forecasts_spd, dataset: spd-dfes-site-forecasts, category: dfes, cadence: 7d, gated: true, large: true, note: "554k rows long format"}
+  - {<<: *spen, id: spen_dfes_site_forecasts_spm, dataset: spm-dfes-site-forecasts, category: dfes, cadence: 7d, gated: true, large: true, note: "430k rows long format"}
+  - {<<: *spen, id: spen_ndp_headroom_spd, dataset: spd-nshr-data-workbook, category: dfes, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_ndp_headroom_spm, dataset: spm-nshr-data-workbook, category: dfes, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_live_outages, dataset: distribution-network-live-outages, category: outage, cadence: 5m, gated: true}
+  - {<<: *spen, id: spen_neo_outages, dataset: national-energy-outage-data, category: outage, cadence: 5m, gated: true}
+  - {<<: *spen, id: spen_flex_heatmap_spd, dataset: spd-heat-map-flexibility, category: flex, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_flex_heatmap_spm, dataset: spm-heat-map-flexibility, category: flex, cadence: 7d, gated: true}
+  - {<<: *spen, id: spen_flex_polygons_spm_piclo, dataset: flexibility_substation_polygons_spm-piclo, category: flex, cadence: 7d, format: geojson}
+
+  # ---------------------------------------------------------------- NGED (CKAN)
+  - {<<: *nged, id: nged_ltds_heatmap, dataset: ltds-capacity-heatmap, category: headroom, cadence: 1d, select: {format: JSON}, note: "JSON per licence area; mRID joins CIM substation numbers"}
+  - {<<: *nged, id: nged_network_capacity_map, dataset: nged-network-capacity, category: headroom, cadence: 1d, gated: true, select: {format: CSV}}
+  - {<<: *nged, id: nged_network_opportunity_map, dataset: network-opportunity-map-headroom, category: headroom, cadence: 1d, gated: true, select: {format: CSV}}
+  - {<<: *nged, id: nged_primary_locations, dataset: primary-substation-location-easting-northings, category: sites, cadence: 7d, gated: true, select: {format: CSV}}
+  - {<<: *nged, id: nged_ltds_fault_levels, dataset: ltds-tabular-model, category: ltds_fault, cadence: 7d, select: {format: CSV, name_regex: "fault"}}
+  - {<<: *nged, id: nged_ltds_tables_other, dataset: ltds-tabular-model, category: ltds_other, cadence: 7d, select: {format: CSV, name_regex: "^(?!.*fault)"}}
+  - {<<: *nged, id: nged_ltds_cim_substation_numbers, dataset: ltds-common-information-model, category: ltds_other, cadence: 7d, select: {format: CSV, name_regex: "Substation Numbers"}}
+  - {<<: *nged, id: nged_gsp_technical_limits, dataset: gsp-technical-limits, category: ltds_other, cadence: 7d, gated: true, select: {format: CSV}}
+  - {<<: *nged, id: nged_ecr, dataset: embedded-capacity-register, category: ecr, cadence: 1d, select: {format: CSV, latest: true}, note: "latest monthly file; 1353 rows have bad eastings, validate per row"}
+  - {<<: *nged, id: nged_generation_capacity_register, dataset: generation-capacity-register, category: ecr, cadence: 1d, gated: true, select: {format: CSV}}
+  - {<<: *nged, id: nged_queue, dataset: connection-queue, category: queue, cadence: 1d, select: {format: CSV}, note: "one CSV per GSP group"}
+  - {<<: *nged, id: nged_connections_reform_register, dataset: nged-connections-reform-register, category: queue, cadence: 1d, select: {format: CSV}, note: "3 title lines before header"}
+  - {<<: *nged, id: nged_distribution_substations, dataset: distribution-substations, category: lv_sites, cadence: 7d, gated: true, select: {format: CSV}}
+  - {<<: *nged, id: nged_distribution_substation_locations, dataset: distribution-substation-location-easting-northings, category: lv_sites, cadence: 7d, gated: true, select: {format: CSV}}
+  - {<<: *nged, id: nged_substation_loading_details, dataset: substation-loading-details, category: lv_usage, cadence: 7d, note: "formats say CSV but urls are .zip; inspect before parsing"}
+  - {<<: *nged, id: nged_smart_meter_lv_feeder, dataset: aggregated-smart-meter-data-lv-feeder, category: lv_usage, cadence: 7d, gated: true, large: true, note: "4.7k gz parts, tens of GB"}
+  - {<<: *nged, id: nged_smart_meter_secondary, dataset: aggregated-smart-meter-data-secondary-substation, category: lv_usage, cadence: 7d, gated: true, large: true}
+  - {<<: *nged, id: nged_lct_connections, dataset: lct-connections, category: lct, cadence: 7d, gated: true, select: {format: CSV}}
+  - {<<: *nged, id: nged_dfes, dataset: dfes, category: dfes, cadence: 7d, select: {name_regex: "Profile Splits|Energy Projections|Annual Scaling"}, note: "small DFES CSVs only; 124 MB local-authority file excluded"}
+  - {<<: *nged, id: nged_spatial_areas, dataset: spatial-datasets, category: boundary, cadence: 7d, gated: true, note: "GPKG supply areas, 16 of 17 registered"}
+  - {<<: *nged, id: nged_live_power_cuts, dataset: live-power-cuts, category: outage, cadence: 5m, select: {format: CSV}}
+  - {<<: *nged, id: nged_live_area_data, dataset: live-data, category: live_national, cadence: 5m, select: {format: CSV}, note: "area-level demand/generation, 5-minute rows"}
+
+  # ---------------------------------------------------------------- SSEN distribution (CKAN behind 403; gated until account/key sorted)
+  - {<<: *ssen, id: ssen_headroom, dataset: generation-availability-and-network-capacity, category: headroom, cadence: 1d, select: {format: CSV, name_regex: "Headroom Dashboard Data", latest: true}}
+  - {<<: *ssen, id: ssen_ltds_sepd, dataset: sepd_long_term_development_statement, category: ltds_other, cadence: 7d, select: {format: JSON}, note: "capacity heatmap JSON; LTDS tables are XLSX/ZIP"}
+  - {<<: *ssen, id: ssen_ltds_shepd, dataset: shepd_long_term_development_statement, category: ltds_other, cadence: 7d, select: {format: JSON}}
+  - {<<: *ssen, id: ssen_substation_data, dataset: ssen-substation-data, category: lv_sites, cadence: 7d, select: {format: CSV}, note: "weekly, 18 MB CSV; sites incl. secondary"}
+  - {<<: *ssen, id: ssen_primary_supply_areas, dataset: primary-supply-areas, category: boundary, cadence: 7d, select: {format: GeoJSON}}
+  - {<<: *ssen, id: ssen_bsp_gsp_supply_areas, dataset: bsp-gsp-supply-areas, category: boundary, cadence: 7d, select: {format: GeoJSON}}
+  - {<<: *ssen, id: ssen_secondary_supply_areas, dataset: secondary-supply-areas, category: boundary, cadence: 7d, large: true, select: {format: GeoJSON}, note: "68-100 MB GeoJSON per licence area"}
+  - {<<: *ssen, id: ssen_ecr, dataset: embedded_capacity_register, category: ecr, cadence: 1d, select: {format: CSV, name_regex: "SSEN ECR Part 1", latest: true}}
+  - {<<: *ssen, id: ssen_ecr_1mw, dataset: embedded_capacity_register, category: ecr, cadence: 1d, select: {format: CSV, name_regex: "SSEN ECR Part 1 - ?1 ?MW", latest: true}, note: "Part 1 >=1 MW (ssen_ecr is the 50kW-1MW file)"}
+  - {<<: *ssen, id: ssen_queue, dataset: ssen-connections-reform-queue, category: queue, cadence: 1d, select: {format: XLSX}, note: "XLSX only"}
+  - {<<: *ssen, id: ssen_smart_meter_lv_feeder, dataset: ssen_smart_meter_prod_lv_feeder, category: lv_usage, cadence: 7d, large: true, note: "full data is GraphQL, not files"}
+  - {<<: *ssen, id: ssen_dfes, dataset: low_carbon_technologies, category: dfes, cadence: 7d, select: {format: CSV}, note: "mostly XLSX; CSV is local-authority level"}
+  - {id: ssen_powertrack_faults, operator: SSEN, portal: http, base_url: "https://external.distribution.prd.ssen.co.uk/opendataportal-prd/v4/api/getallfaults", format: json, rows_path: faults, as_of_path: timestampUtc, category: outage, cadence: 5m, licence: "CC BY 4.0", attribution: "Contains data from the SSEN Distribution PowerTrack open data API, licensed under CC BY 4.0.", note: "anonymous JSON; primaryNrn/transformerNrn/lvFeederNrn are potential join keys"}
+
+  # ---------------------------------------------------------------- SSEN Transmission (ODS)
+  - {<<: *ssent, id: ssent_etys_fault_levels_winter_y1, dataset: etys-25-year-01-202526-ssen-transmission-fault-levels-winter, category: ltds_fault, cadence: 7d, note: "site names only, no coordinates"}
+  - {<<: *ssent, id: ssent_etys_substation_codes, dataset: etys-25-ssen-transmission-index-of-substation-codes, category: sites, cadence: 7d}
+  - {<<: *ssent, id: ssent_etys_transformers, dataset: etys-25-202526-ssen-transmission-transformers, category: ltds_other, cadence: 7d}
+  - {<<: *ssent, id: ssent_etys_circuits, dataset: etys-25-202526-ssen-transmission-circuits, category: ltds_other, cadence: 7d}
+  - {<<: *ssent, id: ssent_sites_supergrid, dataset: ssen-transmission-substation-site-supergrid, category: sites, cadence: 7d, gated: true, format: geojson}
+  - {<<: *ssent, id: ssent_sites_grid, dataset: ssen-transmission-substation-site-grid, category: sites, cadence: 7d, gated: true, format: geojson}
+  - {<<: *ssent, id: ssent_tec_register, dataset: ssen-transmission-tec-transmission-entry-capacity-register, category: tec, cadence: 7d, gated: true}
+  - {<<: *ssent, id: ssent_embedded_register, dataset: ssen-transmission-embedded-register, category: tec, cadence: 7d, gated: true}
+  - {<<: *ssent, id: ssent_interconnector_register, dataset: ssen-transmission-interconnector-register, category: tec, cadence: 7d, gated: true}
+
+  # ---------------------------------------------------------------- NESO (CKAN, keyless)
+  - {<<: *neso, id: neso_tec_register, dataset: transmission-entry-capacity-tec-register, category: tec, cadence: 1d, select: {format: CSV, latest: true}, note: "no coordinates; Connection Site is free text"}
+  - {<<: *neso, id: neso_embedded_register, dataset: embedded-register, category: tec, cadence: 1d, select: {format: CSV, latest: true}, note: "Scotland-only embedded register, NOT a GB ECR"}
+  - {<<: *neso, id: neso_interconnector_register, dataset: interconnector-register, category: tec, cadence: 1d, select: {format: CSV, latest: true}}
+  - {<<: *neso, id: neso_gsp_regions, dataset: gis-boundaries-for-gb-grid-supply-points, category: boundary, cadence: 7d, select: {name_regex: "gsp_regions_\\d+\\.zip", latest: true}, note: "zip with Proj_4326 and Proj_27700 geojson+gpkg; region ids change between versions"}
+  - {<<: *neso, id: neso_dno_licence_areas, dataset: gis-boundaries-for-gb-dno-license-areas, category: boundary, cadence: 7d, select: {format: GeoJSON, latest: true}}
+  - {<<: *neso, id: neso_fes_gsp_info, dataset: regional-breakdown-of-fes-data-electricity, category: dfes, cadence: 7d, select: {name_regex: "Grid Supply Point Info", latest: true}, note: "FES 2024 GSP points, 3 dp"}
+  - {<<: *neso, id: neso_historic_generation_mix, dataset: historic-generation-mix, category: live_national, cadence: 1d, mode: datastore, large: true, select: {name_regex: "generation mix"}, note: "312k half-hourly rows; sort by DATETIME desc for latest"}
+  - {<<: *neso, id: neso_regional_carbon_forecast, dataset: regional-carbon-intensity-forecast, category: live_national, cadence: 1d, mode: datastore, large: true, note: "136k rows"}
+
+  # ---------------------------------------------------------------- Elexon BMRS (keyless)
+  - {<<: *elexon, id: elexon_fuelinst, path: datasets/FUELINST, params: {format: json}, category: live_national, cadence: 5m}
+  - {<<: *elexon, id: elexon_outturn_current, path: generation/outturn/current, params: {format: json}, category: live_national, cadence: 5m}
+  - {<<: *elexon, id: elexon_demand_outturn, path: demand/outturn/summary, params: {format: json}, category: live_national, cadence: 5m}
+  - {<<: *elexon, id: elexon_frequency, path: datasets/FREQ, params: {format: json, measurementDateTimeFrom: "{now-15m}", measurementDateTimeTo: "{now}"}, category: live_national, cadence: 5m, note: "15 s samples, last ~15 min (window expanded at fetch time); without a window the API returns a stale day ending 00:00Z"}
+
+  # ---------------------------------------------------------------- Carbon Intensity (keyless)
+  - {<<: *carbon, id: carbon_regional, path: regional, category: live_national, cadence: 30m, note: "14 DNO regions + aggregates, not GSP level"}
+  - {<<: *carbon, id: carbon_generation, path: generation, category: live_national, cadence: 30m}

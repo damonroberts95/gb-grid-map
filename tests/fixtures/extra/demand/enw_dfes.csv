@@ -1,0 +1,7 @@
+group;dso_pry_number_alias;scenario;year;energy_demand_minimum_demand_mva;energy_demand_maximum_demand_mva;energy_demand_domestic_mwh;energy_demand_non_domestic_mwh;energy_demand_connection_mwh;energy_demand_total_consumption_excl_connection_mwh;energy_demand_electrolyser_mwh;energy_demand_district_heating_domestic_mwh;energy_demand_district_heating_non_domestic_mwh;flexibility_maximum_service_requirements_mw;flexibility_service_requirements_mwh;installed_capacity_battery_storage_mw;installed_capacity_generation_mw;uptake_electric_vehicle_unit_count;uptake_heat_pump_domestic_unit_count;uptake_heat_pump_non_domestic_unit_count
+PRIMARY SUBSTATION;100108;2-HOLISTIC_TRANSITION;2025;3.7;14.0;32747.12;26311.84;0.0;64752.95;0.0;5.12;32.05;0.0;0.0;0.08;2.26;1438.07;70.3;18.06
+PRIMARY SUBSTATION;200417;2-HOLISTIC_TRANSITION;2025;3.98;13.62;22225.56;50923.82;0.0;76634.94;0.0;22.45;59.92;0.0;0.0;0.07;35.36;835.68;78.7;10.16
+PRIMARY SUBSTATION;100644;2-HOLISTIC_TRANSITION;2025;2.49;11.23;19489.48;26831.6;0.0;48202.2;0.0;2.23;4.26;0.0;0.0;0.02;0.21;177.41;226.45;9.88
+PRIMARY SUBSTATION;200417;2-HOLISTIC_TRANSITION;2035;7.19;19.65;19065.42;48797.72;5073.92;114655.52;836.61;2331.26;6370.74;;;0.54;12.34;5594.33;725.82;37.39
+PRIMARY SUBSTATION;100644;2-HOLISTIC_TRANSITION;2035;3.48;18.42;27042.27;27104.62;18943.0;77355.71;237.84;10.42;26.12;;;0.13;0.9;881.42;544.66;52.98
+PRIMARY SUBSTATION;100108;2-HOLISTIC_TRANSITION;2035;5.06;17.63;28503.07;25380.97;1312.46;89623.37;83.3;1386.25;9105.25;;;0.58;4.99;8831.8;624.06;65.54

@@ -1,0 +1,36 @@
+# Live (<= 1 h) sources for the live_* extras. YAML anchors are per file, so the shared defaults are repeated here.
+# Freshness measured 2026-11-12 (see docs/sources/live.md): NGED GSP/area 5-min (latest row ~6 min old), UKPN SGT header
+# 30-min (~15 min), Elexon PN per-minute (current), PV_Live 30-min (~17 min). NPG operational flows lag 75-135 min and
+# SPEN network-flow datasets lag 4+ days: both are NOT registered as live. NeRDA (SSEN) is key-gated: see docs/sources/live.md.
+defaults:
+  ukpn: &ukpn {operator: UKPN, portal: opendatasoft, base_url: "https://ukpowernetworks.opendatasoft.com", auth_env: UKPN_API_KEY, licence: "CC BY 4.0", attribution: "Contains data from the UK Power Networks Open Data Portal, licensed under CC BY 4.0."}
+  nged: &nged {operator: NGED, portal: ckan, base_url: "https://connecteddata.nationalgrid.co.uk", auth_env: NGED_API_KEY, licence: "NGED (WPD) Open Data Licence", attribution: "Contains data (c) National Grid Electricity Distribution, used under the NGED (WPD) Open Data Licence."}
+  elexon: &elexon {operator: ELEXON, portal: http, base_url: "https://data.elexon.co.uk/bmrs/api/v1", format: json, licence: "BSC open licence (Elexon)", attribution: "Contains BMRS data (c) Elexon Limited copyright and database right."}
+  pvlive: &pvlive {operator: OTHER, portal: http, base_url: "https://api.pvlive.uk/pvlive/api/v4", format: json, rows_path: data, category: live_national, cadence: 15m, licence: "Sheffield Solar PV_Live terms (api.pvlive.uk)", attribution: "PV_Live solar generation estimates, Sheffield Solar, University of Sheffield (api.pvlive.uk)."}
+
+sources:
+  # UKPN grid-transformer flows aggregated per GSP (194 rows = GSP x SGT incl. AGGREGATE; 30-min). Needs UKPN key (anonymous export is header-only).
+  - {<<: *ukpn, id: ukpn_sgt_live, dataset: ukpn-super-grid-transformer-header, category: live_national, cadence: 10m, gated: true, note: "live GSP active/reactive power, half-hourly"}
+  # NGED live per-GSP demand/generation/solar/wind, 5-minute rows (one CSV per GSP, 55 files across 4 licence areas; public).
+  - {<<: *nged, id: nged_live_gsp_east_midlands, dataset: live-gsp-data-east-midlands, category: live_national, cadence: 10m, select: {format: CSV}, note: "East Midlands per-GSP 5-minute rows; one CSV per GSP"}
+  - {<<: *nged, id: nged_live_gsp_south_wales, dataset: live-gsp-data-south-wales, category: live_national, cadence: 10m, select: {format: CSV}, note: "South Wales per-GSP 5-minute rows; one CSV per GSP"}
+  - {<<: *nged, id: nged_live_gsp_south_west, dataset: live-gsp-data-south-west, category: live_national, cadence: 10m, select: {format: CSV}, note: "South West per-GSP 5-minute rows; one CSV per GSP"}
+  - {<<: *nged, id: nged_live_gsp_west_midlands, dataset: live-gsp-data-west-midlands, category: live_national, cadence: 10m, select: {format: CSV}, note: "West Midlands per-GSP 5-minute rows; one CSV per GSP"}
+  # Elexon: Physical Notifications (planned output) of every BM unit for the current minute, and the BM unit reference list.
+  - {<<: *elexon, id: elexon_pn_now, path: datasets/PN/stream, params: {from: "{now-5m}", to: "{now}"}, category: live_national, cadence: 15m, note: "~570 KB, ~2,500 BM units; PN is notified plan, not metered output"}
+  - {<<: *elexon, id: elexon_bmunits, path: reference/bmunits/all, category: live_national, cadence: 7d, note: "2 MB; fuelType, generationCapacity, gspGroup, lead party; no coordinates"}
+  # Sheffield Solar PV_Live: PV generation per distribution region (PES id; no bulk GSP endpoint, per-GSP would be ~330 requests).
+  - {<<: *pvlive, id: pvlive_pes_10, path: pes/10, params: {extra_fields: installedcapacity_mwp}, note: "UKPN East"}
+  - {<<: *pvlive, id: pvlive_pes_11, path: pes/11, params: {extra_fields: installedcapacity_mwp}, note: "NGED East Midlands"}
+  - {<<: *pvlive, id: pvlive_pes_12, path: pes/12, params: {extra_fields: installedcapacity_mwp}, note: "UKPN London"}
+  - {<<: *pvlive, id: pvlive_pes_13, path: pes/13, params: {extra_fields: installedcapacity_mwp}, note: "SPEN Manweb"}
+  - {<<: *pvlive, id: pvlive_pes_14, path: pes/14, params: {extra_fields: installedcapacity_mwp}, note: "NGED West Midlands"}
+  - {<<: *pvlive, id: pvlive_pes_15, path: pes/15, params: {extra_fields: installedcapacity_mwp}, note: "NPG North East"}
+  - {<<: *pvlive, id: pvlive_pes_16, path: pes/16, params: {extra_fields: installedcapacity_mwp}, note: "ENW"}
+  - {<<: *pvlive, id: pvlive_pes_17, path: pes/17, params: {extra_fields: installedcapacity_mwp}, note: "SSEN North Scotland"}
+  - {<<: *pvlive, id: pvlive_pes_18, path: pes/18, params: {extra_fields: installedcapacity_mwp}, note: "SPEN Distribution"}
+  - {<<: *pvlive, id: pvlive_pes_19, path: pes/19, params: {extra_fields: installedcapacity_mwp}, note: "UKPN South East"}
+  - {<<: *pvlive, id: pvlive_pes_20, path: pes/20, params: {extra_fields: installedcapacity_mwp}, note: "SSEN Southern"}
+  - {<<: *pvlive, id: pvlive_pes_21, path: pes/21, params: {extra_fields: installedcapacity_mwp}, note: "NGED South Wales"}
+  - {<<: *pvlive, id: pvlive_pes_22, path: pes/22, params: {extra_fields: installedcapacity_mwp}, note: "NGED South West"}
+  - {<<: *pvlive, id: pvlive_pes_23, path: pes/23, params: {extra_fields: installedcapacity_mwp}, note: "NPG Yorkshire"}

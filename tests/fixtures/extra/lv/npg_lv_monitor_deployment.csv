@@ -1,0 +1,18 @@
+priority_number;substation_name;eam_site_asset_id;customer_numbers;utilisation;region;license_area;already_installed;reason_for_installation;geopoint
+5025.0;BEDFORD STREET;SITE-00248756;367.0;71.0;Tyne and Wear;Northeast;Installed;Transformer Utilisation;55.007217206319595, -1.4452172183679997
+5049.0;HAZELRIGG VILLAGE;SITE-00233019;503.0;71.0;Tyne and Wear;Northeast;Installed;Transformer Utilisation;
+5055.0;HYLTON DENE;SITE-00252109;250.0;71.0;Tyne and Wear;Northeast;Installed;Transformer Utilisation;54.91925366137004, -1.4453163650471847
+5073.0;PRESTON HALL STOCKTON;SITE-00250809;120.0;71.0;Teesside;Northeast;Installed;Transformer Utilisation;54.54046369615061, -1.3378182655717865
+5074.0;PROSPECT MOUNT;SITE-00246508;257.0;71.0;Yorkshire Moors & Wolds NE;Northeast;Installed;Transformer Utilisation;54.28392894744166, -0.4288179345672554
+5087.0;VICTORIA ROAD (GAT);SITE-00248528;290.0;71.0;Tyne and Wear;Northeast;Installed;Transformer Utilisation;54.97451979506536, -1.5064238801937826
+5089.0;WINDLESTONE VILLAGE;SITE-00229361;207.0;71.0;Teesside;Northeast;Installed;IDNO;54.659481990109995, -1.5582652784183868
+5094.0;BANK ROW LANE 672;SITE-00279482;106.0;70.0;West Yorkshire;Yorkshire;Installed;Transformer Utilisation;53.65729561636053, -1.730881077615415
+5001.0;VICTORIA ROAD MORLEY 2822;SITE-00278135;192.0;71.0;West Yorkshire;Yorkshire;In Pipeline;Transformer Utilisation;53.75236096859087, -1.601211290102547
+5006.0;WAWNE HOUSING 4459;SITE-00285824;111.0;71.0;Humber Estuary;Yorkshire;In Pipeline;Transformer Utilisation;53.817941275139056, -0.34330191999776927
+5017.0;ADA STREET;SITE-00228653;426.0;71.0;Tyne and Wear;Northeast;In Pipeline;Transformer Utilisation;54.8146548519288, -1.3827510576776425
+5019.0;ASTON DRIVE;SITE-00253617;240.0;71.0;Teesside;Northeast;In Pipeline;Transformer Utilisation;54.534695956619196, -1.3073843314315108
+5020.0;AYCLIFFE GREENWELL;SITE-00231706;196.0;71.0;Teesside;Northeast;In Pipeline;Transformer Utilisation;54.62082493209412, -1.5720576802135988
+5023.0;BEDALE (T3);SITE-00238574;123.0;71.0;;Northeast;In Pipeline;Transformer Utilisation;
+5027.0;BENSHAM HEIGHTS;SITE-00242703;404.0;71.0;Tyne and Wear;Northeast;In Pipeline;Transformer Utilisation;54.95870942557453, -1.611575683822518
+5034.0;BULLION LANE;SITE-00234335;212.0;71.0;Tyne and Wear;Northeast;In Pipeline;Transformer Utilisation;54.85437254347458, -1.5857381572494422
+5023.0;BEDALE (T3);SITE-00238574;123.0;71.0;;Northeast;In Pipeline;Transformer Utilisation;

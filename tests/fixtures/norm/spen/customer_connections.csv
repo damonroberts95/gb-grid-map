@@ -1,0 +1,12 @@
+secondary_transformer_id;licence_area;residential_import;residential_export;non_residential_import_ehv;non_residential_export_ehv;non_residential_import_hv;non_residential_export_hv;non_residential_import_lv;non_residential_export_lv;primary_substation_name
+10616169;SPM;Not Applicable;Not Applicable;0.0;0.0;0.0;0.0;0.0;0.0;09/2128/005/E-LLANSILIN
+10925999;SPD;14;Not Applicable;0.0;0.0;0.0;0.0;1.0;0.0;KILMARNOCK 33/11 KV
+11159930;SPD;88;Not Applicable;0.0;0.0;0.0;0.0;9.0;0.0;COLINSBURGH PRIMARY
+11160003;SPM;8;Not Applicable;0.0;0.0;0.0;0.0;0.0;0.0;10/5981/005/E-U C WALES
+11160126;SPM;6;Not Applicable;0.0;0.0;0.0;0.0;12.0;0.0;06/4951/001/E-DUCKINGTON
+10615810;SPM;469;Not Applicable;0.0;0.0;0.0;0.0;43.0;0.0;02/3589/030/E-GRANBY
+10925822;SPM;7;Not Applicable;0.0;0.0;1.0;0.0;0.0;0.0;PS-SJ4084/014 GARSTON
+11160207;SPD;9;Not Applicable;0.0;0.0;0.0;0.0;0.0;0.0;MILLIKEN PRIMARY
+10019562;SPD;149;Not Applicable;0.0;0.0;0.0;0.0;1.0;0.0;RALSTON PRIMARY
+10019564;SPD;33;Not Applicable;0.0;0.0;0.0;0.0;0.0;0.0;HECLA AVE 55
+10019576;SPD;164;Not Applicable;0.0;0.0;0.0;0.0;8.0;0.0;PS-NS5168/001 YOKER FERRY RD

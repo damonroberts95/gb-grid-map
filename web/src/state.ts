@@ -1,0 +1,74 @@
+// UI state, mirrored into the URL hash so a reload keeps the view.
+
+import { hashGet, hashSet } from './dom'
+
+export type Mode = 'gen' | 'dem'
+export const OPERATORS = ['UKPN', 'NPG', 'ENW', 'SPEN', 'NGED', 'SSEN'] as const
+export const THRESHOLDS = [1, 2, 5, 10, 20] as const
+
+export interface State {
+  mode: Mode
+  thr: number // MW: headroom at/above = green
+  ops: string[]
+  kinds: number[] // 1 GSP, 2 BSP, 3 PRIMARY
+  lv: boolean
+  links: boolean
+  outages: boolean
+  neso: boolean
+  simple: boolean // 'LV monitoring' mode: only monitored LV substations
+  mounts: string[] // g ground, p pole, u unknown
+}
+
+const DEFAULT: State = {
+  mode: 'dem', thr: 5, ops: [...OPERATORS], kinds: [1, 2, 3],
+  lv: true, links: false, outages: true, neso: true, simple: false, mounts: ['g', 'p', 'u'],
+}
+
+type Listener = (s: State) => void
+const listeners: Listener[] = []
+export let state: State = load()
+
+export function set(patch: Partial<State>) {
+  state = { ...state, ...patch }
+  save()
+  for (const l of listeners) l(state)
+}
+
+/** Back to the default filters/mode (layers + map position are reset by their owners). */
+export function reset() {
+  set({ ...DEFAULT })
+}
+
+export function onChange(l: Listener) {
+  listeners.push(l)
+}
+
+function save() {
+  hashSet({
+    m: state.mode, t: String(state.thr), o: state.ops.join(','), k: state.kinds.join(','),
+    l: [state.lv && 'lv', state.links && 'links', state.outages && 'out', state.neso && 'neso'].filter(Boolean).join(','),
+    s: state.simple ? '1' : '0', mt: state.mounts.join(','),
+  })
+}
+
+function load(): State {
+  const p = { get: hashGet, has: (k: string) => hashGet(k) !== null }
+  // partial hashes (e.g. a shared '#s=1' link) override just those keys
+  if (!p.has('m')) return { ...DEFAULT, simple: p.get('s') === '1' }
+  const layers = (p.get('l') ?? '').split(',')
+  const thr = Number(p.get('t'))
+  return {
+    mode: p.get('m') === 'gen' ? 'gen' : 'dem',
+    thr: THRESHOLDS.includes(thr as (typeof THRESHOLDS)[number]) ? thr : DEFAULT.thr,
+    ops: (p.get('o') ?? '').split(',').filter((o) => (OPERATORS as readonly string[]).includes(o)),
+    kinds: (p.get('k') ?? '').split(',').map(Number).filter((k) => [1, 2, 3].includes(k)),
+    lv: layers.includes('lv'),
+    links: layers.includes('links'),
+    outages: layers.includes('out'),
+    neso: layers.includes('neso'),
+    simple: p.get('s') === '1',
+    mounts: p.get('mt') !== null ? (p.get('mt') ?? '').split(',').filter((m) => ['g', 'p', 'u'].includes(m)) : ['g', 'p', 'u'],
+  }
+}
+
+// Map position lives in the same hash (MapLibre `hash: 'map'` option).

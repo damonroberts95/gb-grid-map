@@ -1,0 +1,21 @@
+﻿grid_supply_point;bulk_supply_point;primary_substation;connection_voltage_kv;installed_capacity_mva;fuel_type;connected_accepted;region
+Blyth 132kV;Linton;Denwick;20.0;1.0;Stored Energy (all stored energy irrespective of the original energy source);Accepted;Northeast
+Blyth 132kV;Linton;Linton 66/20kV;20.0;2.0;Other;Connected;Northeast
+Blyth 132kV;Linton;Middlemoor Windfarm;66.0;54.15;Wind;Connected;Northeast
+Blyth 66kV;Blyth 66kV;Ashington;11.0;1.31;Waste;Connected;Northeast
+Blyth 66kV;Blyth 66kV;Ashington;11.0;3.24;Wind;Connected;Northeast
+Blyth 66kV;Blyth 66kV;Blyth Offshore Windfarm;66.0;41.5;Wind;Connected;Northeast
+Blyth 66kV;Blyth 66kV;Broadway House Farm PV;66.0;50.0;Solar;Accepted;Northeast
+Blyth 66kV;Blyth 66kV;Broadway House PV;66.0;9.9;Solar;Accepted;Northeast
+Blyth 66kV;Blyth 66kV;Burnt House;66.0;42.24;Solar;Accepted;Northeast
+Blyth 66kV;Blyth 66kV;Cramlington Biomass;33.0;31.666;Biomass;Connected;Northeast
+Blyth 66kV;Blyth 66kV;Fawdon/Seaton Burn;20.0;2.2;Waste;Connected;Northeast
+Blyth 66kV;Blyth 66kV;Morpeth;20.0;1.373;Solar;Accepted;Northeast
+Fourstones 20kV;Fourstones 20kV;Fourstones 20kV Direct;11.0;1.36;Fossil - Oil;Connected;Northeast
+Fourstones 20kV;Fourstones 20kV;Fourstones 20kV Direct;20.0;36.0;Wind;Connected;Northeast
+Fourstones 33kV;Fourstones 33kV;Ray Fell Windfarm;33.0;20.0;Stored Energy (all stored energy irrespective of the original energy source);Connected;Northeast
+Hartmoor;Hartmoor;Amberton Road;11.0;2.55;Fossil - Gas;Connected;Northeast
+Hartmoor;Hartmoor;Amberton Road;11.0;1.488;Solar;Accepted;Northeast
+Hartmoor;Hartmoor;Greatham Hybrid;66.0;49.5;Solar;Accepted;Northeast
+Hartmoor;Hartmoor;Greatham Hybrid;66.0;49.5;Stored Energy (all stored energy irrespective of the original energy source);Accepted;Northeast
+Hartmoor;Hartmoor;Harehill Farm Hybrid;66.0;10.35;Stored Energy (all stored energy irrespective of the original energy source);Accepted;Northeast

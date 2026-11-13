@@ -1,0 +1,4 @@
+dataset;license_area;site_name;site_functional_location;site_type;site_voltage;site_street;site_town_city;site_county;site_postcode;site_longitude_x_irish_grid;site_latitude_y_irish_grid;site_geopoint;lad_name;lad_code
+Grid Supply Points;NIE;TEST GSP;NI-1;Grid Supply Point;275kV;;Belfast;Antrim;BT1 1AA;333800;374000;54.6,-5.93;Belfast;N09000003
+Primary Substations;NIE;TEST PRIMARY;NI-2;Primary Substation;33kV;;Derry;Londonderry;BT48 1AA;243000;416000;;Derry;N09000005
+Primary Substations;NIE;BAD COORDS;NI-3;Primary Substation;33kV;;X;;;0;0;0,0;X;X

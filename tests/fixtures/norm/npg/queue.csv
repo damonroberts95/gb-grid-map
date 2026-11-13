@@ -1,0 +1,7 @@
+row_number;gsp;licence_area;technology;export_capacity;queue_position;transmission_gate;dno_acceptance_date;final_queue_rank;phase
+1.0;Borders Connection Node A;Northeast;Battery;40.0;0.0;Gate 1;2024-04-24;0.0;N/A
+3.0;Borders Connection Node B;Northeast;Battery;41.0;0.0;Gate 1;2023-08-18;0.0;N/A
+4.0;Borders Connection Node B;Northeast;Battery;90.0;0.0;Gate 1;2023-11-24;0.0;N/A
+6.0;Borders Connection Node B;Northeast;Battery;71.0;0.0;Gate 1;2024-04-16;0.0;N/A
+13.0;Creyke Beck;Yorkshire;Solar;100.0;0.0;Gate 1;2022-06-14;0.0;N/A
+14.0;Creyke Beck;Yorkshire;Solar;30.0;0.0;Gate 1;2022-09-25;0.0;N/A
