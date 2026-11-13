@@ -3,7 +3,7 @@
 import { Marker, type Map as MlMap } from 'maplibre-gl'
 import { api, type SearchHit } from './api'
 import { debounce, h } from './dom'
-import { clearExtras, extrasPanel } from './extras'
+import { clearExtras, enabledExtras, extraTitle, extrasPanel, onExtrasChange } from './extras'
 import { topbar } from './topbar'
 import { showHelp } from './help'
 import { term } from './glossary'
@@ -11,7 +11,7 @@ import { C, OP_COLOURS } from './layers'
 import { KIND_SHAPE, shapeSvg } from './shapes'
 import { OPERATORS, THRESHOLDS, set, state, onChange, type State } from './state'
 
-const KIND_LABEL: Record<number, string> = { 1: 'GSP', 2: 'BSP', 3: 'Primary' }
+const KIND_LABEL: Record<number, string> = { 1: 'GSP', 2: 'BSP', 3: 'Primary', 4: 'LV' }
 
 function seg<T extends string | number>(
   options: readonly T[], value: () => T, label: (v: T) => string, pick: (v: T) => void, cls = '',
@@ -58,7 +58,7 @@ function chips<T extends string | number>(options: readonly T[], selected: () =>
   return wrap
 }
 
-function toggle(key: keyof Pick<State, 'lv' | 'links' | 'outages' | 'neso'>, text: string, termKey: string) {
+function toggle(key: keyof Pick<State, 'links' | 'outages' | 'neso'>, text: string, termKey: string) {
   const input = h('input', { type: 'checkbox' }) as HTMLInputElement
   input.checked = state[key]
   input.addEventListener('change', () => set({ [key]: input.checked } as Partial<State>))
@@ -67,36 +67,53 @@ function toggle(key: keyof Pick<State, 'lv' | 'links' | 'outages' | 'neso'>, tex
 }
 
 /** The key: substation type (shape) is primary data, then headroom colour, then lines/markers. */
+/** Key: only what is on the map now. Rebuilds on filter, mode or layer changes. */
 function legend() {
   const box = h('section', { class: 'key', 'aria-label': 'Map key' })
   const row = (sw: Node, label: Node | string) => h('div', { class: 'key-row' }, h('span', { class: 'key-sw' }, sw), h('span', {}, label))
   const sq = (c: string) => h('i', { class: 'key-col', style: `background:${c}` })
-  const render = (s: State) => {
+  const block = (title: Node | string, ...rows: Node[]) => h('div', { class: 'key-block' }, h('div', { class: 'key-sub' }, title), ...rows)
+  const render = () => {
+    const s = state
+    const hv = !s.simple && s.kinds.some((k) => k <= 3)
+    const lv = s.simple || s.kinds.includes(4)
     const unit = s.mode === 'gen' ? 'MW' : 'MW/MVA'
-    box.replaceChildren(
-      h('div', { class: 'key-grid' },
-        h('div', {},
-          h('div', { class: 'key-sub' }, 'Substation type'),
-          row(shapeSvg(KIND_SHAPE[1], 'var(--muted)', 18), term('gsp', 'GSP')),
-          row(shapeSvg(KIND_SHAPE[2], 'var(--muted)', 16), term('bsp', 'BSP')),
-          row(shapeSvg(KIND_SHAPE[3], 'var(--muted)', 13), term('primary', 'Primary')),
-          row(h('i', { class: 'key-lv' }), term('lv', 'LV (zoom in)')),
-          row(shapeSvg('diamond-ring', 'none', 16), term('transmission_gsp', 'Transmission'))),
-        h('div', {},
-          h('div', { class: 'key-sub' }, term(s.mode === 'gen' ? 'gen_headroom' : 'dem_headroom',
-            s.mode === 'gen' ? 'Spare capacity (generation)' : 'Spare capacity (demand)')),
-          row(sq(C.green), `≥ ${s.thr} ${unit}`),
-          row(sq(C.amber), `0 – ${s.thr}`),
-          row(sq(C.red), 'none'),
-          row(sq(C.none), 'not published'),
-          h('div', { class: 'key-sub' }, 'Lines & markers'),
-          row(h('i', { class: 'key-line', style: `background:${C.hier}` }), term('parent', 'Feed path')),
-          row(h('i', { class: 'key-out' }), term('outage', 'Power cut')))),
-      ...(s.lv ? [h('div', { class: 'leg-note' }, 'LV dot colour = ', term('utilisation', 'utilisation'), ': green <60%, amber <85%, red ≥85%')] : []),
-    )
+    const blocks: Node[] = []
+    if (hv) {
+      blocks.push(block('Substations',
+        ...(s.kinds.includes(1) ? [row(shapeSvg(KIND_SHAPE[1], 'var(--muted)', 18), term('gsp', 'GSP'))] : []),
+        ...(s.kinds.includes(2) ? [row(shapeSvg(KIND_SHAPE[2], 'var(--muted)', 16), term('bsp', 'BSP'))] : []),
+        ...(s.kinds.includes(3) ? [row(shapeSvg(KIND_SHAPE[3], 'var(--muted)', 13), term('primary', 'Primary'))] : []),
+        ...(s.neso ? [row(shapeSvg('diamond-ring', 'none', 16), term('transmission_gsp', 'Transmission'))] : [])))
+      blocks.push(block(term(s.mode === 'gen' ? 'gen_headroom' : 'dem_headroom', s.mode === 'gen' ? 'Spare capacity (gen)' : 'Spare capacity (demand)'),
+        row(sq(C.green), `≥ ${s.thr} ${unit}`), row(sq(C.amber), `0 – ${s.thr}`), row(sq(C.red), 'None'), row(sq(C.none), 'Not published')))
+    }
+    if (lv) {
+      blocks.push(block(term('lv', s.simple ? 'Monitored LV' : 'LV substations'),
+        row(shapeSvg('square', 'var(--muted)', 12), 'Ground'),
+        row(shapeSvg('circle', 'var(--muted)', 12), 'Pole'),
+        row(shapeSvg('diamond', 'var(--muted)', 12), 'Mount unknown'),
+        ...(!s.simple ? [row(h('i', { class: 'key-ring' }), term('lv_monitored_note', 'Monitored'))] : [])))
+      blocks.push(block(term('utilisation', 'LV utilisation'),
+        row(sq(C.green), '< 60%'), row(sq(C.amber), '60 – 85%'), row(sq(C.red), '≥ 85%'), row(sq(C.none), 'Not published')))
+    }
+    const marks: Node[] = []
+    if (!s.simple && s.outages) marks.push(row(h('i', { class: 'key-out' }), term('outage', 'Power cut')))
+    if (!s.simple && s.links) marks.push(row(h('i', { class: 'key-line dashed' }), term('schematic', 'Feeds')))
+    marks.push(row(h('i', { class: 'key-line', style: `background:${C.hier}` }), term('parent', 'Feed path')))
+    blocks.push(block('Lines', ...marks))
+    for (const m of enabledExtras()) {
+      if (!m.legend.length || (s.simple && m.id !== 'dno_areas')) continue
+      blocks.push(block(extraTitle(m), ...m.legend.map(([a, b]) => {
+        const [c, t] = /^#|^rgb/.test(a) ? [a, b] : [b, a]
+        return row(sq(c), t)
+      })))
+    }
+    box.replaceChildren(h('div', { class: 'key-grid' }, ...blocks))
   }
-  render(state)
+  render()
   onChange(render)
+  onExtrasChange(render)
   return box
 }
 
@@ -178,24 +195,6 @@ function action(label: string, title: string, fn: () => void) {
   return h('button', { type: 'button', class: 'sec-btn', title, onclick: (e: Event) => { e.preventDefault(); e.stopPropagation(); fn() } }, label)
 }
 
-/** Key for LV monitoring mode: mount type = shape, colour = utilisation. */
-function lvKey() {
-  const row = (sw: Node, label: Node | string) => h('div', { class: 'key-row' }, h('span', { class: 'key-sw' }, sw), h('span', {}, label))
-  const sq = (c: string) => h('i', { class: 'key-col', style: `background:${c}` })
-  return h('div', { class: 'key' },
-    h('div', { class: 'key-grid' },
-      h('div', {},
-        h('div', { class: 'key-sub' }, 'Mount type'),
-        row(shapeSvg('square', 'var(--muted)', 14), 'Ground-mounted'),
-        row(shapeSvg('circle', 'var(--muted)', 14), 'Pole-mounted'),
-        row(shapeSvg('diamond', 'var(--muted)', 14), 'Not published')),
-      h('div', {},
-        h('div', { class: 'key-sub' }, term('utilisation', 'Utilisation')),
-        row(sq(C.green), '< 60%'), row(sq(C.amber), '60 – 85%'), row(sq(C.red), '≥ 85%'), row(sq(C.none), 'not published'))),
-    h('div', { class: 'leg-note' }, 'Operator-published monitors. ',
-      term('lv_monitored_note', 'Coverage')))
-}
-
 export function buildControls(map: MlMap, select: (hit: SearchHit) => void) {
   const ops = () => state.ops as (typeof OPERATORS)[number][]
   const opChips = () => chips(OPERATORS, ops, (v) => v, (v) => set({ ops: v }), () => undefined, (v) => OP_COLOURS[v])
@@ -206,10 +205,10 @@ export function buildControls(map: MlMap, select: (hit: SearchHit) => void) {
     seg([false, true] as unknown as readonly number[], () => (state.simple as unknown as number),
       (v) => (v ? 'LV monitoring' : 'Full map'), (v) => set({ simple: !!v }), 'mode', (v) => (v ? 'lv_mode' : undefined)),
     search(map, select),
+    section('key', 'Key', [], legend()),
 
     // ---- LV monitoring mode ----
     h('div', { class: 'simple-only' },
-      section('lvkey', 'Key', [], lvKey()),
       section('lvops', 'Operators', opActions(), opChips()),
       section('lvmount', 'Mount type', [action('All', 'Show all', () => set({ mounts: ['g', 'p', 'u'] }))],
         chips(['g', 'p', 'u'] as const, () => state.mounts as ('g' | 'p' | 'u')[],
@@ -217,7 +216,6 @@ export function buildControls(map: MlMap, select: (hit: SearchHit) => void) {
 
     // ---- full map ----
     h('div', { class: 'full-only' },
-      section('key', 'Key', [], legend()),
       section('headroom', term('headroom', 'Spare capacity'), [],
         seg(['dem', 'gen'] as const, () => state.mode, (v) => (v === 'gen' ? 'Generation' : 'Demand'),
           (v) => set({ mode: v }), '', (v) => (v === 'gen' ? 'gen_headroom' : 'dem_headroom')),
@@ -226,15 +224,14 @@ export function buildControls(map: MlMap, select: (hit: SearchHit) => void) {
       section('filters', 'Filter', opActions(),
         opChips(),
         h('div', { class: 'label sub' }, 'Substations'),
-        chips([1, 2, 3] as const, () => state.kinds as (1 | 2 | 3)[], (v) => KIND_LABEL[v], (v) => set({ kinds: v }),
-          (v) => ({ 1: 'gsp', 2: 'bsp', 3: 'primary' })[v])),
+        chips([1, 2, 3, 4] as const, () => state.kinds as (1 | 2 | 3 | 4)[], (v) => KIND_LABEL[v], (v) => set({ kinds: v }),
+          (v) => ({ 1: 'gsp', 2: 'bsp', 3: 'primary', 4: 'lv' })[v])),
       section('layers', 'Layers', [
         action('Clear all', 'Hide all layers', () => {
-          set({ lv: false, outages: false, links: false, neso: false })
+          set({ outages: false, links: false, neso: false })
           clearExtras(map)
         })],
       h('div', { class: 'toggles' },
-        toggle('lv', 'LV substations', 'lv'),
         toggle('outages', 'Live power cuts', 'outage'),
         toggle('links', 'Schematic feeds', 'schematic'),
         toggle('neso', 'Transmission GSPs', 'transmission_gsp'))),

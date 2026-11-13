@@ -20,7 +20,7 @@ LV_AMP_STOPS = [(100, "a0"), (200, "a1"), (300, "a2")]  # A at the busiest LV fe
 LAYERS = [
     LayerMeta(
         id="nerda_sites", title="SSEN live monitored substations (NeRDA)", group="Live", type="geojson", geom="point",
-        minzoom=6, live=True, default_on=False,
+        minzoom=0, live=True, default_on=False,
         description="SSEN South live-monitored substations. LV feeder current every few minutes. Internal use only. "
                     "NeRDA.",
         color={"prop": "c", "type": "categorical", "default": "#8a8a8a", "stops": [

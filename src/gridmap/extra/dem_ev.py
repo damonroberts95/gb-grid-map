@@ -26,7 +26,7 @@ _DROP_STATUS = {100, 150, 200, 210}  # not operational, planned, removed, duplic
 LAYERS = [
     LayerMeta(
         id="ev_chargers", title="EV charge points", group="Demand & LV", type="pmtiles", geom="point",
-        source_layer="ev_chargers", minzoom=8,
+        source_layer="ev_chargers", minzoom=4,
         description="Public EV charge points. Colour is fastest connector. Open Charge Map.",
         color={"prop": "kw", "type": "steps", "default": "#999999",
                "stops": [[0, "#56B4E9"], [7.01, "#0072B2"], [22.01, "#CC79A7"], [50.01, "#882255"], [150.01, "#1b1b3a"]]},
@@ -71,6 +71,6 @@ def build(ctx: Ctx) -> dict[str, Path]:
     src = ctx.tmp / "dem_ev_chargers.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, separators=(",", ":")))
     out = ctx.tmp / "dem_ev_chargers.pmtiles"
-    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "ev_chargers", "-Z8", "-z14",
-                    "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(src)], check=True)
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "ev_chargers", "-Z4", "-z14",
+                    "-B8", "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", "--maximum-tile-bytes=150000", str(src)], check=True)
     return {"ev_chargers": out}

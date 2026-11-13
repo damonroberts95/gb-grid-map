@@ -34,7 +34,7 @@ LAYERS = [
     ),
     LayerMeta(
         id="power_cables", title="Underground cables (OpenStreetMap)", group="Network", type="pmtiles", geom="line",
-        source_layer="power_cables", minzoom=8,
+        source_layer="power_cables", minzoom=4,
         description="Underground and subsea cables. OpenStreetMap. Far from complete.",
         color="#8c510a", size={"prop": "kv", "stops": [[0, 1], [30, 1.4], [100, 2], [250, 2.8]]}, opacity=0.85,
         popup=[["n", "Name or ref", None], ["kv", "Voltage", "kV"], ["op", "Operator", None], ["cc", "Circuits", None]],
@@ -43,7 +43,7 @@ LAYERS = [
     ),
     LayerMeta(
         id="power_substations", title="Grid substations 132 kV+ (OpenStreetMap)", group="Network", type="geojson",
-        geom="point", minzoom=6,
+        geom="point", minzoom=0,
         description="Substations of 132 kV and above. OpenStreetMap.",
         color={"prop": "kv", "type": "steps", "default": "#2c7bb6",
                "stops": [[0, "#2c7bb6"], [250, "#7b3294"]]},
@@ -154,11 +154,12 @@ def build(ctx: Ctx) -> dict[str, Path]:
             for kind, feat in seq_features(src):
                 files[kind].write(json.dumps(feat, separators=(",", ":")) + "\n")
                 counts[kind] += 1
-    for kind, lid, minz in (("line", "power_lines", 5), ("cable", "power_cables", 8)):
+    for kind, lid, minz in (("line", "power_lines", 5), ("cable", "power_cables", 4)):
         if counts[kind]:
             out[lid] = t / f"{lid}.pmtiles"
             subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out[lid]), "-l", lid, f"-Z{minz}", "-z13",
-                            "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(paths[kind])],
+                            "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", "--simplification=4",
+                            "--maximum-tile-bytes=150000", str(paths[kind])],
                            check=True)
     with (t / "osmp.geojsonseq").open() as src:
         feats = list(substation_features(src))

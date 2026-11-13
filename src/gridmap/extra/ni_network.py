@@ -35,7 +35,7 @@ LAYERS = [
     ),
     LayerMeta(
         id="ni_secondary", title="NI secondary substations (LV)", group="Demand & LV", type="pmtiles",
-        geom="point", source_layer="ni_secondary", minzoom=11,
+        geom="point", source_layer="ni_secondary", minzoom=4,
         description="Northern Ireland secondary transformers. Size is rating. NIE Networks. No loading.",
         color="#2b8cbe", size={"prop": "r", "stops": [[0, 2], [500, 3], [1000, 5]]},
         popup=[["n", "Site", None], ["c", "Transformers", None], ["r", "Installed rating", "kVA"]],
@@ -153,7 +153,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
             src = ctx.tmp / "ni_secondary.geojson"
             src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}))
             pm = ctx.tmp / "ni_secondary.pmtiles"
-            subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(pm), "-l", "ni_secondary", "-Z8", "-z14",
-                            "--drop-densest-as-needed", str(src)], check=True)
+            subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(pm), "-l", "ni_secondary", "-Z4", "-z14",
+                            "-B8", "--drop-densest-as-needed", "--maximum-tile-bytes=150000", str(src)], check=True)
             out["ni_secondary"] = pm
     return out

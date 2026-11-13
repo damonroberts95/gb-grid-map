@@ -39,7 +39,7 @@ ATTR = ("UKPN and SPEN: CC BY 4.0, UK Power Networks / SP Energy Networks open d
 LAYERS = [
     LayerMeta(
         id="lv_smart", title="LV smart-meter demand", group="Demand & LV", type="pmtiles", geom="point",
-        source_layer="lv_smart", minzoom=9,
+        source_layer="lv_smart", minzoom=4,
         description="Peak demand per smart meter, in kW. Latest month. NGED, SPEN, UKPN (sample). SSEN is one old "
                     "day, 4 Sep 2024, with estimated positions.",
         color={"prop": "pm", "type": "steps", "default": "#cccccc",
@@ -226,4 +226,4 @@ def build(ctx: Ctx) -> dict[str, Path]:
             "n": r["n"] or r["sid"], "op": r["op"], "pk": num(r["pk"]), "av": num(r["av"]), "d": d,
             "pm": num(pm, 2), "kva": num(k, 0), "ut": num(r["pk"] / k * 100) if k else None,
             "pt": r["pt"], "mo": r["mo"], "as_of": r.get("as_of"), "loc": r.get("loc")}))
-    return {"lv_smart": to_pmtiles(feats, ctx.tmp, "lv_smart", 9, 14)}
+    return {"lv_smart": to_pmtiles(feats, ctx.tmp, "lv_smart", 4, 14)}

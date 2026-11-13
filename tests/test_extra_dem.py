@@ -29,7 +29,7 @@ def test_layers_declared():
             colours = json.dumps(m.color) + json.dumps(m.legend)
             assert "#d73027" not in colours.lower()
     assert {m.id for m in dem_lct.LAYERS} == {"lct", "lct_primary"}
-    assert [m.id for m in dem_ev.LAYERS] == ["ev_chargers"] and dem_ev.LAYERS[0].minzoom == 8
+    assert [m.id for m in dem_ev.LAYERS] == ["ev_chargers"] and dem_ev.LAYERS[0].minzoom == 4
 
 
 def test_ukpn_secondary_totals(monkeypatch):

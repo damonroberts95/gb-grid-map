@@ -30,7 +30,7 @@ _ATTR = ("LCT counts: UK Power Networks open data portal (CC BY 4.0); Electricit
 LAYERS = [
     LayerMeta(
         id="lct", title="Low-carbon tech at LV substations", group="Demand & LV", type="pmtiles", geom="point",
-        source_layer="lct", minzoom=9,
+        source_layer="lct", minzoom=4,
         description="EV chargers, heat pumps, solar and batteries per LV substation. UKPN (Nov 2026), ENW (Jul 2026). "
                     "Colour is EV plus heat pumps.",
         color={"prop": "dm", "type": "steps", "default": "#bdbdbd", "stops": _SEQ},
@@ -267,7 +267,7 @@ def _tiles(feats: list[dict], ctx: Ctx, name: str, zmin: int, zmax: int) -> Path
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, separators=(",", ":")))
     out = ctx.tmp / f"dem_{name}.pmtiles"
     subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", name, f"-Z{zmin}", f"-z{zmax}",
-                    "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(src)], check=True)
+                    "-B8", "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", "--maximum-tile-bytes=150000", str(src)], check=True)
     return out
 
 
@@ -275,7 +275,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
     out: dict[str, Path] = {}
     lv = _ukpn_secondary() + _enw_mcs()
     if lv:
-        out["lct"] = _tiles(lv, ctx, "lct", 9, 14)
+        out["lct"] = _tiles(lv, ctx, "lct", 4, 14)
     uk_idx, nged_idx = site_index(ctx.data_dir, "UKPN"), site_index(ctx.data_dir, "NGED")
     pr = _ukpn_primary(uk_idx) + _nged(nged_idx) + _spen(ctx.data_dir) + _npg()
     if pr:

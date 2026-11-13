@@ -22,7 +22,7 @@ STOPS = [[0, "#f1eef6"], [25, "#bdc9e1"], [50, "#74a9cf"], [75, "#2b8cbe"], [100
 LAYERS = [
     LayerMeta(
         id="live_constraints", title="Constraint loading now (UKPN)", group="Live", type="geojson", geom="point",
-        minzoom=6, live=True, default_on=False,
+        minzoom=0, live=True, default_on=False,
         description="Busiest constraint per substation, as % of limit. Above 100% means curtailment. UKPN, every "
                     "minute.",
         color={"prop": "u", "type": "steps", "default": "#8a8a8a", "stops": STOPS},

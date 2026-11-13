@@ -21,8 +21,7 @@ export function applyOutlines(map: MlMap, theme: 'light' | 'dark') {
   const sel = (fallback: string) => ['case', ['boolean', ['feature-state', 'selected'], false], C.ink,
     ['boolean', ['feature-state', 'hover'], false], C.ink, fallback]
   if (map.getLayer('sites')) map.setPaintProperty('sites', 'icon-halo-color', sel(o) as ExpressionSpecification)
-  if (map.getLayer('lv')) map.setPaintProperty('lv', 'circle-stroke-color', sel(o) as ExpressionSpecification)
-  if (map.getLayer('lvmon')) map.setPaintProperty('lvmon', 'icon-halo-color', sel(o) as ExpressionSpecification)
+  if (map.getLayer('lv')) map.setPaintProperty('lv', 'icon-halo-color', sel(o) as ExpressionSpecification)
   for (const l of map.getStyle().layers) {
     if (l.id.startsWith('x_') && l.id.endsWith('_pt') && l.type === 'circle') map.setPaintProperty(l.id, 'circle-stroke-color', o)
   }
@@ -172,60 +171,14 @@ export function addLayers(map: MlMap, s: State) {
   })
 }
 
-function addLv(map: MlMap, url: string, s: State) {
-  // promoteId: tile features carry their id as a property; without this, feature-state (selection) can't attach
-  map.addSource('lv', { type: 'vector', url: `pmtiles://${location.origin}${url}`, promoteId: { lv: 'id' } })
-  map.addLayer(
-    {
-      id: 'lv', type: 'circle', source: 'lv', 'source-layer': 'lv', minzoom: 11,
-      layout: { visibility: s.lv ? 'visible' : 'none' },
-      filter: ['in', ['get', 'op'], ['literal', s.ops]],
-      paint: {
-        // LV is the key layer for this app: readable from first appearance, generous at street level
-        'circle-radius': ['interpolate', ['linear'], ['zoom'],
-          11, ['case', ['boolean', ['feature-state', 'selected'], false], 5.5, 2.4],
-          14, ['case', ['boolean', ['feature-state', 'selected'], false], 8.5, 5.2],
-          18, ['case', ['boolean', ['feature-state', 'selected'], false], 13, 9.5]],
-        'circle-color': [
-          'case', ['!', ['has', 'u']], C.none,
-          ['<', ['get', 'u'], 60], C.green, ['<', ['get', 'u'], 85], C.amber, C.red,
-        ],
-        'circle-opacity': 1,
-        'circle-stroke-color': [
-          'case', ['boolean', ['feature-state', 'selected'], false], C.ink, OUTLINE.light,
-        ],
-        'circle-stroke-width': [
-          'interpolate', ['linear'], ['zoom'],
-          11, ['case', ['boolean', ['feature-state', 'selected'], false], 2.5, 0.6],
-          15, ['case', ['boolean', ['feature-state', 'selected'], false], 3, 1.1],
-        ],
-      },
-    },
-    'links',
-  )
-}
+/** LV substations: one tileset, both views. Shape = mount type (■ ground, ● pole, ◆ unknown); colour = utilisation;
+ * monitored sites get a ring. Monitored sites are in the tiles from z4, the rest from z11. */
+export const lvVisible = (s: State) => s.simple || s.kinds.includes(4)
 
-/** Monitored LV substations (any vendor), national scale. Ground = square, pole = circle, unknown = ring.
- * Colour = transformer utilisation. Shown only in 'LV monitoring' mode. */
-function addLvMon(map: MlMap, url: string, s: State) {
-  map.addSource('lvmon', { type: 'vector', url: `pmtiles://${location.origin}${url}`, promoteId: { lvmon: 'id' } })
-  map.addLayer({
-    id: 'lvmon', type: 'symbol', source: 'lvmon', 'source-layer': 'lvmon',
-    layout: {
-      visibility: s.simple ? 'visible' : 'none',
-      // mount type: ground = square, pole = circle, not published = filled diamond (all coloured by utilisation)
-      'icon-image': ['match', ['get', 'mt'], 'g', 'shape-square', 'p', 'shape-circle', 'shape-diamond'],
-      'icon-size': ['interpolate', ['linear'], ['zoom'], 5, 0.16, 9, 0.26, 13, 0.42, 16, 0.6],
-      'icon-allow-overlap': true, 'icon-ignore-placement': true,
-      'symbol-sort-key': ['coalesce', ['to-number', ['get', 'u']], 0],
-    },
-    paint: {
-      'icon-color': lvUtilColour,
-      'icon-halo-color': ['case', ['boolean', ['feature-state', 'selected'], false], C.ink, OUTLINE.light],
-      'icon-halo-width': ['case', ['boolean', ['feature-state', 'selected'], false], 2.5, 1.2],
-    },
-    filter: lvMonFilter(s),
-  } as LayerSpecification, 'sites')
+export function lvFilter(s: State): ExpressionSpecification {
+  const ops: ExpressionSpecification = ['in', ['get', 'op'], ['literal', s.ops]]
+  if (!s.simple) return ops
+  return ['all', ops, ['==', ['get', 'mon'], 1], ['in', ['coalesce', ['get', 'mt'], 'u'], ['literal', s.mounts]]]
 }
 
 const lvUtilColour: ExpressionSpecification = [
@@ -233,9 +186,34 @@ const lvUtilColour: ExpressionSpecification = [
   ['<', ['to-number', ['get', 'u']], 60], C.green, ['<', ['to-number', ['get', 'u']], 85], C.amber, C.red,
 ]
 
-function lvMonFilter(s: State): ExpressionSpecification {
-  const mt: ExpressionSpecification = ['coalesce', ['get', 'mt'], 'u']
-  return ['all', ['in', ['get', 'op'], ['literal', s.ops]], ['in', mt, ['literal', s.mounts]]]
+function addLv(map: MlMap, url: string, s: State) {
+  // promoteId: tile features carry their id as a property; without this, feature-state (selection) can't attach
+  map.addSource('lv', { type: 'vector', url: `pmtiles://${location.origin}${url}`, promoteId: { lv: 'id' } })
+  map.addLayer({
+    id: 'lv-ring', type: 'circle', source: 'lv', 'source-layer': 'lv',
+    filter: ['all', lvFilter(s), ['==', ['get', 'mon'], 1]],
+    layout: { visibility: lvVisible(s) && !s.simple ? 'visible' : 'none' },
+    paint: {
+      'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': C.hier, 'circle-stroke-width': 1.8,
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 3.5, 11, 6.5, 14, 10, 18, 15],
+    },
+  } as LayerSpecification, 'links')
+  map.addLayer({
+    id: 'lv', type: 'symbol', source: 'lv', 'source-layer': 'lv',
+    filter: lvFilter(s),
+    layout: {
+      visibility: lvVisible(s) ? 'visible' : 'none',
+      'icon-image': ['match', ['get', 'mt'], 'g', 'shape-square', 'p', 'shape-circle', 'shape-diamond'],
+      'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.16, 9, 0.24, 11, 0.28, 14, 0.42, 18, 0.7],
+      'icon-allow-overlap': true, 'icon-ignore-placement': true,
+      'symbol-sort-key': ['coalesce', ['to-number', ['get', 'u']], 0],
+    },
+    paint: {
+      'icon-color': lvUtilColour,
+      'icon-halo-color': ['case', ['boolean', ['feature-state', 'selected'], false], C.ink, OUTLINE.light],
+      'icon-halo-width': ['case', ['boolean', ['feature-state', 'selected'], false], 2.5, 1],
+    },
+  } as LayerSpecification, 'links')
 }
 
 /** Swap data sources in place when the server publishes a new manifest. No page reload. */
@@ -248,11 +226,6 @@ export function applyManifest(map: MlMap, m: Manifest, s: State) {
     if (src) src.setUrl(`pmtiles://${location.origin}${L.lv}`)
     else addLv(map, L.lv, s)
   }
-  if (L.lvmon && L.lvmon !== current.lvmon) {
-    const src = map.getSource('lvmon') as VectorTileSource | undefined
-    if (src) src.setUrl(`pmtiles://${location.origin}${L.lvmon}`)
-    else addLvMon(map, L.lvmon, s)
-  }
   current = { ...L }
 }
 
@@ -263,12 +236,16 @@ export function refreshOutages(map: MlMap) {
 export function applyState(map: MlMap, s: State) {
   document.body.classList.toggle('simple', s.simple)
   const vis = (id: string, on: boolean) => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none') }
-  if (map.getLayer('lvmon')) map.setFilter('lvmon', lvMonFilter(s))
-  vis('lvmon', s.simple)
+  if (map.getLayer('lv')) {
+    map.setFilter('lv', lvFilter(s))
+    map.setFilter('lv-ring', ['all', lvFilter(s), ['==', ['get', 'mon'], 1]])
+  }
+  vis('lv', lvVisible(s))
+  vis('lv-ring', lvVisible(s) && !s.simple)
   setExtrasSuppressed(map, s.simple)
   if (s.simple) {
     // LV monitoring mode: only monitored LV substations (+ operator areas and the selected item's hierarchy)
-    for (const id of ['sites', 'site-labels', 'links', 'outages', 'lv']) vis(id, false)
+    for (const id of ['sites', 'site-labels', 'links', 'outages']) vis(id, false)
     return
   }
   vis('sites', true)
@@ -279,10 +256,7 @@ export function applyState(map: MlMap, s: State) {
   map.setPaintProperty('sites', 'icon-color', siteColour(s))
   map.setLayoutProperty('links', 'visibility', s.links ? 'visible' : 'none')
   map.setLayoutProperty('outages', 'visibility', s.outages ? 'visible' : 'none')
-  if (map.getLayer('lv')) {
-    map.setLayoutProperty('lv', 'visibility', s.lv ? 'visible' : 'none')
-    map.setFilter('lv', ['in', ['get', 'op'], ['literal', s.ops]])
-  }
+
 }
 
 export interface HierNode { site_id?: string; name?: string; kind?: string; lat: number | null; lon: number | null }

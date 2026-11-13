@@ -41,13 +41,13 @@ def num(v: float | None, nd: int = 1) -> float | None:
     return None if v is None else round(float(v), nd)
 
 
-def to_pmtiles(features: list[dict], tmp: Path, name: str, minzoom: int = 9, maxzoom: int = 14) -> Path:
+def to_pmtiles(features: list[dict], tmp: Path, name: str, minzoom: int = 4, maxzoom: int = 14) -> Path:
     """Points -> pmtiles with tippecanoe. Dense areas are thinned at low zoom, never at maxzoom's tile budget."""
     src = tmp / f"{name}.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": features}))
     out = tmp / f"{name}.pmtiles"
     subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", name, f"-Z{minzoom}", f"-z{maxzoom}",
-                    "--drop-densest-as-needed", "--maximum-tile-bytes=450000", str(src)], check=True)
+                    "-B8", "--drop-densest-as-needed", "--maximum-tile-bytes=150000", str(src)], check=True)
     return out
 
 

@@ -19,7 +19,7 @@ YEAR, SCENARIO = 2030, "best_view"
 LAYERS = [
     LayerMeta(
         id="lv_headroom_forecast", title="LV headroom forecast (ENW, 2030)", group="Demand & LV", type="pmtiles",
-        geom="point", source_layer="lv_headroom_forecast", minzoom=9,
+        geom="point", source_layer="lv_headroom_forecast", minzoom=4,
         description="Spare transformer capacity in 2030, in kVA. Negative is over capacity. ENW, DFES 2024, Best View. North "
                     "West only.",
         color={"prop": "hr", "type": "steps", "default": "#c7d7e5",
@@ -68,4 +68,4 @@ def build(ctx: Ctx) -> dict[str, Path]:
                                         "h35": num(_f(r.get(f"{SCENARIO}_2035")), 0), "kva": num(kva, 0), "c": cust}))
     if not feats:
         return {}
-    return {"lv_headroom_forecast": to_pmtiles(feats, ctx.tmp, "lv_headroom_forecast", 9, 14)}
+    return {"lv_headroom_forecast": to_pmtiles(feats, ctx.tmp, "lv_headroom_forecast", 4, 14)}

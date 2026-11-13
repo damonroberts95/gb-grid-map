@@ -42,7 +42,7 @@ def data(tmp_path, monkeypatch):
 def test_layers_declared():
     for m in [*mon.LAYERS, *hf.LAYERS]:
         assert m.description and m.attribution and not m.default_on
-        assert m.type == "pmtiles" and m.source_layer == m.id and m.minzoom >= 9
+        assert m.type == "pmtiles" and m.source_layer == m.id and m.minzoom <= 5
         assert m.popup and m.legend
         for hexcol in ("#d73027",):
             assert hexcol not in json.dumps(m.color)

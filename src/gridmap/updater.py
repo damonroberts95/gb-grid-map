@@ -78,7 +78,7 @@ from gridmap.server.app import create_app
 from gridmap.extra import modules
 create_app(Path({data!r}), scheduler=False)
 assert load_sources()
-for m in modules():
+for m in modules(strict=True):
     assert isinstance(m.LAYERS, list) and (not m.LAYERS or callable(m.build)), m.__name__
 """
 

@@ -24,7 +24,7 @@ MIN_BASE_MW = 0.5  # below this a % growth is noise
 
 LAYERS = [
     LayerMeta(
-        id="dfes", title="Forecast demand growth (DFES)", group="Demand & LV", type="geojson", geom="point", minzoom=6,
+        id="dfes", title="Forecast demand growth (DFES)", group="Demand & LV", type="geojson", geom="point", minzoom=0,
         description="Peak demand growth by primary, 2025 to 2035. Holistic Transition. DFES 2026. UKPN, NPg, ENW, "
                     "SPEN.",
         color={"prop": "g", "type": "steps", "default": "#bdbdbd",

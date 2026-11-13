@@ -160,6 +160,15 @@ function setEnabled(map: MlMap, id: string, on: boolean) {
   writeHash()
 }
 
+/** Key support: enabled extras (with their legends) and a change hook. */
+export function enabledExtras(): ExtraMeta[] {
+  return Object.values(metas).filter((m) => enabled.has(m.id))
+}
+export function onExtrasChange(fn: () => void) {
+  changeListeners.push(fn)
+}
+export const extraTitle = (m: ExtraMeta) => FRIENDLY_TITLE[m.id] ?? m.title
+
 /** 'Clear all': every extra off, including default-on ones (remembered as switched off). */
 export function clearExtras(map: MlMap) {
   for (const id of Object.keys(metas)) setEnabled(map, id, false)

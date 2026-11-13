@@ -69,9 +69,19 @@ class Ctx:
     tmp: Path
 
 
-def modules() -> list[Any]:
-    names = sorted({m.name for m in pkgutil.iter_modules(__path__) if not m.name.startswith("_")})
-    return [importlib.import_module(f"{__name__}.{n}") for n in names]
+def modules(strict: bool = False) -> list[Any]:
+    """Every extra module that imports cleanly. A broken module is logged and skipped, so one bad layer can't stop
+    the build. strict=True (update validation) re-raises, so a broken update is rejected."""
+    import logging
+    out = []
+    for n in sorted({m.name for m in pkgutil.iter_modules(__path__) if not m.name.startswith("_")}):
+        try:
+            out.append(importlib.import_module(f"{__name__}.{n}"))
+        except Exception:
+            if strict:
+                raise
+            logging.getLogger("gridmap.extra").exception("extra module %s failed to import; skipped", n)
+    return out
 
 
 def _input_hash(mod: Any, data_dir: Path) -> str:

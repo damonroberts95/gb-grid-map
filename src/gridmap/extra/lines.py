@@ -39,7 +39,7 @@ GEOJSON_LV = [("ukpn_oh_lv", "UKPN"), ("npg_oh_lv", "NPG"), ("enw_oh_lv", "ENW")
 LAYERS = [
     LayerMeta(
         id="dno_lines", title="Overhead lines (DNO, 6.6-132 kV)", group="Network", type="pmtiles", geom="line",
-        source_layer="dno_lines", minzoom=6,
+        source_layer="dno_lines", minzoom=4,
         description="Overhead lines, coloured by voltage. UKPN, NPG, ENW, SSEN. No cables. No SPEN or NGED data.",
         color={"prop": "kv", "type": "steps", "default": "#8c8c8c",
                "stops": [[0, "#cc79a7"], [30, "#009e9e"], [100, "#2c7bb6"], [250, "#7b3294"]]},
@@ -51,7 +51,7 @@ LAYERS = [
     ),
     LayerMeta(
         id="lv_overhead", title="LV overhead lines (DNO)", group="Demand & LV", type="pmtiles", geom="line",
-        source_layer="lv_overhead", minzoom=11,
+        source_layer="lv_overhead", minzoom=4,
         description="Overhead LV lines. UKPN, NPG, ENW. 2026. No cables.",
         color="#009e73", size={"prop": "w", "stops": [[0, 0.6], [2, 1.2]]}, opacity=0.8,
         popup=[["op", "Operator", None], ["kv", "Voltage", "kV"]],
@@ -177,7 +177,8 @@ def _ssen_feats(snap: Path) -> Iterator[tuple[dict, bool]]:
 
 def _tile(feats_path: Path, out: Path, layer: str, minz: int, maxz: int) -> None:
     subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", layer, f"-Z{minz}", f"-z{maxz}",
-                    "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(feats_path)], check=True)
+                    "--drop-densest-as-needed", "--drop-smallest-as-needed", "--simplification=4",
+                    "--extend-zooms-if-still-dropping", "--maximum-tile-bytes=150000", str(feats_path)], check=True)
 
 
 def build(ctx: Ctx) -> dict[str, Path]:
@@ -203,8 +204,8 @@ def build(ctx: Ctx) -> dict[str, Path]:
     out: dict[str, Path] = {}
     if counts["hv"]:
         out["dno_lines"] = ctx.tmp / "dno_lines.pmtiles"
-        _tile(hv_p, out["dno_lines"], "dno_lines", 6, 13)
+        _tile(hv_p, out["dno_lines"], "dno_lines", 4, 13)
     if counts["lv"]:
         out["lv_overhead"] = ctx.tmp / "lv_overhead.pmtiles"
-        _tile(lv_p, out["lv_overhead"], "lv_overhead", 11, 15)
+        _tile(lv_p, out["lv_overhead"], "lv_overhead", 4, 15)
     return out

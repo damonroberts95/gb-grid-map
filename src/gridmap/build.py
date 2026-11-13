@@ -3,7 +3,6 @@
   sites.<hash>.geojson  every GSP/BSP/PRIMARY site with coordinates (short property keys)
   links.<hash>.geojson  schematic parent -> child lines
   lv.<hash>.pmtiles     secondary substations (tippecanoe, layer `lv`, z11-14)
-  lvmon.<hash>.pmtiles  monitored secondary substations only (layer `lvmon`, z4-14)
 
 A layer is rebuilt only when the hash of its input files changes. Files are written under a temp name and
 renamed into place; the manifest is renamed last, so readers never see a manifest that points at a missing file.
@@ -26,17 +25,13 @@ import polars as pl
 from .normalise.common import DATA_DIR
 from .tools import tool
 
-BUILD_VERSION = "3"  # bump when the output format changes, to force a rebuild
+BUILD_VERSION = "4"  # bump when the output format changes, to force a rebuild
 KIND_NUM = {"GSP": 1, "BSP": 2, "PRIMARY": 3}
 STALE_SECONDS = 600
-TIPPECANOE = ["-l", "lv", "-Z11", "-z14", "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", "-r1",
-              "--force", "-q"]
-# monitored LV only (national, low zoom): -r1 = no rate-based dropping; tiles over 500 KB are thinned.
-# 100 KB tiles: at national zooms the densest clusters thin out (pattern stays readable, panning stays fast);
-# every site is present from about z8.
-TIPPECANOE_LVMON = ["-l", "lvmon", "-Z4", "-z14", "-r1", "--no-feature-limit", "--maximum-tile-bytes=100000",
-                    "--drop-densest-as-needed", "--force", "-q"]
-
+# One LV tileset for both views: monitored sites from z4 (per-feature tippecanoe.minzoom), all others from z11.
+# 120 KB tiles: at national zooms dense monitored clusters thin out; street zooms are far below the cap.
+TIPPECANOE = ["-l", "lv", "-Z4", "-z14", "-r1", "--no-feature-limit", "--maximum-tile-bytes=120000",
+              "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", "--force", "-q"]
 
 def _hash_files(files: list[Path], salt: str) -> str:
     h = hashlib.sha256(f"{BUILD_VERSION}:{salt}".encode())
@@ -125,29 +120,26 @@ def lv_frame(norm: Path, data_dir: Path | None = None) -> pl.DataFrame:
                     "mt", "mti", "mon", "ms"))
 
 
-def _lv_geojsonl(df: pl.DataFrame, out: Path, only_mon: bool) -> str:
+def _lv_geojsonl(df: pl.DataFrame, out: Path) -> str:
     with tempfile.NamedTemporaryFile("w", suffix=".geojsonl", delete=False, dir=out.parent, prefix="tmp_lv_") as tf:
         for uid, op, lat, lon, u, kva, cu, mt, mti, mon, ms in df.iter_rows():
-            if only_mon and not mon:
-                continue
             props = {"id": uid, "op": op, "u": _num(u, 1), "kva": None if kva is None else int(kva), "cu": cu,
                      "mt": mt, "mti": mti, "mon": 1 if mon else None, "ms": ms}
-            if only_mon:
-                props.pop("mon")
             tf.write(json.dumps({"type": "Feature", "geometry": {"type": "Point", "coordinates": [round(lon, 6), round(lat, 6)]},
+                                 "tippecanoe": {"minzoom": 4 if mon else 11},
                                  "properties": {k: v for k, v in props.items() if v is not None}},
                                 separators=(",", ":")) + "\n")
         return tf.name
 
 
-def build_lv(norm: Path, out: Path, only_mon: bool = False, df: pl.DataFrame | None = None) -> None:
+def build_lv(norm: Path, out: Path, df: pl.DataFrame | None = None) -> None:
     """tippecanoe over lv_site rows that have coordinates. Writes `out` (a .pmtiles path).
-    only_mon=True builds the `lvmon` layer (monitored sites only, z4-14)."""
+    Monitored sites appear from z4, all others from z11 (one tileset for the main and LV monitoring views)."""
     df = lv_frame(norm) if df is None else df
-    src = _lv_geojsonl(df, out, only_mon)
+    src = _lv_geojsonl(df, out)
     tmp = out.with_name(f"tmp_{out.name}")
     try:
-        subprocess.run([tool("tippecanoe"), "-P", "-o", str(tmp), *(TIPPECANOE_LVMON if only_mon else TIPPECANOE), src],
+        subprocess.run([tool("tippecanoe"), "-P", "-o", str(tmp), *TIPPECANOE, src],
                        check=True)
         os.replace(tmp, out)
     finally:
@@ -182,6 +174,7 @@ def build_all(data_dir: Path | None = None, public: Path | None = None, only_liv
     public.mkdir(parents=True, exist_ok=True)
     old = read_manifest(public)
     layers = dict(old.get("layers", {}))
+    layers.pop("lvmon", None)  # retired: monitored LV is part of the single `lv` tileset now
     changed: list[str] = []
 
     site_in = [derived / f"{n}.parquet" for n in ("site", "site_capacity", "site_fault", "site_queue")]
@@ -192,12 +185,11 @@ def build_all(data_dir: Path | None = None, public: Path | None = None, only_liv
         "sites": ([f for f in site_in if f.exists()], "geojson"),
         "links": (link_in, "geojson"),
         "lv": (lv_in, "pmtiles"),
-        "lvmon": (lv_in, "pmtiles"),
     }
     lv_df = None
     sites_b = links_b = None
     for layer, (inputs, ext) in ({} if only_live else plan).items():
-        if not inputs or (layer not in ("lv", "lvmon") and not (derived / "site.parquet").exists()):
+        if not inputs or (layer != "lv" and not (derived / "site.parquet").exists()):
             continue
         h = _hash_files(inputs, layer)
         name = f"{layer}.{h}.{ext}"
@@ -210,10 +202,7 @@ def build_all(data_dir: Path | None = None, public: Path | None = None, only_liv
         else:
             if lv_df is None:
                 lv_df = lv_frame(norm, data_dir)
-            if layer == "lvmon" and not lv_df["mon"].any():
-                layers.pop("lvmon", None)  # no monitor lists available: no layer (tippecanoe rejects empty input)
-                continue
-            build_lv(norm, public / name, only_mon=layer == "lvmon", df=lv_df)
+            build_lv(norm, public / name, df=lv_df)
         layers[layer] = f"/data/{name}"
         changed.append(layer)
 

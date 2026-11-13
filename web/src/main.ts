@@ -99,7 +99,7 @@ onHierarchy((from, chain, children, how) =>
 // "Zoom in to see local substations" hint (LV tiles start at z11; newcomers otherwise think LV is missing)
 const zoomHint = h('div', { class: 'zoom-hint', hidden: true }, 'Zoom in for LV substations')
 document.body.append(zoomHint)
-const updateHint = () => { zoomHint.hidden = !(state.lv && !state.simple && map.getZoom() < 11) }
+const updateHint = () => { zoomHint.hidden = !(state.kinds.includes(4) && !state.simple && map.getZoom() < 11) }
 map.on('zoomend', updateHint)
 onChange(updateHint)
 
@@ -149,9 +149,9 @@ map.on('load', async () => {
   map.on('click', (e) => {
     const xl = extraLayerIds().filter((id) => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none')
     const vis = (id: string) => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none'
-    const hits = map.queryRenderedFeatures(e.point, { layers: ['sites', 'lv', 'lvmon', 'outages', ...xl].filter((id) => vis(id)) })
+    const hits = map.queryRenderedFeatures(e.point, { layers: ['sites', 'lv', 'outages', ...xl].filter((id) => vis(id)) })
     const site = hits.find((f) => f.layer.id === 'sites')
-    const lv = hits.find((f) => f.layer.id === 'lv' || f.layer.id === 'lvmon')
+    const lv = hits.find((f) => f.layer.id === 'lv')
     const out = hits.find((f) => f.layer.id === 'outages')
     const x = hits.find((f) => f.layer.id.startsWith('x_'))
     if (site) {

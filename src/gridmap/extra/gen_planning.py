@@ -56,7 +56,7 @@ LAYERS = [
         legend=TECH_COLORS, attribution=REPD_ATTR),
     LayerMeta(
         id="ecr_projects", title="Connection-register projects (DNO)", group="Generation & planning",
-        type="pmtiles", geom="point", source_layer="ecr_projects", minzoom=6,
+        type="pmtiles", geom="point", source_layer="ecr_projects", minzoom=4,
         description="Generation and storage projects with coordinates. DNO capacity registers. Small sites are "
                     "rounded or missing.",
         color={"prop": "st", "type": "categorical", "default": "#9a9a9a",
@@ -124,7 +124,8 @@ def _write_pmtiles(ctx: Ctx, layer: str, feats: list[dict], zmin: int, zmax: int
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, separators=(",", ":")))
     out = ctx.tmp / f"{layer}.pmtiles"
     subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", layer, f"-Z{zmin}", f"-z{zmax}",
-                    "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(src)], check=True)
+                    *(["-B8"] if layer == "ecr_projects" else []),
+                    "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", "--maximum-tile-bytes=150000", str(src)], check=True)
     return out
 
 
@@ -292,7 +293,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
         feats = ecr_features(pl.concat(frames, how="diagonal_relaxed"))
         print(f"ecr_projects: {len(feats)} features")
         if feats:
-            out["ecr_projects"] = _write_pmtiles(ctx, "ecr_projects", feats, 6, 13)
+            out["ecr_projects"] = _write_pmtiles(ctx, "ecr_projects", feats, 4, 13)
 
     snap = latest_snapshot("neso_tec_register")
     if snap is not None:

@@ -38,7 +38,7 @@ otherwise inferred from kVA (<= 100 kVA pole, > 200 kVA ground, between: unknown
 `mon`: ENW/SPEN/NGED lists by id, NPG installed monitors and SSEN NeRDA LV-feeder secondaries by nearest lv_site within 40 m.
 Built with tippecanoe `-Z11 -z14 --drop-densest-as-needed --extend-zooms-if-still-dropping -r1`; no names in tiles.
 
-### `lvmon.<hash>.pmtiles` — monitored secondary substations only, layer `lvmon`, minzoom 4, maxzoom 14.
+
 Same sites as `lv` with `mon=1`, national at low zoom. Properties: `id`, `op`, `mt`, `mti`, `ms`, `u`, `kva`, `cu`
 (same meaning as above; `mon` is omitted as it is always 1). Built with `-Z4 -z14 -r1 --no-feature-limit
 --maximum-tile-bytes=500000 --drop-densest-as-needed` (tiles are thinned only if they exceed 500 KB). Absent from the

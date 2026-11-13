@@ -247,3 +247,6 @@ re-check before calling anything done. Add an entry (with date) whenever a new m
 - **First-run set is `refresh.is_core`**: category core, or `core: true` on the source (the lv_monitored inputs).
 - **Address search index** (`derived/places.parquet`) is rebuilt by refresh when os_open_names / os_codepoint change.
 - **A feed that is missing can leave a sibling feed's aggregate half-empty** (`area_constraints`: breaches without curtailment events crashed `min([])`). Guard empties in extras.
+- **One broken extra module must not block the build.** `extra.modules()` imports every module; a SyntaxError used
+  to abort `build_all` before the manifest was written (stale layers, e.g. a retired `lvmon` lingering). It now logs
+  and skips the module. (2026-11-13)

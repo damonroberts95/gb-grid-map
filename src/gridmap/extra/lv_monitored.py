@@ -27,7 +27,7 @@ ATTR = ("ENW and SPEN: CC BY 4.0, SP Energy Networks / Electricity North West op
 LAYERS = [
     LayerMeta(
         id="lv_monitored", title="LV monitored substations", group="Demand & LV", type="pmtiles", geom="point",
-        source_layer="lv_monitored", minzoom=9,
+        source_layer="lv_monitored", minzoom=4,
         description="LV substations with a published monitor. ENW, SPEN, NPG, NGED (Nov 2026). Plus NPG's shortlist.",
         color={"prop": "s", "type": "categorical", "default": "#0b7285",
                "stops": [["Monitored", "#0b7285"], ["Shortlisted", "#99d5da"]]},
@@ -180,4 +180,4 @@ def build(ctx: Ctx) -> dict[str, Path]:
     feats = [f for _, f in _all(ctx.data_dir)]
     if not feats:
         return {}
-    return {"lv_monitored": to_pmtiles(feats, ctx.tmp, "lv_monitored", minzoom=9, maxzoom=14)}
+    return {"lv_monitored": to_pmtiles(feats, ctx.tmp, "lv_monitored", minzoom=4, maxzoom=14)}

@@ -27,7 +27,7 @@ LEGEND = [["#ffffcc", "under 1,500 kWh"], ["#a1dab4", "1,500 to 2,500"], ["#41b6
 LAYERS = [
     LayerMeta(
         id="elec_postcode_kwh", title="Home electricity use by postcode (2024)", group="Demand & LV",
-        type="pmtiles", geom="point", source_layer="elec_postcode_kwh", minzoom=6,
+        type="pmtiles", geom="point", source_layer="elec_postcode_kwh", minzoom=4,
         description="Average yearly home electricity use per meter, 2024. Postcodes with 5 or more meters. DESNZ.",
         color={"prop": "kwh", "type": "steps", "default": "#cccccc", "stops": STOPS},
         size={"prop": "m", "stops": [[5, 1.5], [30, 2.5], [150, 3.5], [3000, 7]]}, opacity=0.8,
@@ -113,10 +113,10 @@ def build(ctx: Ctx) -> dict[str, Path]:
     src = ctx.tmp / "elec_postcode_kwh.geojsonl"
     with src.open("w") as f:
         for r in sectors(pts).iter_rows(named=True):
-            f.write(_feat(r, 6, 10) + "\n")
+            f.write(_feat(r, 4, 10) + "\n")
         for r in pts.iter_rows(named=True):
             f.write(_feat(r, 12, 13) + "\n")
     out = ctx.tmp / "elec_postcode_kwh.pmtiles"
-    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "elec_postcode_kwh", "-Z6", "-z13",
-                    "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(src)], check=True)
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "elec_postcode_kwh", "-Z4", "-z13",
+                    "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", "--maximum-tile-bytes=150000", str(src)], check=True)
     return {"elec_postcode_kwh": out}

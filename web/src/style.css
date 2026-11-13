@@ -1026,3 +1026,7 @@ dialog.help h3 { margin: 12px 0 4px; font-size: 13px; }
 }
 
 .progress[hidden] { display: none; }
+
+.key-block { display: grid; gap: 1px; align-content: start; }
+.key-ring { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #1f6feb; box-sizing: border-box; }
+.key-line.dashed { background: repeating-linear-gradient(90deg, #5b7083 0 4px, transparent 4px 7px); height: 2px; }

@@ -10,8 +10,7 @@ export interface State {
   mode: Mode
   thr: number // MW: headroom at/above = green
   ops: string[]
-  kinds: number[] // 1 GSP, 2 BSP, 3 PRIMARY
-  lv: boolean
+  kinds: number[] // 1 GSP, 2 BSP, 3 PRIMARY, 4 LV
   links: boolean
   outages: boolean
   neso: boolean
@@ -20,8 +19,8 @@ export interface State {
 }
 
 const DEFAULT: State = {
-  mode: 'dem', thr: 5, ops: [...OPERATORS], kinds: [1, 2, 3],
-  lv: true, links: false, outages: true, neso: true, simple: false, mounts: ['g', 'p', 'u'],
+  mode: 'dem', thr: 5, ops: [...OPERATORS], kinds: [1, 2, 3, 4],
+  links: false, outages: true, neso: true, simple: false, mounts: ['g', 'p', 'u'],
 }
 
 type Listener = (s: State) => void
@@ -46,7 +45,7 @@ export function onChange(l: Listener) {
 function save() {
   hashSet({
     m: state.mode, t: String(state.thr), o: state.ops.join(','), k: state.kinds.join(','),
-    l: [state.lv && 'lv', state.links && 'links', state.outages && 'out', state.neso && 'neso'].filter(Boolean).join(','),
+    l: [state.links && 'links', state.outages && 'out', state.neso && 'neso'].filter(Boolean).join(','),
     s: state.simple ? '1' : '0', mt: state.mounts.join(','),
   })
 }
@@ -61,8 +60,9 @@ function load(): State {
     mode: p.get('m') === 'gen' ? 'gen' : 'dem',
     thr: THRESHOLDS.includes(thr as (typeof THRESHOLDS)[number]) ? thr : DEFAULT.thr,
     ops: (p.get('o') ?? '').split(',').filter((o) => (OPERATORS as readonly string[]).includes(o)),
-    kinds: (p.get('k') ?? '').split(',').map(Number).filter((k) => [1, 2, 3].includes(k)),
-    lv: layers.includes('lv'),
+    // old links had a separate LV toggle ('l=lv'): fold it into kind 4
+    kinds: [...(p.get('k') ?? '').split(',').map(Number).filter((k) => [1, 2, 3, 4].includes(k)),
+      ...(layers.includes('lv') && !(p.get('k') ?? '').split(',').includes('4') ? [4] : [])],
     links: layers.includes('links'),
     outages: layers.includes('out'),
     neso: layers.includes('neso'),
