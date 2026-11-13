@@ -105,7 +105,7 @@ sources:
   - {<<: *enw, id: enw_primary_polygons, dataset: enwl-substation-primary-polygons, category: boundary, cadence: 7d, gated: true, format: geojson}
   - {<<: *enw, id: enw_ecr_1mw_plus, dataset: enwl-embedded-capacity-register-2-1mw-and-above, category: ecr, cadence: 1d, gated: true}
   - {<<: *enw, id: enw_ecr_under_1mw, dataset: enwl-embedded-capacity-register-1-under-1mw, category: ecr, cadence: 1d, gated: true}
-  - {<<: *enw, id: enw_lv_headroom_monitored, dataset: dfes-lv-headroom-monitored, category: lv_usage, cadence: 7d, gated: true}
+  - {<<: *enw, id: enw_lv_headroom_monitored, dataset: dfes-lv-headroom-monitored, category: lv_usage, cadence: 7d, gated: true, core: true}
   - {<<: *enw, id: enw_lv_headroom_unmonitored, dataset: dfes-lv-headroom-unmonitored, category: lv_usage, cadence: 7d, gated: true}
   - {<<: *enw, id: enw_lv_load_duration, dataset: lv_load_duration, category: lv_usage, cadence: 7d, gated: true}
   - {<<: *enw, id: enw_capacity_distribution_tx, dataset: sp-enw-capacity-distribution-tx, category: lv_sites, cadence: 7d, gated: true, note: "per distribution transformer utilisation/headroom"}
@@ -144,7 +144,7 @@ sources:
   - {<<: *spen, id: spen_ecr_1mw_plus, dataset: embedded-capacity-register, category: ecr, cadence: 1d, gated: true}
   - {<<: *spen, id: spen_ecr_50kw_1mw, dataset: embedded-capacity-register-50kv-1mw, category: ecr, cadence: 1d, note: "coordinates rounded to 1 km, ~49% missing; do not use for site matching"}
   - {<<: *spen, id: spen_queue_gsp_position, dataset: gsp-queue-position, category: queue, cadence: 1d, gated: true}
-  - {<<: *spen, id: spen_lv_monitor, dataset: lv_monitor, category: lv_usage, cadence: 7d, gated: true, large: true, note: "105k monthly rows per transformer; secondary utilisation"}
+  - {<<: *spen, id: spen_lv_monitor, dataset: lv_monitor, category: lv_usage, cadence: 7d, gated: true, core: true, note: "105k monthly rows per transformer (~8 MB); secondary utilisation. Feeds lv_monitored and the SPEN lv_site coordinates, so it is fetched in the first-run pass."}
   - {<<: *spen, id: spen_smart_meter_transformer, dataset: smart-meter-penetration-by-transformer-level, category: lv_usage, cadence: 7d, gated: true}
   - {<<: *spen, id: spen_customer_connections_lv_tx, dataset: customer_connections_profile_lv_transformer, category: lv_usage, cadence: 7d, gated: true}
   - {<<: *spen, id: spen_feeder_utilisation_spd, dataset: spd-historic-feeder-utilisation, category: lv_usage, cadence: 7d}

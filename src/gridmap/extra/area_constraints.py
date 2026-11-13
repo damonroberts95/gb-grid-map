@@ -155,6 +155,8 @@ def curtailment_points(data_dir: Path) -> list[dict]:
     feats: list[dict] = []
     # UKPN: aggregated per GSP area; location = resolved GSP site, else the area centre
     for gsp, o in sorted(ukpn_schemes().items()):
+        if not o["t"]:  # breaches known but no curtailment events (feed missing): nothing to show
+            continue
         poly = polys.get(_norm(gsp))
         lat = lon = None
         if idx:

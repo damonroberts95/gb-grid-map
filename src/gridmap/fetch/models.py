@@ -13,7 +13,7 @@ REGISTRY_PATH = Path(__file__).resolve().parent.parent / "sources.yaml"
 
 OPERATORS = {"UKPN", "NPG", "ENW", "SPEN", "NGED", "SSEN", "SSEN-T", "NESO", "ELEXON", "CARBON",
              "DESNZ", "OSM", "OCM", "ONS", "OFGEM", "OTHER"}
-PORTALS = {"opendatasoft", "ckan", "http", "json_attachment", "govuk"}
+PORTALS = {"opendatasoft", "ckan", "http", "json_attachment", "govuk", "ssen_gql", "smart_agg", "ocm"}
 CATEGORIES = {
     "headroom", "sites", "ltds_fault", "ltds_other", "ecr", "queue", "tec", "lv_sites",
     "lv_usage", "outage", "live_national", "dfes", "lct", "boundary", "flex",
@@ -46,6 +46,7 @@ class Source:
     select: dict[str, Any] = field(default_factory=dict)  # resource / attachment selector
     rows_path: str | None = None  # dotted path to the row list inside a JSON document
     as_of_path: str | None = None  # dotted path to a data date inside a JSON document
+    core: bool = False  # fetched in the first-run pass (see refresh.is_core) even if its category is not core
     note: str | None = None
 
     @property
@@ -101,7 +102,7 @@ def load_sources(path: Path | None = None) -> list[Source]:
             raise ValueError(f"{src.id}: bad operator/portal/category")
         if src.gated and not src.auth_env:
             raise ValueError(f"{src.id}: gated sources need auth_env")
-        if src.portal in {"opendatasoft", "ckan", "json_attachment", "govuk"} and not src.dataset:
+        if src.portal in {"opendatasoft", "ckan", "json_attachment", "govuk", "smart_agg"} and not src.dataset:
             raise ValueError(f"{src.id}: dataset required")
         _ = src.cadence_seconds  # validates
         out.append(src)

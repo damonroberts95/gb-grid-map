@@ -2,9 +2,9 @@
 
 UKPN (21 substations: the published extract is capped at 30,000 rows), SPEN (Wirral Sep 2026, Ayrshire & Clyde
 South Oct 2026; feeders summed per substation) and NGED (all secondary substations, latest month). The raw feeds
-are half-hourly; scripts/lv_fetch_aggregates.py streams SPEN/NGED and stores one row per substation
+are half-hourly; the `smart_agg` fetcher (fetch/smart_agg.py) streams SPEN/NGED and stores one row per substation
 (data/raw/<id>/<ts>/agg.parquet). SSEN publishes feeder-level half-hourly usage through a GraphQL API with no
-coordinates: scripts/lv_fetch_ssen_gql.py saves one day of it plus a feeder x postcode lookup, and `_ssen` sums
+coordinates: the `ssen_gql` fetcher (fetch/ssen_gql.py) saves one day of it plus a feeder x postcode lookup, and `_ssen` sums
 feeders per secondary substation and places it at the MPAN-weighted centroid of its postcodes (OS Code-Point Open),
 snapped to the nearest SSEN lv_site within 250 m. NPG (file links) and ENW (installation counts only) are not
 consumption feeds. Consumption is taken as Wh per half-hour (kW = Wh x 2 / 1000); only smart-metered customers

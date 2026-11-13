@@ -7,6 +7,7 @@ from __future__ import annotations
 import io
 import logging
 import zipfile
+from pathlib import Path
 
 import polars as pl
 from pyproj import Transformer
@@ -29,12 +30,17 @@ def _wgs(x, y):
     return [round(v, 6) for v in lat], [round(v, 6) for v in lon]
 
 
+def _zip(snap: Path) -> Path:
+    """The downloaded zip in a snapshot (named after the URL's last segment, e.g. `downloads`; older ones `file`)."""
+    return next(p for p in sorted(snap.iterdir()) if p.name != "meta.json" and zipfile.is_zipfile(p))
+
+
 def _open_names() -> pl.DataFrame:
     snap = latest_snapshot("os_open_names")
     if snap is None:
         raise SystemExit("os_open_names not fetched: uv run python -I -m gridmap.fetch --only os_open_names")
     parts = []
-    with zipfile.ZipFile(snap / "file") as z:
+    with zipfile.ZipFile(_zip(snap)) as z:
         for n in z.namelist():
             if not n.startswith("Data/") or not n.endswith(".csv"):
                 continue
@@ -49,7 +55,7 @@ def _codepoint() -> pl.DataFrame | None:
     if snap is None:
         return None
     parts = []
-    with zipfile.ZipFile(snap / "file") as z:
+    with zipfile.ZipFile(_zip(snap)) as z:
         for n in z.namelist():
             if n.startswith("Data/CSV/") and n.endswith(".csv"):
                 parts.append(pl.read_csv(io.BytesIO(z.read(n)), has_header=False, infer_schema=False)

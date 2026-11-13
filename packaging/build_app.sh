@@ -30,7 +30,7 @@ if [ "${NO_KEYS:-0}" != 1 ]; then
 fi
 
 echo "== build info (shell version, deps hash, commit): the updater compares these with each update"
-printf '{"deps_hash": "%s", "sha": "%s"}\n' "$(uv run python scripts/make_bundle.py --deps-hash)" "$(git rev-parse HEAD)" > packaging/build_info.json
+printf '{"deps_hash": "%s", "sha": "%s", "commit_time": "%s"}\n' "$(uv run python scripts/make_bundle.py --deps-hash)" "$(git rev-parse HEAD)" "$(git show -s --format=%cI HEAD)" > packaging/build_info.json
 
 echo "== pyinstaller"
 rm -rf build dist/"GB Grid" dist/"GB Grid.app"

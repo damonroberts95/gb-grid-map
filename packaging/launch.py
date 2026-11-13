@@ -55,20 +55,44 @@ def ok(sha):
     return (HOME / "payload" / sha / "src" / "gridmap" / "__init__.py").is_file()
 
 
+def _ts(s):
+    from datetime import datetime
+    try:
+        return datetime.fromisoformat(str(s)).timestamp()  # 3.11+ parses "Z"
+    except (TypeError, ValueError):
+        return None
+
+
+def newer_than_bundle(sha):
+    """A payload is only worth running if its code is newer than the code bundled in this app. Compares commit
+    times (falls back to the payload's build time). Unknown -> run it (old behaviour)."""
+    info = json.loads(read_text("build_info.json") or "{}")
+    if sha == info.get("sha"):
+        return False  # identical code: the bundled copy is enough
+    bundle_t = _ts(info.get("commit_time"))
+    try:
+        man = json.loads((HOME / "payload" / sha / "manifest.json").read_text())
+    except (OSError, ValueError):
+        man = {}
+    payload_t = _ts(man.get("commit_time")) or _ts(man.get("built_at"))
+    return bundle_t is None or payload_t is None or payload_t > bundle_t
+
+
 def select():
     """sha of the payload to run, or None for the bundled copy."""
     f = HOME / "payload" / "current.json"
     st = load_state(f)
     pend = st["pending"]
     if pend:
-        if not st["trying"] and ok(pend):
+        if not st["trying"] and ok(pend) and newer_than_bundle(pend):
             st["trying"] = True
             save_state(f, st)
             return pend
-        st["bad"] = [pend] + [b for b in st["bad"] if b != pend][:19]
+        if st["trying"] or not ok(pend):  # it was tried and never became healthy, or vanished
+            st["bad"] = [pend] + [b for b in st["bad"] if b != pend][:19]
         st["pending"], st["trying"] = None, False
         save_state(f, st)
-    return next((g for g in st["good"] if ok(g) and g not in st["bad"]), None)
+    return next((g for g in st["good"] if ok(g) and g not in st["bad"] and newer_than_bundle(g)), None)
 
 
 def mark_bad(sha):

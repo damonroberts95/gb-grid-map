@@ -23,6 +23,14 @@ sys.path.insert(0, str(ROOT / "src"))
 from gridmap import payload
 
 
+def _commit_time(root: Path, sha: str) -> str | None:
+    """ISO commit time of `sha` (the launcher compares it with the bundled build's commit time)."""
+    import subprocess
+    r = subprocess.run(["git", "-C", str(root), "show", "-s", "--format=%cI", sha], capture_output=True, text=True,
+                       check=False)
+    return r.stdout.strip() or None
+
+
 def build(root: Path, out: Path, sha: str, built_at: str | None = None) -> Path:
     out.mkdir(parents=True, exist_ok=True)
     files: dict[str, Path] = {}
@@ -36,7 +44,8 @@ def build(root: Path, out: Path, sha: str, built_at: str | None = None) -> Path:
                     raise SystemExit(f"refusing to bundle secret-like file: {rel}")
                 # other file types (e.g. .pyc, py.typed) are simply left out
     manifest = {"sha": sha, "built_at": built_at or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "min_shell_version": (root / "SHELL_VERSION").read_text().strip(), "deps_hash": payload.compute_deps_hash(root)}
+                "min_shell_version": (root / "SHELL_VERSION").read_text().strip(), "deps_hash": payload.compute_deps_hash(root),
+                "commit_time": _commit_time(root, sha)}
     zpath = out / "update-bundle.zip"
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("manifest.json", json.dumps(manifest, indent=1))

@@ -24,6 +24,7 @@ USER_AGENT = "gridmap-local/0.1"  # honest UA; never spoof a browser
 BACKOFF = 1.0  # seconds, doubled per attempt (tests set 0)
 RETRY_STATUS = {429, 500, 502, 503, 504}
 MAX_BYTES = 200 * 1024 * 1024
+POST_GAP = 0.5  # seconds before every POST (polite; tests set 0)
 
 
 class FetchError(Exception):
@@ -101,6 +102,28 @@ async def get(ctx: Ctx, url: str, *, headers: dict[str, str] | None = None,
                 return resp
         await _backoff(attempt, resp)
     raise AssertionError("unreachable")
+
+
+async def post_json(ctx: Ctx, url: str, payload: dict[str, Any], *, retries: int = 4, gap: float | None = None) -> dict[str, Any]:
+    """POST a JSON body, return the decoded JSON. Retries on transport errors / 429 / 5xx / GraphQL `errors`
+    (BigQuery hiccups); at most one request per `gap` seconds per call site. Raises FetchError."""
+    last = ""
+    for attempt in range(retries + 1):
+        await asyncio.sleep(POST_GAP if gap is None else gap)
+        try:
+            async with ctx.limiter.slot(url):
+                resp = await ctx.client.post(url, json=payload)
+            body = resp.json()
+            if resp.status_code == 200 and "errors" not in body:
+                return body
+            last = f"HTTP {resp.status_code} {str(body.get('errors', ''))[:200]}"
+            if resp.status_code < 500 and resp.status_code != 429 and "errors" not in body:
+                break
+        except (httpx.TransportError, ValueError) as e:
+            last = f"{type(e).__name__}: {e}"
+        if attempt < retries:
+            await asyncio.sleep(BACKOFF * 2 ** (attempt + 1))
+    raise FetchError(f"POST {url} failed: {last}")
 
 
 async def download(ctx: Ctx, url: str, dest: Path, *, headers: dict[str, str] | None = None,

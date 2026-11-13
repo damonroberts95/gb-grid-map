@@ -26,13 +26,15 @@ import polars as pl
 from .normalise.common import DATA_DIR
 from .tools import tool
 
-BUILD_VERSION = "2"  # bump when the output format changes, to force a rebuild
+BUILD_VERSION = "3"  # bump when the output format changes, to force a rebuild
 KIND_NUM = {"GSP": 1, "BSP": 2, "PRIMARY": 3}
 STALE_SECONDS = 600
 TIPPECANOE = ["-l", "lv", "-Z11", "-z14", "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", "-r1",
               "--force", "-q"]
 # monitored LV only (national, low zoom): -r1 = no rate-based dropping; tiles over 500 KB are thinned.
-TIPPECANOE_LVMON = ["-l", "lvmon", "-Z4", "-z14", "-r1", "--no-feature-limit", "--maximum-tile-bytes=500000",
+# 100 KB tiles: at national zooms the densest clusters thin out (pattern stays readable, panning stays fast);
+# every site is present from about z8.
+TIPPECANOE_LVMON = ["-l", "lvmon", "-Z4", "-z14", "-r1", "--no-feature-limit", "--maximum-tile-bytes=100000",
                     "--drop-densest-as-needed", "--force", "-q"]
 
 

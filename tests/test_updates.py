@@ -240,7 +240,7 @@ def test_bundle_has_expected_files_and_manifest(tree, tmp_path):
     assert "manifest.json" in names and "web/dist/index.html" in names and "src/gridmap/sources.yaml" in names
     assert all(n == "manifest.json" or n.startswith(("src/gridmap/", "web/dist/")) for n in names)
     m = json.loads(zipfile.ZipFile(z).read("manifest.json"))
-    assert set(m) == {"sha", "built_at", "min_shell_version", "deps_hash"} and m["min_shell_version"] == "1"
+    assert set(m) == {"sha", "built_at", "min_shell_version", "deps_hash", "commit_time"} and m["min_shell_version"] == "1"
     assert m["deps_hash"] == payload.compute_deps_hash(tree)
 
 
@@ -255,3 +255,20 @@ def test_bundle_excludes_secrets(tree, tmp_path):
         z.writestr(".env.local", "KEY=1")
     with pytest.raises(SystemExit):
         make_bundle.check(bad)
+
+
+def test_older_payload_never_beats_newer_bundle(tmp_path, monkeypatch):
+    import json as _j
+    home = tmp_path / "home"
+    monkeypatch.setattr(launch, "HOME", home)
+    for sha, t in (("old", "2026-11-13T10:00:00+00:00"), ("new", "2026-11-13T12:00:00+00:00")):
+        d = home / "payload" / sha
+        (d / "src" / "gridmap").mkdir(parents=True)
+        (d / "src" / "gridmap" / "__init__.py").write_text("")
+        (d / "manifest.json").write_text(_j.dumps({"sha": sha, "commit_time": t}))
+    monkeypatch.setattr(launch, "read_text",
+                        lambda n: _j.dumps({"sha": "bundle", "commit_time": "2026-11-13T11:00:00+00:00"}))
+    assert not launch.newer_than_bundle("old")   # older code than the app: use the bundled copy
+    assert launch.newer_than_bundle("new")
+    monkeypatch.setattr(launch, "read_text", lambda n: _j.dumps({"sha": "new"}))
+    assert not launch.newer_than_bundle("new")   # identical code

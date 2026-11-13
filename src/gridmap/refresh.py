@@ -127,7 +127,19 @@ CORE_CATEGORIES = {"headroom", "sites", "lv_sites", "ltds_fault", "ecr", "queue"
 
 
 def is_core(s: Source) -> bool:
-    return s.category in CORE_CATEGORIES and not s.max_mb
+    return s.core or (s.category in CORE_CATEGORIES and not s.max_mb)
+
+
+def places_stale(data_dir: Path) -> bool:
+    """True when data/derived/places.parquet (address search) is missing or older than its inputs
+    (newest os_open_names / os_codepoint snapshots, or build_places.py). False while Open Names is not fetched."""
+    names = latest_snapshot("os_open_names")
+    if names is None:
+        return False
+    out = data_dir / "derived" / "places.parquet"
+    cp = latest_snapshot("os_codepoint")
+    newest = max(_mtime(names), _mtime(cp) if cp else 0.0)
+    return not out.exists() or newest > _mtime(out) or code_newer_than(out, "build_places.py")
 
 
 def refresh(*, force: bool = False, on_stage: StageCb | None = None, con: duckdb.DuckDBPyConnection | None = None,
@@ -176,6 +188,14 @@ def refresh(*, force: bool = False, on_stage: StageCb | None = None, con: duckdb
             except Exception as e:  # noqa: BLE001 - one adapter failing must not stop the others
                 _normalise_failed[op] = time.time()
                 say("normalise", f"{op} FAILED: {type(e).__name__}: {e}")
+
+        if data_dir == DATA_DIR and places_stale(data_dir):  # the build reads the snapshots under DATA_DIR
+            say("places", "building address search index")
+            try:
+                from . import build_places
+                build_places.build()
+            except Exception as e:  # noqa: BLE001 - search is optional; never block the map
+                say("places", f"FAILED: {type(e).__name__}: {e}")
 
         derived_missing = not (data_dir / "derived" / "site.parquet").exists()
         chain = (bool(res["normalised"]) or derived_missing

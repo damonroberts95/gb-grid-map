@@ -236,3 +236,14 @@ re-check before calling anything done. Add an entry (with date) whenever a new m
 - **Updatable code can only import what the .app already bundles.** A new third-party import passes tests in dev and breaks in the frozen app. Dependency changes change `deps_hash` and need `make app`; old apps then show "needs new app".
 - **Never import `gridmap` in `packaging/launch.py` before `use_payload()`.** It would load the bundled copy and the payload would be ignored. The launcher's `-c` branch (used by the updater's validation) runs before payload selection so it does not touch `current.json`.
 - **In the frozen app `sys.executable` is the GUI shell.** Run subprocess checks as `sys.executable -I -c <code>`; the launcher execs the code instead of opening a window.
+- **MapLibre worker in production builds:** `optimizeDeps.exclude` fixes dev only. Vite can't see MapLibre's runtime
+  `new URL(e, import.meta.url)`, so `vite build` emits no worker and the packaged app shows a blank map. Import it
+  with `?worker&url` and call `setWorkerUrl()`. Always test the production build (`/` on :8787), not just Vite dev.
+
+## 14. Fresh-install parity (2026-11-13)
+
+- **Everything an adapter or extra reads must be fetchable by the scheduler.** Hand-fetched snapshots and one-off scripts hide gaps until a fresh `GRIDMAP_HOME` (packaged app) lacks them. Test with an empty temp home: `GRIDMAP_HOME=<tmp> uv run python -I -m gridmap.refresh`. New portals: `ssen_gql`, `smart_agg` (NGED/SPEN smart-meter aggregation), `ocm`. `large: true` is for sources nothing reads.
+- **Snapshot file names follow the URL** (`downloads`, not `file`): never open `snap / "file"`; find zips by `zipfile.is_zipfile`. build_places did and only worked on the dev Mac's old snapshots.
+- **First-run set is `refresh.is_core`**: category core, or `core: true` on the source (the lv_monitored inputs).
+- **Address search index** (`derived/places.parquet`) is rebuilt by refresh when os_open_names / os_codepoint change.
+- **A feed that is missing can leave a sibling feed's aggregate half-empty** (`area_constraints`: breaches without curtailment events crashed `min([])`). Guard empties in extras.

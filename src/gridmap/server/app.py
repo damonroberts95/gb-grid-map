@@ -15,6 +15,7 @@ import json
 import logging
 import math
 import os
+import re
 import threading
 from bisect import bisect_right
 from contextlib import asynccontextmanager
@@ -205,10 +206,32 @@ class State:
 
     def set_stage(self, stage: str, detail: str = "") -> None:
         self.stage = {"stage": stage, "detail": detail}
+        m = re.match(r"(\d+) sources due", detail or "")
+        if stage == "fetch" and m:
+            self.fetch_total = int(m.group(1))
         self.bus.publish("status", self.stage)
+
+    def progress(self) -> dict:
+        """Refresh progress for the top-bar bar: fetch counts done/due since this refresh began; later stages
+        are fixed steps. Weights: fetch 70, normalise 10, match 5, build 15."""
+        if not self.refreshing:
+            return {"active": False, "pct": 100, "stage": "idle"}
+        stage = self.stage.get("stage", "fetch")
+        base = {"fetch": 0, "normalise": 70, "match": 80, "build": 85}.get(stage, 0)
+        pct = base
+        if stage == "fetch" and getattr(self, "fetch_total", 0):
+            try:
+                done = self.cur().execute("SELECT count(DISTINCT source_id) FROM source_run WHERE started_at >= ?",
+                                          [self.refresh_started]).fetchone()[0]
+            except duckdb.Error:
+                done = 0
+            pct = round(70 * min(1.0, done / self.fetch_total))
+        return {"active": True, "pct": pct, "stage": stage, "detail": self.stage.get("detail", "")}
 
     def refresh_once(self, core_only: bool = False) -> None:
         before = build.read_manifest(self.public).get("version")
+        self.refresh_started = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.fetch_total = 0
         self.refreshing = True
         self.set_stage("fetch", "starting")
         try:
@@ -292,6 +315,10 @@ def create_app(data_dir: Path | None = None, scheduler: bool | None = None) -> F
     def one(sql: str, params: list) -> dict | None:
         r = rows(st.cur(), sql, params)
         return r[0] if r else None
+
+    @app.get("/api/progress")
+    def progress():
+        return JSONResponse(st.progress(), headers={"Cache-Control": "no-store"})
 
     @app.get("/api/manifest")
     def manifest():

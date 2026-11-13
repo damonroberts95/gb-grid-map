@@ -9,6 +9,7 @@ sources:
     dataset: lv-monitor-deployment-strategy
     category: lv_usage
     cadence: 7d
+    core: true
     gated: true
     auth_env: NPG_API_KEY
     licence: "Northern Powergrid Open Data Licence v1.0"
@@ -23,6 +24,7 @@ sources:
     rows_path: result.resources
     category: lv_usage
     cadence: 7d
+    core: true
     licence: "NGED (WPD) Open Data Licence"
     attribution: "Contains data (c) National Grid Electricity Distribution, used under the NGED (WPD) Open Data Licence."
     note: "CKAN package metadata only: each resource is named by the monitored secondary substation number. The half-hourly CSVs themselves are not downloaded."
@@ -33,21 +35,68 @@ sources:
     dataset: dfes-lv-peak-demand-monitored
     category: lv_usage
     cadence: 7d
+    core: true
     gated: true
     auth_env: ENW_API_KEY
     licence: "CC BY 4.0 (some datasets: SP ENW Shared Licence)"
     attribution: "Contains data from SP Energy Networks (Electricity North West) open data portal, licensed under CC BY 4.0."
   - id: ssen_sm_gql
     operator: SSEN
-    portal: http
+    portal: ssen_gql
     base_url: "https://gql.internal.datopian.com/v1/graphql"
-    format: json
+    params: {day: "2024-09-04"}
     category: lv_usage
     cadence: 30d
-    large: true
+    max_mb: 200
+    keep: 1
     licence: "CC BY 4.0"
     attribution: "Contains data from the SSEN Distribution data portal, licensed under CC BY 4.0."
-    note: "SSEN smart-meter LV feeder consumption via GraphQL (POST, Hasura over BigQuery); the generic GET fetcher cannot read it, so large: true keeps it out of refresh. Fetched by scripts/lv_fetch_ssen_gql.py: lookup (feeder x postcode) + half-hourly usage for one day. Uses the ssen_smart_meter_dev_* tables (data ends 2024-09-05); the ssen_smart_meter_prod_* tables return BigQuery 403."
+    note: "SSEN smart-meter LV feeder consumption via GraphQL (POST, Hasura over BigQuery), fetched by fetch/ssen_gql.py: feeder x postcode lookup + half-hourly usage for params.day (~40 MB gz, ~200 requests at <=2/s). Uses the ssen_smart_meter_dev_* tables (data ends 2024-09-05, static); the ssen_smart_meter_prod_* tables return BigQuery 403. max_mb only raises the wall-clock limit to 60 min."
+  - id: spen_smart_consumption_wirral_agg
+    operator: SPEN
+    portal: smart_agg
+    base_url: "https://spenergynetworks.opendatasoft.com"
+    dataset: spm-aggregated-smart-consumption-wirral-feeder-level
+    select: {kind: ods}
+    category: lv_usage
+    cadence: 30d
+    gated: true
+    auth_env: SPEN_API_KEY
+    max_mb: 1500
+    keep: 1
+    licence: "CC BY 4.0"
+    attribution: "Contains data from the SP Energy Networks open data portal, licensed under CC BY 4.0."
+    note: "Half-hourly feeder consumption, Wirral. Grouped on the portal, streamed and reduced to one row per secondary substation (agg.parquet)."
+  - id: spen_smart_consumption_ayrshire_agg
+    operator: SPEN
+    portal: smart_agg
+    base_url: "https://spenergynetworks.opendatasoft.com"
+    dataset: spd-aggregated-smart-consumption-ayrshire-clyde-south-feeder-level
+    select: {kind: ods}
+    category: lv_usage
+    cadence: 30d
+    gated: true
+    auth_env: SPEN_API_KEY
+    max_mb: 1500
+    keep: 1
+    licence: "CC BY 4.0"
+    attribution: "Contains data from the SP Energy Networks open data portal, licensed under CC BY 4.0."
+    note: "Half-hourly feeder consumption, Ayrshire and Clyde South. Same reduction as the Wirral source."
+  - id: nged_smart_meter_secondary_agg
+    operator: NGED
+    portal: smart_agg
+    base_url: "https://connecteddata.nationalgrid.co.uk"
+    dataset: aggregated-smart-meter-data-secondary-substation
+    select: {kind: ckan_parts}
+    category: lv_usage
+    cadence: 30d
+    gated: true
+    auth_env: NGED_API_KEY
+    max_mb: 1500
+    keep: 1
+    licence: "NGED (WPD) Open Data Licence"
+    attribution: "Contains data (c) National Grid Electricity Distribution, used under the NGED (WPD) Open Data Licence."
+    note: "Newest month only: ~88 gz parts, ~520 MB in total, downloaded one at a time (0.3 s apart) and each reduced to a partial parquet; nothing raw is kept. Result is one row per secondary substation (agg.parquet)."
   - id: os_codepoint
     operator: OTHER
     portal: http

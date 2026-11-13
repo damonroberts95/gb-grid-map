@@ -11,12 +11,44 @@ interface Handlers {
 let builtAt: string | null = null
 let stage = 'idle'
 
+// Thin progress bar under the top bar while data updates (polls /api/progress only while busy).
+const bar = h('div', { class: 'progress', hidden: true, role: 'progressbar', 'aria-label': 'Updating data',
+  'aria-valuemin': '0', 'aria-valuemax': '100' }, h('i', {}))
+document.body.append(bar)
+let polling: number | undefined
+let lastPct = 0
+
+async function pollProgress() {
+  try {
+    const p = await (await fetch('/api/progress')).json() as { active: boolean; pct: number; stage: string }
+    if (!p.active) { stopProgress(); return }
+    lastPct = p.pct
+    bar.hidden = false
+    bar.setAttribute('aria-valuenow', String(p.pct))
+    ;(bar.firstChild as HTMLElement).style.width = `${Math.max(3, p.pct)}%`
+    paintStatus(true)
+  } catch { /* server restarting: keep last value */ }
+}
+
+function startProgress() {
+  if (polling) return
+  void pollProgress()
+  polling = window.setInterval(pollProgress, 2000)
+}
+
+function stopProgress() {
+  clearInterval(polling)
+  polling = undefined
+  bar.hidden = true
+  lastPct = 0
+}
+
 function paintStatus(connected: boolean) {
   const el = $('#status')
   if (!el) return
   const busy = stage !== 'idle'
   el.className = `status ${connected ? (busy ? 'busy' : 'ok') : 'down'}`
-  el.textContent = !connected ? 'Offline' : busy ? 'Updating data…' : `Data updated ${ago(builtAt)}`
+  el.textContent = !connected ? 'Offline' : busy ? `Updating data ${lastPct}%` : `Data updated ${ago(builtAt)}`
   el.title = builtAt ? `Map data built ${new Date(builtAt).toLocaleString()}` : ''
 }
 
@@ -36,6 +68,8 @@ export function connectLive(on: Handlers) {
     es.addEventListener('live', (e) => on.live(JSON.parse((e as MessageEvent).data).feed))
     es.addEventListener('status', (e) => {
       stage = JSON.parse((e as MessageEvent).data).stage
+      if (stage !== 'idle') startProgress()
+      else stopProgress()
       paintStatus(true)
     })
   }

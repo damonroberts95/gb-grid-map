@@ -62,7 +62,6 @@ sources:
     format: geojson
     gated: true
     auth_env: UKPN_API_KEY
-    large: true
     licence: "CC BY 4.0"
     attribution: "Contains data from the UK Power Networks Open Data Portal, licensed under CC BY 4.0."
     note: "11 kV overhead (103k)"
@@ -76,7 +75,6 @@ sources:
     format: geojson
     gated: true
     auth_env: UKPN_API_KEY
-    large: true
     licence: "CC BY 4.0"
     attribution: "Contains data from the UK Power Networks Open Data Portal, licensed under CC BY 4.0."
     note: "LV overhead (215k)"
@@ -103,7 +101,6 @@ sources:
     format: geojson
     gated: true
     auth_env: NPG_API_KEY
-    large: true
     licence: "Northern Powergrid Open Data Licence v1.0"
     attribution: "Contains data (c) Northern Powergrid, used under the Northern Powergrid Open Data Licence v1.0."
     note: "HV overhead feeders (21k)"
@@ -117,7 +114,6 @@ sources:
     format: geojson
     gated: true
     auth_env: NPG_API_KEY
-    large: true
     licence: "Northern Powergrid Open Data Licence v1.0"
     attribution: "Contains data (c) Northern Powergrid, used under the Northern Powergrid Open Data Licence v1.0."
     note: "LV overhead feeders (27k)"
@@ -157,7 +153,6 @@ sources:
     format: geojson
     gated: true
     auth_env: ENW_API_KEY
-    large: true
     licence: "CC BY 4.0"
     attribution: "Contains data from SP Energy Networks (Electricity North West) open data portal, licensed under CC BY 4.0."
     note: "11 kV overhead"
@@ -184,7 +179,6 @@ sources:
     format: geojson
     gated: true
     auth_env: ENW_API_KEY
-    large: true
     licence: "CC BY 4.0"
     attribution: "Contains data from SP Energy Networks (Electricity North West) open data portal, licensed under CC BY 4.0."
     note: "LV overhead (33k)"

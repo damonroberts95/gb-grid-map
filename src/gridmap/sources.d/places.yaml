@@ -1,4 +1,4 @@
-# OS Open Names: streets, places and postcode units for offline map search (server/places.py, build via scripts/build_places.py).
+# OS Open Names: streets, places and postcode units for offline map search (server/places.py, built by gridmap.build_places inside refresh).
 sources:
   - id: os_open_names
     operator: OTHER
