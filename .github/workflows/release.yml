@@ -25,6 +25,14 @@ jobs:
       - name: Build web UI
         run: cd web && npm ci && npm run build
       - uses: astral-sh/setup-uv@v5
+      - name: Install tippecanoe (tile builds in tests)
+        run: |
+          sudo apt-get update -q
+          if ! sudo apt-get install -y -q tippecanoe; then
+            git clone --depth 1 https://github.com/felt/tippecanoe.git /tmp/tippecanoe
+            make -C /tmp/tippecanoe -j"$(nproc)" && sudo make -C /tmp/tippecanoe install
+          fi
+          tippecanoe --version
       - name: Tests
         run: uv run pytest -q
       - name: Package update bundle
