@@ -15,7 +15,7 @@ export function showHelp() {
       h('li', {}, h('strong', {}, 'Colours'), ': green has room, amber a little, red none, grey not published.'),
       h('li', {}, h('strong', {}, 'Search'), ' a street, postcode or substation.'),
       h('li', {}, h('strong', {}, 'Click'), ' a dot for details and what feeds it.'),
-      h('li', {}, h('strong', {}, 'LV monitoring'), ' shows street substations with a monitor.')),
+      h('li', {}, h('strong', {}, 'Blue rings'), ' mark street substations with a monitor.')),
     h('p', { class: 'muted small' }, 'Hover dotted words for definitions. ⟲ Reset undoes changes.'),
     h('div', { class: 'help-actions' }, h('button', { type: 'button', class: 'tb-btn primary', onclick: close }, 'Got it')),
   )

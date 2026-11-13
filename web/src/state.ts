@@ -53,7 +53,7 @@ function save() {
 function load(): State {
   const p = { get: hashGet, has: (k: string) => hashGet(k) !== null }
   // partial hashes (e.g. a shared '#s=1' link) override just those keys
-  if (!p.has('m')) return { ...DEFAULT, simple: p.get('s') === '1' }
+  if (!p.has('m')) return { ...DEFAULT }
   const layers = (p.get('l') ?? '').split(',')
   const thr = Number(p.get('t'))
   return {
@@ -66,7 +66,7 @@ function load(): State {
     links: layers.includes('links'),
     outages: layers.includes('out'),
     neso: layers.includes('neso'),
-    simple: p.get('s') === '1',
+    simple: false, // LV monitoring tab removed (one LV view; monitored sites are ringed)
     mounts: p.get('mt') !== null ? (p.get('mt') ?? '').split(',').filter((m) => ['g', 'p', 'u'].includes(m)) : ['g', 'p', 'u'],
   }
 }

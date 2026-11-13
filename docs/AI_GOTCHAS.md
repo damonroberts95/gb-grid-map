@@ -250,3 +250,7 @@ re-check before calling anything done. Add an entry (with date) whenever a new m
 - **One broken extra module must not block the build.** `extra.modules()` imports every module; a SyntaxError used
   to abort `build_all` before the manifest was written (stale layers, e.g. a retired `lvmon` lingering). It now logs
   and skips the module. (2026-11-13)
+- **Frozen app: module source files may not exist.** PyInstaller puts modules in a PYZ archive, so code reading
+  `Path(mod.__file__)` fails, and that silently broke every refresh in the bundled app (stale manifest, empty LV).
+  The spec now ships `gridmap` as .py (`module_collection_mode`), and `extra._module_bytes` falls back to compiled
+  code. Always run a full refresh in the *built app* (fresh or existing home) and grep its log for ERROR. (2026-11-13)

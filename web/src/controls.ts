@@ -202,17 +202,8 @@ export function buildControls(map: MlMap, select: (hit: SearchHit) => void) {
     action('None', 'Hide all operators', () => set({ ops: [] }))]
 
   const panel = h('section', { class: 'panel controls', 'aria-label': 'Map controls' },
-    seg([false, true] as unknown as readonly number[], () => (state.simple as unknown as number),
-      (v) => (v ? 'LV monitoring' : 'Full map'), (v) => set({ simple: !!v }), 'mode', (v) => (v ? 'lv_mode' : undefined)),
     search(map, select),
     section('key', 'Key', [], legend()),
-
-    // ---- LV monitoring mode ----
-    h('div', { class: 'simple-only' },
-      section('lvops', 'Operators', opActions(), opChips()),
-      section('lvmount', 'Mount type', [action('All', 'Show all', () => set({ mounts: ['g', 'p', 'u'] }))],
-        chips(['g', 'p', 'u'] as const, () => state.mounts as ('g' | 'p' | 'u')[],
-          (v) => ({ g: 'Ground', p: 'Pole', u: 'Unknown' })[v], (v) => set({ mounts: v })))),
 
     // ---- full map ----
     h('div', { class: 'full-only' },

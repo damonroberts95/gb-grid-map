@@ -53,6 +53,8 @@ a = Analysis(
     excludes=["tkinter", "matplotlib", "pytest", "respx", "pyarrow", "pandas", "IPython", "PyQt5", "PyQt6",
               "PySide2", "PySide6", "qtpy", "gi", "gtk"],
     noarchive=False,
+    # ship our own package as .py files (like update payloads): code that reads module files works the same
+    module_collection_mode={"gridmap": "py"},
 )
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="GB Grid", console=False, target_arch="arm64",

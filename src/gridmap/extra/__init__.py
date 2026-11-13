@@ -84,8 +84,20 @@ def modules(strict: bool = False) -> list[Any]:
     return out
 
 
+def _module_bytes(mod: Any) -> bytes:
+    """The module's source, or its compiled code when no .py file exists (frozen app bundles)."""
+    try:
+        return Path(mod.__file__).read_bytes()
+    except (OSError, TypeError):
+        import marshal
+        try:
+            return marshal.dumps(mod.__loader__.get_code(mod.__name__))
+        except Exception:  # noqa: BLE001 - last resort: name only (rebuilds when data changes)
+            return mod.__name__.encode()
+
+
 def _input_hash(mod: Any, data_dir: Path) -> str:
-    h = hashlib.sha256(Path(mod.__file__).read_bytes())
+    h = hashlib.sha256(_module_bytes(mod))
     for sid in sorted(getattr(mod, "SOURCES", [])):
         snap = latest_snapshot(sid)
         h.update(f"{sid}:{snap.name if snap else '-'}".encode())
@@ -109,7 +121,11 @@ def build_extras(data_dir: Path | None, public: Path, old: dict[str, Any], only_
         present |= {m.id for m in metas}
         if only_live and not any(m.live for m in metas):
             continue
-        h = _input_hash(mod, data_dir)
+        try:
+            h = _input_hash(mod, data_dir)
+        except Exception as e:  # noqa: BLE001 - one layer's problem must not stop the others
+            errors[mod.__name__] = f"{type(e).__name__}: {e}"
+            continue
         if all(extras.get(m.id, {}).get("hash") == h and (public / Path(extras[m.id]["url"]).name).exists()
                for m in metas):
             continue
