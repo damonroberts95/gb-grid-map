@@ -7,7 +7,10 @@ ROOT=$PWD
 TOOLS_DIR=${TOOLS_DIR:-/opt/homebrew/bin}
 
 [ "$(uname -m)" = arm64 ] || { echo "build on an Apple Silicon Mac"; exit 1; }
-[ -f .env ] || { echo ".env missing: the API keys are bundled from it"; exit 1; }
+# NO_KEYS=1: public build with no API keys (users add their own on the Keys page)
+if [ "${NO_KEYS:-0}" != 1 ]; then
+  [ -f .env ] || { echo ".env missing: the API keys are bundled from it (or set NO_KEYS=1)"; exit 1; }
+fi
 
 echo "== web build"
 (cd web && npm run build)
@@ -21,7 +24,10 @@ for t in tippecanoe pmtiles; do
     echo "$t links to non-system libraries (listed above)"; exit 1
   fi
 done
-cp .env packaging/keys.env; chmod 600 packaging/keys.env   # gitignored (keys.env); never print it
+rm -f packaging/keys.env   # never let a stale keys file slip into a build
+if [ "${NO_KEYS:-0}" != 1 ]; then
+  cp .env packaging/keys.env; chmod 600 packaging/keys.env   # gitignored (keys.env); never print it
+fi
 
 echo "== build info (shell version, deps hash, commit): the updater compares these with each update"
 printf '{"deps_hash": "%s", "sha": "%s"}\n' "$(uv run python scripts/make_bundle.py --deps-hash)" "$(git rev-parse HEAD)" > packaging/build_info.json
@@ -47,7 +53,8 @@ GB Grid (Apple Silicon Macs only)
 
 Notes
 -----
-* The app holds operator API keys. Do not share it publicly.
+* API keys: add free keys on the Keys tab for more data.
+  (Private builds may already include keys. Do not share those publicly.)
 * Data folder: ~/Library/Application Support/GB Grid
   (data, map, logs/app.log, keys in ".env").
 * Start over: quit, then delete that folder.

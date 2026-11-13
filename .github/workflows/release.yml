@@ -50,7 +50,7 @@ jobs:
           notes="Update bundle for ${GITHUB_SHA}. Installed apps download this automatically."
           # immutable per-commit release
           gh release view "update-$short" >/dev/null 2>&1 || \
-            gh release create "update-$short" $files --target "$GITHUB_SHA" --title "update-$short" --notes "$notes"
+            gh release create "update-$short" $files --target "$GITHUB_SHA" --title "update-$short" --notes "$notes" --latest=false
           # rolling release: move the tag, then create-or-update the release and replace its assets
           git tag -f latest-update "$GITHUB_SHA"
           git push -f origin latest-update

@@ -15,6 +15,7 @@ import { connectLive, refreshNational, setBuiltAt } from './live'
 import { onChange, reset as resetState, state } from './state'
 import { gateOnSetup } from './setup'
 import { initUpdates } from './updates'
+import { nudgeKeys } from './keysnudge'
 import { applyThemeToDocument, basemap, INK, initialTheme, onTheme, setTheme, theme } from './theme'
 
 await gateOnSetup() // first run of the packaged app: show setup progress until data + basemap exist
@@ -190,6 +191,7 @@ initGlossary()
 buildControls(map, onSearch)
 maybeShowWelcome()
 initUpdates()
+void nudgeKeys()
 void refreshNational()
 setInterval(refreshNational, 60_000)
 
