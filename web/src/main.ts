@@ -1,7 +1,8 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
 import './style.css'
-import { addProtocol, Map as MlMap, type MapGeoJSONFeature, type StyleSpecification } from 'maplibre-gl'
+import { addProtocol, setWorkerUrl, Map as MlMap, type MapGeoJSONFeature, type StyleSpecification } from 'maplibre-gl'
 import { Protocol } from 'pmtiles'
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { api, type SearchHit } from './api'
 import { buildControls } from './controls'
 import { hide, initDetail, onHierarchy, showLv, showSite } from './detail'
@@ -19,6 +20,10 @@ import { nudgeKeys } from './keysnudge'
 import { applyThemeToDocument, basemap, INK, initialTheme, onTheme, setTheme, theme } from './theme'
 
 await gateOnSetup() // first run of the packaged app: show setup progress until data + basemap exist
+
+// MapLibre builds its worker URL at runtime, which Vite can't see: bundle the worker explicitly (worker + its
+// shared chunk in one file) and hand MapLibre the URL. Without this the production build has no map.
+setWorkerUrl(maplibreWorkerUrl)
 
 const pmtiles = new Protocol()
 addProtocol('pmtiles', pmtiles.tile)
