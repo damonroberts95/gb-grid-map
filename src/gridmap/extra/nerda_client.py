@@ -32,7 +32,8 @@ LAYERS: list = []  # helper module: no layers (the extras framework skips it)
 SOURCES: list[str] = []
 BASE = "https://nerda-prod-apis-v2.azurewebsites.net/api/"
 SOURCE_ID = "ssen_nerda_static"
-ENV_PATH = Path(__file__).resolve().parents[3] / ".env"
+from ..settings import KEYS_FILE as ENV_PATH
+
 KEY_LIFETIME_DAYS, KEY_WARN_DAY = 90, 80
 STATIC_MAX_AGE_DAYS = 7
 KEEP_SNAPSHOTS = 2

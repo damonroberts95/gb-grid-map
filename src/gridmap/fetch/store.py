@@ -47,7 +47,8 @@ def utcnow() -> str:
 
 class Store:
     def __init__(self, data_dir: Path | None = None):
-        self.data_dir = Path(data_dir or os.environ.get("GRIDMAP_DATA_DIR") or REPO_ROOT / "data")
+        from ..settings import DATA_DIR as _DATA_DIR
+        self.data_dir = Path(data_dir or _DATA_DIR)
         self.raw_dir = self.data_dir / "raw"
         self.db_path = self.data_dir / "grid.duckdb"
         self._con: duckdb.DuckDBPyConnection | None = None

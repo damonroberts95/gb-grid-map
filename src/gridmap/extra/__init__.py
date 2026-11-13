@@ -12,6 +12,9 @@ The framework (build_extras) hashes each module's inputs (its source snapshots, 
 `inputs` paths it declares), rebuilds only when they change, content-addresses the output into data/public,
 and adds it to manifest["extras"]. The web app renders every extra generically from its LayerMeta.
 
+Overlay (auto-update, see gridmap.updater): `<OVERLAY_DIR>/extra/*.py` takes precedence over the bundled module of
+the same filename (overlay dir is first on the package __path__); bundled modules without an overlay twin stay.
+
 Contract for files:
 - geojson: FeatureCollection, WGS84, numeric feature `id` optional. Keep properties short and few.
 - pmtiles: built with tippecanoe; `source_layer` must match the -l name.
@@ -25,15 +28,44 @@ import importlib
 import json
 import pkgutil
 import shutil
+import sys
 import tempfile
 import traceback
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .. import settings
 from ..normalise.common import DATA_DIR, latest_snapshot
 
 PKG = Path(__file__).resolve().parent
+_UNSET = object()
+_overlay_seen: Any = _UNSET  # mtime of OVERLAY_DIR/VERSION.json when the overlay was last (re)loaded
+
+
+def overlay_dir() -> Path:
+    return settings.OVERLAY_DIR / "extra"
+
+
+def reset_overlay() -> None:
+    """Make the package see OVERLAY_DIR/extra/*.py: overlay files take precedence over bundled ones of the same
+    name (the overlay dir is first on the package __path__). Forget cached extra modules when the overlay changed."""
+    global _overlay_seen
+    ov = str(overlay_dir())
+    if ov in __path__:
+        __path__.remove(ov)
+    if overlay_dir().is_dir():
+        __path__.insert(0, ov)
+    try:
+        seen = (settings.OVERLAY_DIR / "VERSION.json").stat().st_mtime
+    except OSError:
+        seen = None
+    first = _overlay_seen is _UNSET
+    if seen != _overlay_seen:
+        _overlay_seen = seen
+        for k in ([] if first else [k for k in sys.modules if k.startswith(f"{__name__}.")]):
+            del sys.modules[k]
+        importlib.invalidate_caches()
 
 
 @dataclass
@@ -69,11 +101,9 @@ class Ctx:
 
 
 def modules() -> list[Any]:
-    out = []
-    for m in pkgutil.iter_modules([str(PKG)]):
-        if not m.name.startswith("_"):
-            out.append(importlib.import_module(f"{__name__}.{m.name}"))
-    return out
+    reset_overlay()
+    names = sorted({m.name for m in pkgutil.iter_modules(__path__) if not m.name.startswith("_")})
+    return [importlib.import_module(f"{__name__}.{n}") for n in names]  # overlay dir first on __path__
 
 
 def _input_hash(mod: Any, data_dir: Path) -> str:
@@ -135,3 +165,6 @@ def build_extras(data_dir: Path | None, public: Path, old: dict[str, Any], only_
 
 def describe() -> str:
     return json.dumps([asdict(m) for mod in modules() for m in mod.LAYERS], indent=1)
+
+
+reset_overlay()  # at import, so helper modules (lv_common, ...) also resolve to overlay copies

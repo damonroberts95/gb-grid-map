@@ -16,6 +16,7 @@ from typing import Any
 import polars as pl
 
 from ..normalise.common import latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 SOURCES = ["nie_sites_grid_bulk_primary", "nie_secondary_transformers"]
@@ -154,7 +155,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
             src = ctx.tmp / "ni_secondary.geojson"
             src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}))
             pm = ctx.tmp / "ni_secondary.pmtiles"
-            subprocess.run(["tippecanoe", "-q", "-f", "-o", str(pm), "-l", "ni_secondary", "-Z8", "-z14",
+            subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(pm), "-l", "ni_secondary", "-Z8", "-z14",
                             "--drop-densest-as-needed", str(src)], check=True)
             out["ni_secondary"] = pm
     return out

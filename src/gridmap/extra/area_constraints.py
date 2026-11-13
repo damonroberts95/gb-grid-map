@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from ..normalise.common import latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 SOURCES = ["ukpn_curtailment_events", "ukpn_constraint_breaches", "npg_curtailment_events", "ukpn_gsp_areas",
@@ -253,7 +254,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
         src = ctx.tmp / "area_anm.geojson"
         src.write_text(json.dumps({"type": "FeatureCollection", "features": polys}, separators=(",", ":")))
         pm = ctx.tmp / "area_anm.pmtiles"
-        subprocess.run(["tippecanoe", "-q", "-f", "-o", str(pm), "-l", "anm_zones", "-Z5", "-z12",
+        subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(pm), "-l", "anm_zones", "-Z5", "-z12",
                         "--simplification=4", "--drop-densest-as-needed", str(src)], check=True)
         out["anm_zones"] = pm
     return out

@@ -18,14 +18,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
-from dotenv import load_dotenv
 
 from . import build, load, match
 from .fetch import runner
 from .fetch.models import Source, load_sources
-from .fetch.store import DDL, REPO_ROOT, Store
+from .fetch.store import DDL, Store
 from .normalise.__main__ import ADAPTERS
 from .normalise.common import DATA_DIR, latest_snapshot
+from .settings import OVERLAY_DIR, load_keys
 
 LIVE = {"outage": "outages", "live_national": "national"}  # category -> feed name (docs/api.md events)
 FAIL_RETRY = (600, 3600)  # a failing source is retried after clamp(cadence, 10 min, 1 h)
@@ -121,9 +121,18 @@ def _has_table(con: duckdb.DuckDBPyConnection, name: str) -> bool:
                 .fetchone()[0])
 
 
+# First run: fetch only what the main map needs, show it, then fetch the rest in later passes.
+CORE_CATEGORIES = {"headroom", "sites", "lv_sites", "ltds_fault", "ecr", "queue", "tec", "boundary",
+                   "outage", "live_national"}
+
+
+def is_core(s: Source) -> bool:
+    return s.category in CORE_CATEGORIES and not s.max_mb
+
+
 def refresh(*, force: bool = False, on_stage: StageCb | None = None, con: duckdb.DuckDBPyConnection | None = None,
             lock: threading.Lock | None = None, data_dir: Path | None = None,
-            registry: list[Source] | None = None) -> dict:
+            registry: list[Source] | None = None, core_only: bool = False) -> dict:
     """One pass. Returns {fetched, live, normalised, loaded, built}; `live` lists feeds whose data refreshed."""
     say = on_stage or (lambda stage, detail: None)
     data_dir = data_dir or DATA_DIR
@@ -132,7 +141,7 @@ def refresh(*, force: bool = False, on_stage: StageCb | None = None, con: duckdb
     if own:
         data_dir.mkdir(parents=True, exist_ok=True)
         con = duckdb.connect(str(data_dir / "grid.duckdb"))
-    load_dotenv(REPO_ROOT / ".env")  # keys stay in os.environ; never printed
+    load_keys()  # keys stay in os.environ; never printed
     registry = registry if registry is not None else load_sources()
     res: dict = {"fetched": {}, "live": [], "normalised": [], "loaded": False, "built": []}
     try:
@@ -143,6 +152,8 @@ def refresh(*, force: bool = False, on_stage: StageCb | None = None, con: duckdb
             if (n := st.ingest_pending()):
                 say("fetch", f"ingested {n} runs logged by CLI fetches")
             due = due_sources(registry, con, force=force)
+            if core_only:
+                due = [s for s in due if is_core(s)]
         cat = {s.id: s.category for s in registry}
 
         if due:
@@ -182,7 +193,8 @@ def refresh(*, force: bool = False, on_stage: StageCb | None = None, con: duckdb
         fetched_static = due and any(r for r in summary["runs"]
                                      if r["status"] == "ok" and cat[r["source"]] not in LIVE)
         if (chain or fetched_static or not (data_dir / "public" / "manifest.json").exists()
-                or code_newer_than(data_dir / "public" / "manifest.json", "build.py", "extra")):
+                or code_newer_than(data_dir / "public" / "manifest.json", "build.py", "extra")
+                or _mtime(OVERLAY_DIR / "VERSION.json") > _mtime(data_dir / "public" / "manifest.json")):
             say("build", "building map files")
             out = build.build_all(data_dir)
             res["built"] = out["changed"]

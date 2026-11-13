@@ -11,6 +11,7 @@ from pathlib import Path
 import polars as pl
 
 from ..normalise.common import latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 SOURCES = ["neso_gsp_regions", "neso_fes_gsp_info"]
@@ -88,7 +89,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
     src = ctx.tmp / "gsp_regions.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}))
     out = ctx.tmp / "gsp_regions.pmtiles"
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", "gsp_regions", "-Z0", "-z11",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "gsp_regions", "-Z0", "-z11",
                     "--simplification=4", "--coalesce-densest-as-needed", "--detect-shared-borders", str(src)],
                    check=True)
     return {"gsp_regions": out}

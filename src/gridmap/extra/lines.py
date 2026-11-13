@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from ..normalise.common import latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 ATTR = ("Overhead lines: UK Power Networks, Northern Powergrid, Electricity North West, SSEN Distribution open data "
@@ -178,7 +179,7 @@ def _ssen_feats(snap: Path) -> Iterator[tuple[dict, bool]]:
 
 
 def _tile(feats_path: Path, out: Path, layer: str, minz: int, maxz: int) -> None:
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", layer, f"-Z{minz}", f"-z{maxz}",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", layer, f"-Z{minz}", f"-z{maxz}",
                     "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(feats_path)], check=True)
 
 

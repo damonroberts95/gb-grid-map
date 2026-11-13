@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from ..normalise.common import latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 SOURCES = ["carbon_regional", "neso_dno_licence_areas"]
@@ -95,6 +96,6 @@ def build(ctx: Ctx) -> dict[str, Path]:
     src = ctx.tmp / "live_carbon.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}))
     out = ctx.tmp / "carbon_regions.pmtiles"
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", "carbon_regions", "-Z0", "-z9",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "carbon_regions", "-Z0", "-z9",
                     "--simplification=4", "--detect-shared-borders", str(src)], check=True)
     return {"carbon_regions": out}

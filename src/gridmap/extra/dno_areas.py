@@ -10,6 +10,7 @@ from pathlib import Path
 from pyproj import Transformer
 
 from ..normalise.common import latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 SOURCES = ["neso_dno_licence_areas"]
@@ -65,7 +66,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
     src = ctx.tmp / "dno_areas.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}))
     out = ctx.tmp / "dno_areas.pmtiles"
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", "dno_areas", "-Z0", "-z10", "-r1",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "dno_areas", "-Z0", "-z10", "-r1",
                     "--simplification=6", "--detect-shared-borders", "--no-tiny-polygon-reduction", str(src)],
                    check=True)
     return {"dno_areas": out}

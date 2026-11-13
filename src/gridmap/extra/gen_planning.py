@@ -24,6 +24,7 @@ from ..normalise.common import (
     snapshot_files,
     snapshot_meta,
 )
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 SOURCES = ["desnz_repd", "neso_tec_register", "ssent_sites_grid", "ssent_sites_supergrid"]
@@ -126,7 +127,7 @@ def _write_pmtiles(ctx: Ctx, layer: str, feats: list[dict], zmin: int, zmax: int
     src = ctx.tmp / f"gen_{layer}.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, separators=(",", ":")))
     out = ctx.tmp / f"{layer}.pmtiles"
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", layer, f"-Z{zmin}", f"-z{zmax}",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", layer, f"-Z{zmin}", f"-z{zmax}",
                     "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(src)], check=True)
     return out
 

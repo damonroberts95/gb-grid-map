@@ -15,6 +15,7 @@ import tempfile
 from pathlib import Path
 
 from ..normalise.common import DATA_DIR
+from ..tools import tool
 from . import Ctx
 
 
@@ -39,7 +40,7 @@ def main() -> int:
             info = f"features={n:,} props={props}"
             assert size <= 3_000_000, "geojson over 3 MB: use pmtiles"
         elif f.suffix == ".pmtiles":
-            out = subprocess.run(["pmtiles", "show", str(f)], capture_output=True, text=True,
+            out = subprocess.run([tool("pmtiles"), "show", str(f)], capture_output=True, text=True,
                                  check=False).stdout
             info = " ".join(ln.strip() for ln in out.splitlines() if ln.split(":")[0].strip() in
                             ("min zoom", "max zoom", "addressed tiles count", "layer"))

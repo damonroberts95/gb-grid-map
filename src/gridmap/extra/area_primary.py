@@ -13,6 +13,7 @@ from typing import Any
 import polars as pl
 
 from ..normalise.common import latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 # (source id, operator, level) -- level P = primary, B = BSP-level. Order matters only for tippecanoe.
@@ -205,7 +206,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
     src = ctx.tmp / "area_primary.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, separators=(",", ":")))
     out = ctx.tmp / "area_primary.pmtiles"
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", "primary_areas", "-Z5", "-z13",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "primary_areas", "-Z5", "-z13",
                     "--simplification=6", "--simplify-only-low-zooms", "--coalesce-densest-as-needed",
                     "--detect-shared-borders", "--maximum-tile-bytes=450000", str(src)], check=True)
     return {"primary_areas": out}

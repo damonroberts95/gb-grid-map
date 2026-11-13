@@ -8,10 +8,12 @@ dependencies = [
     "fastapi>=0.162.5",
     "httpx>=0.28.1",
     "openpyxl>=3.1.5",
+    "osmium>=4.3.2",
     "polars>=2.1.0",
     "pyarrow>=26.0.1",
     "pyproj>=3.8.0",
     "python-dotenv>=1.2.4",
+    "pywebview>=6.2.1",
     "pyyaml>=6.0.3",
     "rapidfuzz>=3.14.6",
     "uvicorn[standard]>=0.54.0",
@@ -23,6 +25,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "pyinstaller>=6.22.3",
     "pytest>=9.2.0",
     "respx>=0.23.1",
     "ruff>=0.17.4",

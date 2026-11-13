@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ..normalise.common import DATA_DIR, best_coords, latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 SOURCES = ["ocm_gb_poi"]  # not in sources.yaml: needs a header key + bbox pagination (see docstring)
@@ -143,7 +144,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
     src = ctx.tmp / "dem_ev_chargers.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, separators=(",", ":")))
     out = ctx.tmp / "dem_ev_chargers.pmtiles"
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", "ev_chargers", "-Z8", "-z14",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "ev_chargers", "-Z8", "-z14",
                     "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(src)], check=True)
     return {"ev_chargers": out}
 
@@ -155,7 +156,9 @@ if __name__ == "__main__":
 
     from dotenv import load_dotenv
 
-    load_dotenv(DATA_DIR.parent / ".env")
+    from ..settings import KEYS_FILE
+
+    load_dotenv(KEYS_FILE)
     k = os.environ.get("OCM_API_KEY")
     if not k:
         sys.exit("OCM_API_KEY not set in .env")

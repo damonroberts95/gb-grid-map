@@ -15,6 +15,7 @@ import polars as pl
 from pyproj import Transformer
 
 from ..normalise.common import latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 SOURCES = ["desnz_postcode_elec", "os_codepoint"]
@@ -119,6 +120,6 @@ def build(ctx: Ctx) -> dict[str, Path]:
         for r in pts.iter_rows(named=True):
             f.write(_feat(r, 12, 13) + "\n")
     out = ctx.tmp / "elec_postcode_kwh.pmtiles"
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", "elec_postcode_kwh", "-Z6", "-z13",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "elec_postcode_kwh", "-Z6", "-z13",
                     "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(src)], check=True)
     return {"elec_postcode_kwh": out}

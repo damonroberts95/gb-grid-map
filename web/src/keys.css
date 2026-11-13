@@ -1,0 +1,27 @@
+/* Keys page: provider cards. Uses the tokens from pages.css. */
+.k-summary { display: flex; align-items: center; gap: 12px; margin: 14px 0 4px; font-size: 16px; font-weight: 650; }
+.k-bar { flex: 1; max-width: 260px; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.k-bar i { display: block; height: 100%; background: var(--ok); }
+.k-card { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+.k-card h2 { margin: 0 0 4px; font-size: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.k-chip { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 10px; color: #fff; background: var(--muted); }
+.k-chip.ok { background: var(--ok); }
+.k-chip.bad { background: var(--bad); }
+.k-opt { font-size: 12px; font-weight: 400; color: var(--muted); }
+.k-unlocks { margin: 2px 0 8px; }
+.k-card ol { margin: 6px 0 10px; padding-left: 22px; }
+.k-card li { margin: 3px 0; }
+.k-card a { color: var(--accent); }
+.k-field { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; }
+.k-field label { flex: 0 0 100%; font-size: 12.5px; font-weight: 600; }
+.k-field input { flex: 1 1 260px; max-width: 460px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--bg); color: var(--ink); font: 13px ui-monospace, monospace; }
+.k-card button { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 6px; padding: 5px 12px; cursor: pointer; font: inherit; }
+.k-card button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.k-card button:disabled { opacity: 0.5; cursor: default; }
+.k-msg { font-size: 12.5px; min-height: 1.2em; margin: 2px 0; }
+.k-msg.ok { color: var(--ok); }
+.k-msg.bad { color: var(--bad); }
+.k-card details { margin-top: 8px; color: var(--muted); font-size: 12.5px; }
+.k-card details ul { margin: 6px 0; padding-left: 20px; }
+.k-foot { margin-top: 24px; }

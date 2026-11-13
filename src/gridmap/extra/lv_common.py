@@ -11,6 +11,7 @@ from pathlib import Path
 import polars as pl
 
 from ..normalise.common import best_coords, latest_snapshot, snapshot_files
+from ..tools import tool
 
 LAYERS: list = []
 SOURCES: list[str] = []
@@ -45,7 +46,7 @@ def to_pmtiles(features: list[dict], tmp: Path, name: str, minzoom: int = 9, max
     src = tmp / f"{name}.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": features}))
     out = tmp / f"{name}.pmtiles"
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", name, f"-Z{minzoom}", f"-z{maxzoom}",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", name, f"-Z{minzoom}", f"-z{maxzoom}",
                     "--drop-densest-as-needed", "--maximum-tile-bytes=450000", str(src)], check=True)
     return out
 

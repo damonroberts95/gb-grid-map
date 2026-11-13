@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from ..normalise.common import latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
 from .live_carbon import REGION_TO_AREA, reproject
 
@@ -99,7 +100,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
     src = ctx.tmp / "live_pv.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}))
     out = ctx.tmp / "live_pv.pmtiles"
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", "live_pv", "-Z0", "-z9",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "live_pv", "-Z0", "-z9",
                     "--simplification=4", "--detect-shared-borders", str(src)], check=True)
     return {"live_pv": out}
 

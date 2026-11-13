@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from ..normalise.common import latest_snapshot, snapshot_files
+from ..tools import tool
 from .lines import _dbf_rows
 
 LAYERS: list = []
@@ -135,6 +136,6 @@ def read_polygon_zip(z: Path, crs: int, want: set[str]) -> Iterator[tuple[dict[s
 def tile(feats: list[dict], out: Path, layer: str, minz: int, maxz: int, extra: list[str] | None = None) -> Path:
     src = out.with_suffix(".geojsonl")
     src.write_text("\n".join(json.dumps(f, separators=(",", ":")) for f in feats))
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", layer, f"-Z{minz}", f"-z{maxz}",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", layer, f"-Z{minz}", f"-z{maxz}",
                     *(extra or []), str(src)], check=True)
     return out

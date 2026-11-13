@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import re
 from pathlib import Path
 from typing import Any
@@ -15,7 +14,7 @@ from pyproj import Transformer
 from .schema import conform
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-DATA_DIR = Path(os.environ.get("GRIDMAP_DATA_DIR") or REPO_ROOT / "data")
+from ..settings import DATA_DIR
 
 # GB bounds (incl. Shetland, Scilly) for validation.
 LAT_MIN, LAT_MAX, LON_MIN, LON_MAX = 49.8, 60.95, -8.7, 1.9

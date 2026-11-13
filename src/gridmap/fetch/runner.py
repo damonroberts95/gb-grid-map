@@ -32,7 +32,10 @@ async def _run_one(src: Source, ctx: Ctx, include_large: bool) -> tuple[Result, 
         elif src.large and not include_large:
             res = Result("skipped", note="large: true (use --include-large)")
         else:
-            res = await FETCHERS[src.portal](src, ctx)
+            # wall-clock cap per source: 15 min, or 60 min for declared big downloads (max_mb)
+            res = await asyncio.wait_for(FETCHERS[src.portal](src, ctx), timeout=3600 if src.max_mb else 900)
+    except TimeoutError:
+        res = Result("error", note="timed out (per-source limit); will retry later")
     except FetchError as e:
         res = Result("error", note=str(e))
     except Exception as e:  # noqa: BLE001 - one bad source must never stop the run

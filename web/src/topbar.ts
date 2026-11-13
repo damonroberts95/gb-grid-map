@@ -3,7 +3,7 @@
 import './topbar.css'
 import { h } from './dom'
 
-export type Page = 'map' | 'stats' | 'queue'
+export type Page = 'map' | 'stats' | 'queue' | 'keys'
 
 export function topbar(active: Page, right: Node[] = []): HTMLElement {
   const tab = (href: string, label: string, page: Page, title: string) =>
@@ -13,6 +13,7 @@ export function topbar(active: Page, right: Node[] = []): HTMLElement {
     h('nav', { class: 'tb-nav', 'aria-label': 'Pages' },
       tab('/', 'Map', 'map', 'Interactive grid map'),
       tab('/stats.html', 'Stats', 'stats', 'Data coverage statistics'),
-      tab('/queue.html', 'Queue', 'queue', 'Connection queue by substation')),
+      tab('/queue.html', 'Queue', 'queue', 'Connection queue by substation'),
+      tab('/keys.html', 'Keys', 'keys', 'Set up API keys for locked datasets')),
     h('div', { class: 'tb-right' }, ...right))
 }

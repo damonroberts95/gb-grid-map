@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -15,6 +14,7 @@ import polars as pl
 
 from ..normalise.common import latest_snapshot, snapshot_files
 from . import Ctx, LayerMeta
+from ._osm import export_geojsonseq, pbf_in
 from .offshore_common import tile
 from .osm_power import max_kv
 
@@ -188,20 +188,14 @@ def _centre(g: dict) -> list[float] | None:
     return [round(sum(c[0] for c in ring) / len(ring), 5), round(sum(c[1] for c in ring) / len(ring), 5)]
 
 
-def _run(cmd: list[str]) -> None:
-    subprocess.run(cmd, check=True, capture_output=True)
-
-
 def build(ctx: Ctx) -> dict[str, Path]:
     snap = latest_snapshot("osm_gb_pbf")
     if snap is None:
         return {}
-    pbf = next(f for f in snapshot_files(snap) if f.name.endswith(".pbf"))
+    pbf = pbf_in(snapshot_files(snap))
     t = ctx.tmp
-    _run(["osmium", "tags-filter", "-o", str(t / "off.pbf"), "--overwrite", str(pbf), "w/power=cable",
-          "n/power=transition", "nwr/power=substation"])
-    _run(["osmium", "export", "-f", "geojsonseq", "-x", "print_record_separator=false", "-o",
-          str(t / "off.geojsonseq"), "--overwrite", str(t / "off.pbf")])
+    export_geojsonseq(pbf, t / "off.geojsonseq", {"power": {"cable", "transition", "substation"}},
+                      nodes=True, ways=True, areas=True)
     with (t / "off.geojsonseq").open() as src:
         cables, points = features(src, register())
     out: dict[str, Path] = {}

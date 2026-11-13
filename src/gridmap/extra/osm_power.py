@@ -10,7 +10,9 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 from ..normalise.common import latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
+from ._osm import export_geojsonseq, pbf_in
 
 SOURCES = ["osm_gb_pbf"]
 ATTR = "© OpenStreetMap contributors (ODbL)"
@@ -137,40 +139,32 @@ def substation_features(lines: Iterable[str], min_kv: float = 132) -> Iterator[d
         yield {"type": "Feature", "geometry": {"type": "Point", "coordinates": pt}, "properties": props}
 
 
-def _run(cmd: list[str]) -> None:
-    subprocess.run(cmd, check=True, capture_output=True)
-
-
 def build(ctx: Ctx) -> dict[str, Path]:
     snap = latest_snapshot("osm_gb_pbf")
     if snap is None:
         return {}
-    pbf = next(f for f in snapshot_files(snap) if f.name.endswith(".pbf"))
+    pbf = pbf_in(snapshot_files(snap))
     t = ctx.tmp
-    _run(["osmium", "tags-filter", "-o", str(t / "osmp_lines.pbf"), "--overwrite", str(pbf),
-          "w/power=line,minor_line,cable"])
-    _run(["osmium", "export", "-f", "geojsonseq", "-x", "print_record_separator=false", "--geometry-types=linestring",
-          "-o", str(t / "osmp_lines.geojsonseq"), "--overwrite", str(t / "osmp_lines.pbf")])
-    _run(["osmium", "tags-filter", "-o", str(t / "osmp_subs.pbf"), "--overwrite", str(pbf), "nwr/power=substation"])
-    _run(["osmium", "export", "-f", "geojsonseq", "-x", "print_record_separator=false",
-          "-o", str(t / "osmp_subs.geojsonseq"), "--overwrite", str(t / "osmp_subs.pbf")])
+    # one pyosmium pass: power lines/cables as LineStrings, substations as Points/MultiPolygons
+    export_geojsonseq(pbf, t / "osmp.geojsonseq", {"power": {"line", "minor_line", "cable", "substation"}},
+                      nodes=True, ways=True, areas=True)
 
     out: dict[str, Path] = {}
     paths = {"line": t / "osmp_lines.geojsonl", "cable": t / "osmp_cables.geojsonl"}
     counts = {"line": 0, "cable": 0}
     with paths["line"].open("w") as fl, paths["cable"].open("w") as fc:
         files = {"line": fl, "cable": fc}
-        with (t / "osmp_lines.geojsonseq").open() as src:
+        with (t / "osmp.geojsonseq").open() as src:
             for kind, feat in seq_features(src):
                 files[kind].write(json.dumps(feat, separators=(",", ":")) + "\n")
                 counts[kind] += 1
     for kind, lid, minz in (("line", "power_lines", 5), ("cable", "power_cables", 8)):
         if counts[kind]:
             out[lid] = t / f"{lid}.pmtiles"
-            subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out[lid]), "-l", lid, f"-Z{minz}", "-z13",
+            subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out[lid]), "-l", lid, f"-Z{minz}", "-z13",
                             "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(paths[kind])],
                            check=True)
-    with (t / "osmp_subs.geojsonseq").open() as src:
+    with (t / "osmp.geojsonseq").open() as src:
         feats = list(substation_features(src))
     if feats:
         out["power_substations"] = t / "power_substations.geojson"

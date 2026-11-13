@@ -107,6 +107,7 @@ export default defineConfig({
         main: path.resolve(here, 'index.html'),
         stats: path.resolve(here, 'stats.html'),
         queue: path.resolve(here, 'queue.html'),
+        keys: path.resolve(here, 'keys.html'),
       },
     },
   },

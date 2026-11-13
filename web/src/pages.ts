@@ -13,7 +13,7 @@ function initialTheme(): 'light' | 'dark' {
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-export function shell(active: 'stats' | 'queue'): HTMLElement {
+export function shell(active: 'stats' | 'queue' | 'keys'): HTMLElement {
   const root = document.documentElement
   root.dataset.theme = initialTheme()
   const btn = h('button', { class: 'tb-btn', type: 'button', title: 'Toggle dark mode', 'aria-label': 'Toggle dark mode' }, '◐')

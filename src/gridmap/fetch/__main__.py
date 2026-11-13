@@ -5,10 +5,8 @@ from __future__ import annotations
 import argparse
 import sys
 
-from dotenv import load_dotenv
-
+from ..settings import load_keys
 from .runner import format_table, run
-from .store import REPO_ROOT
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -20,7 +18,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--no-keys", action="store_true", help="ignore .env / environment API keys (anonymous run)")
     args = p.parse_args(argv)
     if not args.no_keys:
-        load_dotenv(REPO_ROOT / ".env")
+        load_keys()
     try:
         summary = run(args.only.split(",") if args.only else None, force=args.force, dry_run=args.dry_run,
                       include_large=args.include_large, env={} if args.no_keys else None)

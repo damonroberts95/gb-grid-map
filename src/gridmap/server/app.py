@@ -207,12 +207,13 @@ class State:
         self.stage = {"stage": stage, "detail": detail}
         self.bus.publish("status", self.stage)
 
-    def refresh_once(self) -> None:
+    def refresh_once(self, core_only: bool = False) -> None:
         before = build.read_manifest(self.public).get("version")
         self.refreshing = True
         self.set_stage("fetch", "starting")
         try:
-            res = refresh_mod.refresh(on_stage=self.set_stage, con=self.con, lock=self.lock, data_dir=self.data_dir)
+            res = refresh_mod.refresh(on_stage=self.set_stage, con=self.con, lock=self.lock, data_dir=self.data_dir,
+                                      core_only=core_only)
         except Exception as e:
             log.exception("refresh failed")
             self.refreshing = False
@@ -230,6 +231,9 @@ class State:
 
     def run_scheduler(self) -> None:
         self.rebuild_index()
+        if not (self.public / "manifest.json").exists():
+            # first run: core data only, so the map appears in minutes; the loop below fetches the rest
+            self.refresh_once(core_only=True)
         while not self.stop.is_set():
             self.refresh_once()
             self.stop.wait(60)
@@ -274,6 +278,12 @@ def create_app(data_dir: Path | None = None, scheduler: bool | None = None) -> F
     app.state.st = st
     from . import nerda  # GET /api/nerda/{nrn} + background LV sweep (server/nerda.py)
     nerda.install(app, st)
+    from . import (  # API-key setup page + config auto-update (server/keys.py, updates.py)
+        keys,
+        updates,
+    )
+    keys.install(app, st)
+    updates.install(app, st)
 
     @app.exception_handler(duckdb.CatalogException)
     async def _no_data(request: Request, exc: duckdb.CatalogException):
@@ -579,6 +589,10 @@ def create_app(data_dir: Path | None = None, scheduler: bool | None = None) -> F
                            for k, v in s.items()} for s in ranked[:limit]]}
 
     app.mount("/data", CachedStatic(directory=st.public), name="data")
+    from . import (
+        static,  # production web build + /basemap + /api/setup; must stay LAST (its "/" mount is a catch-all)
+    )
+    static.install(app, st)
     return app
 
 

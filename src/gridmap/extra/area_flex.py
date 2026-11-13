@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from ..normalise.common import latest_snapshot, snapshot_files, snapshot_meta
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 SOURCES = ["ukpn_flex_lv_zones", "ukpn_flex_hv_zones", "enw_flex_monthly_tender", "enw_flex_biannual_tender",
@@ -137,7 +138,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
     src = ctx.tmp / "area_flex.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, separators=(",", ":")))
     out = ctx.tmp / "area_flex.pmtiles"
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", "flex_zones", "-Z5", "-z13",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", "flex_zones", "-Z5", "-z13",
                     "--simplification=4", "--simplify-only-low-zooms", "--drop-densest-as-needed",
                     "--maximum-tile-bytes=450000", str(src)], check=True)
     return {"flex_zones": out}

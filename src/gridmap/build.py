@@ -24,6 +24,7 @@ from pathlib import Path
 import polars as pl
 
 from .normalise.common import DATA_DIR
+from .tools import tool
 
 BUILD_VERSION = "2"  # bump when the output format changes, to force a rebuild
 KIND_NUM = {"GSP": 1, "BSP": 2, "PRIMARY": 3}
@@ -144,7 +145,7 @@ def build_lv(norm: Path, out: Path, only_mon: bool = False, df: pl.DataFrame | N
     src = _lv_geojsonl(df, out, only_mon)
     tmp = out.with_name(f"tmp_{out.name}")
     try:
-        subprocess.run(["tippecanoe", "-P", "-o", str(tmp), *(TIPPECANOE_LVMON if only_mon else TIPPECANOE), src],
+        subprocess.run([tool("tippecanoe"), "-P", "-o", str(tmp), *(TIPPECANOE_LVMON if only_mon else TIPPECANOE), src],
                        check=True)
         os.replace(tmp, out)
     finally:

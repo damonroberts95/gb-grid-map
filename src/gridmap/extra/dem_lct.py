@@ -15,6 +15,7 @@ from pathlib import Path
 import polars as pl
 
 from ..normalise.common import best_coords, latest_snapshot, snapshot_files
+from ..tools import tool
 from . import Ctx, LayerMeta
 
 SOURCES = ["ukpn_lct_secondary", "ukpn_lct_primary", "enw_mcs_lct_per_substation", "nged_lct_connections",
@@ -267,7 +268,7 @@ def _tiles(feats: list[dict], ctx: Ctx, name: str, zmin: int, zmax: int) -> Path
     src = ctx.tmp / f"dem_{name}.geojson"
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}, separators=(",", ":")))
     out = ctx.tmp / f"dem_{name}.pmtiles"
-    subprocess.run(["tippecanoe", "-q", "-f", "-o", str(out), "-l", name, f"-Z{zmin}", f"-z{zmax}",
+    subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", name, f"-Z{zmin}", f"-z{zmax}",
                     "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", str(src)], check=True)
     return out
 

@@ -13,7 +13,10 @@ import { addShapeImages } from './shapes'
 import { addLayers, applyManifest, applyOutlines, applyState, refreshOutages, setHierarchy, type HierNode } from './layers'
 import { connectLive, refreshNational, setBuiltAt } from './live'
 import { onChange, reset as resetState, state } from './state'
+import { gateOnSetup } from './setup'
 import { applyThemeToDocument, basemap, INK, initialTheme, onTheme, setTheme, theme } from './theme'
+
+await gateOnSetup() // first run of the packaged app: show setup progress until data + basemap exist
 
 const pmtiles = new Protocol()
 addProtocol('pmtiles', pmtiles.tile)
