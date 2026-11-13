@@ -5,119 +5,41 @@ import { h } from './dom'
 import { extraDescription } from './extras'
 
 export const GLOSSARY: Record<string, { t: string; d: string }> = {
-  headroom: {
-    t: 'Spare capacity (headroom)',
-    d: 'How much more can connect at a substation before it hits a network limit (thermal, voltage or fault level), per the operator’s latest published assessment. Indicative only: a formal connection application decides.',
-  },
-  gen_headroom: {
-    t: 'Generation headroom',
-    d: 'Estimated extra generation or export (MW) that could connect here before a network limit is reached. Each operator calculates it differently, e.g. with or without projects already in the queue.',
-  },
-  dem_headroom: {
-    t: 'Demand headroom',
-    d: 'Estimated extra load (e.g. heat pumps, EV charging, new buildings) the substation can supply before its firm capacity is exceeded. Some operators publish it in MVA rather than MW.',
-  },
-  threshold: {
-    t: 'Green threshold',
-    d: 'Sites with at least this much headroom show green; between zero and this, amber; zero or negative, red. Pick the size of connection you care about.',
-  },
-  fault_level: {
-    t: 'Fault level',
-    d: 'The current (kA) that would flow into a short circuit at this point. Switchgear must safely break and make that current. New generation, especially rotating machines, adds fault current.',
-  },
-  fault_headroom: {
-    t: 'Fault headroom',
-    d: 'Switchgear break rating minus the prospective three-phase break fault level (kA). Low or negative values commonly block new synchronous generation even when thermal headroom exists.',
-  },
-  break: {
-    t: 'Break (RMS)',
-    d: 'The RMS fault current a circuit breaker must interrupt. "Make" is the peak current when closing onto a fault, typically about 2.5× the break value.',
-  },
-  rating: {
-    t: 'Switchgear rating',
-    d: 'The maximum fault current the installed circuit breakers are rated to interrupt (break) or close onto (make).',
-  },
-  three_phase: {
-    t: '3-phase fault',
-    d: 'A short circuit across all three phases: usually the largest fault current and the one switchgear is sized for. Single-phase (earth) faults are listed separately.',
-  },
-  firm: {
-    t: 'Firm capacity',
-    d: 'Capacity still available with the largest single transformer or circuit out of service (N-1 security). Demand headroom is usually firm capacity minus peak demand.',
-  },
-  mva: {
-    t: 'MVA vs MW',
-    d: 'MVA is apparent power; MW is real power. MW ≈ MVA × power factor (typically 0.9–0.95). Transformer ratings and some demand headroom figures are in MVA.',
-  },
-  kv: { t: 'kV', d: 'Kilovolts: the voltage level. GB distribution runs at 132, 66, 33, 11 and 6.6 kV, then 400/230 V at LV.' },
-  busbar: {
-    t: 'Busbar',
-    d: 'The conductor inside a substation that circuits connect to. One site often has several busbars at different voltages, each with its own headroom.',
-  },
-  gsp: {
-    t: 'Grid Supply Point (GSP)',
-    d: 'Where the transmission network (400/275 kV, or 132 kV in Scotland) feeds the distribution network. Ring markers are NESO’s list of GSPs.',
-  },
-  bsp: {
-    t: 'Bulk Supply Point (BSP)',
-    d: 'Substation stepping 132 kV down to 33 kV (66 kV in parts of the north-east and London). Feeds a group of primaries.',
-  },
-  primary: {
-    t: 'Primary substation',
-    d: 'Steps 33 kV down to 11 kV (or 6.6 kV) for the local high-voltage feeders that supply secondary substations.',
-  },
-  lv: {
-    t: 'LV / secondary substation',
-    d: 'The local transformer (11 or 6.6 kV to 400/230 V) on a street or pole that supplies homes and businesses. Coloured by utilisation where published.',
-  },
-  utilisation: {
-    t: 'Utilisation',
-    d: 'Peak load as a share of transformer rating. Above ~85% there is little room for new heat pumps, EV chargers or solar export. UKPN publishes 20%-wide bands; we show the band midpoint.',
-  },
-  transmission_gsp: {
-    t: 'Transmission GSPs',
-    d: 'NESO’s published grid supply points (transmission to distribution). Shown as rings: no headroom data, but they anchor the hierarchy.',
-  },
-  schematic: {
-    t: 'Schematic feeds',
-    d: 'Straight lines from each substation to the one feeding it. Shows the network hierarchy, not real cable or line routes.',
-  },
-  outage: {
-    t: 'Live power cuts',
-    d: 'Current unplanned faults (filled) and planned work (hollow) from operator feeds, refreshed every few minutes.',
-  },
-  queue: {
-    t: 'Connection queue',
-    d: 'Generation and storage projects in the operator’s Embedded Capacity Register (≥1 MW and smaller). Queued = accepted + offered. Linked to substations by name, so coverage varies.',
-  },
-  accepted: { t: 'Accepted', d: 'Customer has accepted a connection offer; capacity is reserved but not yet built.' },
-  offered: { t: 'Offered', d: 'Operator has issued a connection offer that is not yet accepted.' },
-  connected: { t: 'Connected', d: 'Already built and operating.' },
-  scoping: { t: 'Scoping / other', d: 'Enquiry or early-stage application; not yet a firm offer. Status unknown also lands here.' },
-  rag: {
-    t: 'RAG',
-    d: 'Red/amber/green rating. Colours here are computed from the headroom number and your threshold, not taken from the operator’s own RAG.',
-  },
-  frequency: {
-    t: 'Grid frequency',
-    d: 'Nominal 50 Hz. Falls when demand exceeds generation and rises when there is surplus; must stay within 49.5–50.5 Hz. Source: Elexon.',
-  },
-  demand_gw: {
-    t: 'National demand',
-    d: 'Transmission-metered GB demand (Elexon). Excludes embedded solar and wind, which reduce what the transmission system sees.',
-  },
-  carbon: {
-    t: 'Carbon intensity',
-    d: 'Grams of CO₂ emitted per kWh of electricity consumed right now (Carbon Intensity API, NESO).',
-  },
-  basis: {
-    t: 'Headroom basis',
-    d: 'How the operator defines its headroom figure: firm or non-firm, thermal only or including fault level, before or after queued projects. Compare operators with care.',
-  },
-  more_layers: { t: 'More layers', d: 'Additional public datasets: generation projects, lines, LV usage, forecasts, areas and more. Hover a layer name for what it shows and where it comes from.' },
-  lv_mode: { t: 'LV monitoring mode', d: 'Shows only LV (secondary) substations that operators publish as having an LV monitor, by mount type and utilisation, at every zoom level. Everything else is hidden.' },
-  lv_monitored_note: { t: 'Coverage', d: 'Only monitors that operators publish are shown: ENW (PreSense), SPEN, NGED, NPG and SSEN NeRDA. UKPN publishes no monitored-site list. Vendor is rarely published.' },
-  parent: { t: 'Fed from', d: 'The upstream substation supplying this one (Primary → BSP → GSP), resolved from operator data.' },
+  headroom: { t: 'Spare capacity', d: 'Extra load a substation can take before a network limit. Operator estimate. A guide only.' },
+  gen_headroom: { t: 'Generation headroom', d: 'Extra generation that can connect, in MW. Each operator counts it differently.' },
+  dem_headroom: { t: 'Demand headroom', d: 'Extra demand the substation can supply. Some operators give MVA.' },
+  threshold: { t: 'Green threshold', d: 'Green at or above this. Amber between 0 and this. Red at 0 or below.' },
+  fault_level: { t: 'Fault level', d: 'Current (kA) in a short circuit here. New generation adds to it.' },
+  fault_headroom: { t: 'Fault headroom', d: 'Breaker rating minus 3-phase fault level (kA). Low means new generators may be blocked.' },
+  break: { t: 'Break (RMS)', d: 'Fault current a breaker must stop. "Make" is the peak on closing, about 2.5 times break.' },
+  rating: { t: 'Switchgear rating', d: 'Most fault current the breakers can stop (break) or close onto (make).' },
+  three_phase: { t: '3-phase fault', d: 'Short circuit across all three phases. Usually the largest.' },
+  firm: { t: 'Firm capacity', d: 'Capacity left with the largest transformer or circuit out (N-1).' },
+  mva: { t: 'MVA vs MW', d: 'MVA is apparent power. MW is real power. MW is about MVA × 0.9 to 0.95.' },
+  kv: { t: 'kV', d: 'Kilovolts. GB distribution runs at 132, 66, 33, 11 and 6.6 kV.' },
+  busbar: { t: 'Busbar', d: 'Conductor that circuits connect to. A site can have several.' },
+  gsp: { t: 'Grid Supply Point (GSP)', d: 'Where transmission feeds the local network. Rings show NESO’s list.' },
+  bsp: { t: 'Bulk Supply Point (BSP)', d: 'Steps 132 kV down to 33 kV (66 kV in parts). Feeds primaries.' },
+  primary: { t: 'Primary substation', d: 'Steps 33 kV down to 11 kV (or 6.6 kV).' },
+  lv: { t: 'LV substation', d: 'Street or pole transformer. 11 or 6.6 kV down to 400/230 V.' },
+  utilisation: { t: 'Utilisation', d: 'Peak load as a share of transformer rating. UKPN gives 20% bands. We show the middle.' },
+  transmission_gsp: { t: 'Transmission GSPs', d: 'NESO’s grid supply points. Rings. No headroom data.' },
+  schematic: { t: 'Schematic feeds', d: 'Straight lines to the feeding substation. Not real routes.' },
+  outage: { t: 'Live power cuts', d: 'Filled: unplanned fault. Hollow: planned work. Refreshes every few minutes.' },
+  queue: { t: 'Connection queue', d: 'Projects in the Embedded Capacity Register. Queued = accepted + offered. Matched by name.' },
+  accepted: { t: 'Accepted', d: 'Offer accepted. Capacity reserved. Not built.' },
+  offered: { t: 'Offered', d: 'Offer made. Not accepted yet.' },
+  connected: { t: 'Connected', d: 'Built and running.' },
+  scoping: { t: 'Scoping / other', d: 'Early enquiry or unknown status.' },
+  rag: { t: 'RAG', d: 'Red, amber, green. We work it out from headroom and your threshold.' },
+  frequency: { t: 'Grid frequency', d: 'Nominal 50 Hz. Must stay within 49.5 to 50.5. Source: Elexon.' },
+  demand_gw: { t: 'National demand', d: 'GB demand on the transmission grid (Elexon). Excludes small local solar and wind.' },
+  carbon: { t: 'Carbon intensity', d: 'Grams of CO₂ per kWh now. Source: NESO Carbon Intensity API.' },
+  basis: { t: 'Headroom basis', d: 'How the operator defines headroom. Compare operators with care.' },
+  more_layers: { t: 'More layers', d: 'Extra public datasets. Hover a name for details.' },
+  lv_mode: { t: 'LV monitoring mode', d: 'Only LV substations that operators say have a monitor.' },
+  lv_monitored_note: { t: 'Coverage', d: 'ENW, SPEN, NGED, NPG and SSEN NeRDA only. UKPN publishes no list.' },
+  parent: { t: 'Fed from', d: 'Upstream substation: Primary, then BSP, then GSP.' },
 }
 
 const tip = h('div', { class: 'tip', role: 'tooltip', id: 'tip', hidden: true })

@@ -87,7 +87,7 @@ function legend() {
             s.mode === 'gen' ? 'Spare capacity (generation)' : 'Spare capacity (demand)')),
           row(sq(C.green), `≥ ${s.thr} ${unit}`),
           row(sq(C.amber), `0 – ${s.thr}`),
-          row(sq(C.red), 'none / negative'),
+          row(sq(C.red), 'none'),
           row(sq(C.none), 'not published'),
           h('div', { class: 'key-sub' }, 'Lines & markers'),
           row(h('i', { class: 'key-line', style: `background:${C.hier}` }), term('parent', 'Feed path')),
@@ -102,7 +102,7 @@ function legend() {
 
 function search(map: MlMap, select: (hit: SearchHit) => void) {
   const input = h('input', {
-    type: 'search', placeholder: 'Search substations, streets, postcodes…', 'aria-label': 'Search substations, streets and postcodes', autocomplete: 'off',
+    type: 'search', placeholder: 'Search place or substation', 'aria-label': 'Search substations, streets and postcodes', autocomplete: 'off',
   }) as HTMLInputElement
   const list = h('ul', { class: 'results', role: 'listbox' })
   let ctl: AbortController | undefined
@@ -150,7 +150,7 @@ function search(map: MlMap, select: (hit: SearchHit) => void) {
       )
       if (!hits.length) list.replaceChildren(h('li', { class: 'empty' }, 'No matches'))
     } catch (e) {
-      if ((e as Error).name !== 'AbortError') list.replaceChildren(h('li', { class: 'empty' }, 'Search unavailable'))
+      if ((e as Error).name !== 'AbortError') list.replaceChildren(h('li', { class: 'empty' }, 'Search failed'))
     }
   }, 120)
   input.addEventListener('input', () => run(input.value))
@@ -192,8 +192,8 @@ function lvKey() {
       h('div', {},
         h('div', { class: 'key-sub' }, term('utilisation', 'Utilisation')),
         row(sq(C.green), '< 60%'), row(sq(C.amber), '60 – 85%'), row(sq(C.red), '≥ 85%'), row(sq(C.none), 'not published'))),
-    h('div', { class: 'leg-note' }, 'LV substations with a monitor (any vendor) as published by each operator. ',
-      term('lv_monitored_note', 'Why some are missing')))
+    h('div', { class: 'leg-note' }, 'Operator-published monitors. ',
+      term('lv_monitored_note', 'Coverage')))
 }
 
 export function buildControls(map: MlMap, select: (hit: SearchHit) => void) {
@@ -219,9 +219,9 @@ export function buildControls(map: MlMap, select: (hit: SearchHit) => void) {
     h('div', { class: 'full-only' },
       section('key', 'Key', [], legend()),
       section('headroom', term('headroom', 'Spare capacity'), [],
-        seg(['dem', 'gen'] as const, () => state.mode, (v) => (v === 'gen' ? 'For new generation' : 'For new demand'),
+        seg(['dem', 'gen'] as const, () => state.mode, (v) => (v === 'gen' ? 'Generation' : 'Demand'),
           (v) => set({ mode: v }), '', (v) => (v === 'gen' ? 'gen_headroom' : 'dem_headroom')),
-        h('div', { class: 'label sub' }, term('threshold', 'Show green when at least')),
+        h('div', { class: 'label sub' }, term('threshold', 'Green from')),
         seg(THRESHOLDS, () => state.thr as (typeof THRESHOLDS)[number], (v) => `${v} MW`, (v) => set({ thr: v }), 'small')),
       section('filters', 'Filter', opActions(),
         opChips(),
@@ -229,7 +229,7 @@ export function buildControls(map: MlMap, select: (hit: SearchHit) => void) {
         chips([1, 2, 3] as const, () => state.kinds as (1 | 2 | 3)[], (v) => KIND_LABEL[v], (v) => set({ kinds: v }),
           (v) => ({ 1: 'gsp', 2: 'bsp', 3: 'primary' })[v])),
       section('layers', 'Layers', [
-        action('Clear all', 'Turn off every layer except substations', () => {
+        action('Clear all', 'Hide all layers', () => {
           set({ lv: false, outages: false, links: false, neso: false })
           clearExtras(map)
         })],
@@ -238,15 +238,15 @@ export function buildControls(map: MlMap, select: (hit: SearchHit) => void) {
         toggle('outages', 'Live power cuts', 'outage'),
         toggle('links', 'Schematic feeds', 'schematic'),
         toggle('neso', 'Transmission GSPs', 'transmission_gsp'))),
-      section('more', term('more_layers', 'More layers'), [action('Clear all', 'Turn off all extra layers', () => clearExtras(map))],
+      section('more', term('more_layers', 'More layers'), [action('Clear all', 'Hide all extras', () => clearExtras(map))],
         extrasPanel(map))),
     section('gbnow', 'GB now', [], h('div', { id: 'national', class: 'national' })),
   )
   document.body.prepend(topbar('map', [
     h('span', { id: 'status', class: 'status' }),
-    h('button', { type: 'button', class: 'tb-btn', title: 'How to use this map', onclick: showHelp }, '? Help'),
+    h('button', { type: 'button', class: 'tb-btn', title: 'Help', onclick: showHelp }, '? Help'),
     h('button', {
-      type: 'button', class: 'tb-btn', 'aria-label': 'Reset to default view', title: 'Reset to default view',
+      type: 'button', class: 'tb-btn', 'aria-label': 'Reset view', title: 'Reset view',
       onclick: () => window.dispatchEvent(new Event('gridmap:reset')),
     }, '⟲ Reset'),
     h('button', {

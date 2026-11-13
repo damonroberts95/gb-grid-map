@@ -23,8 +23,7 @@ LAYERS = [
     LayerMeta(
         id="carbon_regions", title="Carbon intensity by region", group="Live", type="pmtiles", geom="polygon",
         source_layer="carbon_regions", minzoom=0, live=True,
-        description="Forecast carbon intensity (gCO2 per kWh) of electricity for each of the 14 distribution "
-                    "regions in the current half hour, with the generation mix. Source: NESO Carbon Intensity API.",
+        description="Carbon intensity (gCO2/kWh) by region, this half hour. NESO Carbon Intensity API.",
         color={"prop": "i", "type": "steps", "default": "#cfd6dd",
                "stops": [[0, "#f1eef6"], [50, "#d7b5d8"], [100, "#df65b0"], [150, "#dd1c77"], [200, "#980043"],
                          [300, "#4d0026"]]},

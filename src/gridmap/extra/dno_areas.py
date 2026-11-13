@@ -25,8 +25,7 @@ LAYERS = [
     LayerMeta(
         id="dno_areas", title="Operator areas", group="Areas", type="pmtiles", geom="polygon",
         source_layer="dno_areas", minzoom=0, default_on=True,
-        description="The 14 distribution licence areas and which operator (DNO) runs each: UKPN, NPG, "
-                    "ENW, SPEN, NGED, SSEN. Boundaries from NESO (May 2024).",
+        description="The 14 distribution areas and their operators. NESO, May 2024.",
         color={"prop": "op", "type": "categorical", "stops": [[k, v] for k, v in OP_COLOURS.items()],
                "default": "#888888"},
         size=2.2, opacity=0.25,

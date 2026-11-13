@@ -23,13 +23,11 @@ LAYERS = [
     LayerMeta(
         id="power_lines", title="Power lines (OpenStreetMap)", group="Network", type="pmtiles", geom="line",
         source_layer="power_lines", minzoom=5,
-        description="Overhead power lines mapped by OpenStreetMap volunteers across Great Britain, coloured by "
-                    "voltage (400/275, 132, 66/33 kV and below). Community-mapped, so voltages and coverage vary; "
-                    "lines with no voltage tag are grey.",
+        description="Overhead lines, coloured by voltage. OpenStreetMap. Grey has no voltage.",
         color={"prop": "kv", "type": "steps", "default": "#8c8c8c", "stops": BAND_STOPS},
         size={"prop": "kv", "stops": [[0, 0.7], [1, 0.9], [30, 1.5], [100, 2.2], [250, 3]]},
         opacity=0.85,
-        popup=[["n", "Name / ref", None], ["kv", "Voltage", "kV"], ["op", "Operator", None], ["cc", "Circuits", None]],
+        popup=[["n", "Name or ref", None], ["kv", "Voltage", "kV"], ["op", "Operator", None], ["cc", "Circuits", None]],
         legend=[["#7b3294", "400 / 275 kV"], ["#2c7bb6", "132 kV"], ["#009e9e", "66 / 33 kV"],
                 ["#cc79a7", "11 kV and below"], ["#8c8c8c", "Voltage not mapped"]],
         attribution=ATTR,
@@ -37,18 +35,16 @@ LAYERS = [
     LayerMeta(
         id="power_cables", title="Underground cables (OpenStreetMap)", group="Network", type="pmtiles", geom="line",
         source_layer="power_cables", minzoom=8,
-        description="Underground and submarine power cables mapped in OpenStreetMap. Mostly transmission and "
-                    "interconnector routes; distribution cable is rarely mapped, so this is far from complete.",
+        description="Underground and subsea cables. OpenStreetMap. Far from complete.",
         color="#8c510a", size={"prop": "kv", "stops": [[0, 1], [30, 1.4], [100, 2], [250, 2.8]]}, opacity=0.85,
-        popup=[["n", "Name / ref", None], ["kv", "Voltage", "kV"], ["op", "Operator", None], ["cc", "Circuits", None]],
+        popup=[["n", "Name or ref", None], ["kv", "Voltage", "kV"], ["op", "Operator", None], ["cc", "Circuits", None]],
         legend=[["#8c510a", "Underground / submarine cable"]],
         attribution=ATTR,
     ),
     LayerMeta(
         id="power_substations", title="Grid substations 132 kV+ (OpenStreetMap)", group="Network", type="geojson",
         geom="point", minzoom=6,
-        description="Substations mapped in OpenStreetMap with a voltage of 132 kV or more, including National Grid and "
-                    "SP Transmission sites not in any DNO dataset. Names and voltages are volunteer-mapped.",
+        description="Substations of 132 kV and above. OpenStreetMap.",
         color={"prop": "kv", "type": "steps", "default": "#2c7bb6",
                "stops": [[0, "#2c7bb6"], [250, "#7b3294"]]},
         size={"prop": "kv", "stops": [[0, 3.5], [250, 5.5]]},

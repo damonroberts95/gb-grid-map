@@ -1,0 +1,52 @@
+# On every push to main: test, build the web UI, package update-bundle.zip and publish it as the rolling
+# `latest-update` release (plus an immutable `update-<shortsha>` release). Installed apps poll `latest-update`.
+# See docs/UPDATES.md.
+name: release
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Build web UI
+        run: cd web && npm ci && npm run build
+      - uses: astral-sh/setup-uv@v5
+      - name: Tests
+        run: uv run pytest -q
+      - name: Package update bundle
+        run: uv run python scripts/make_bundle.py --sha "$GITHUB_SHA" --out dist/update
+      - name: Check the bundle holds no secrets
+        run: |
+          uv run python scripts/make_bundle.py --check dist/update/update-bundle.zip
+          if unzip -Z1 dist/update/update-bundle.zip | grep -E '(^|/)(\.env[^/]*|keys\.env)$'; then
+            echo "secret-like file in bundle"; exit 1
+          fi
+      - name: Publish releases
+        run: |
+          short="${GITHUB_SHA::7}"
+          files="dist/update/update-bundle.zip dist/update/update-bundle.zip.sha256 dist/update/manifest.json"
+          notes="Update bundle for ${GITHUB_SHA}. Installed apps download this automatically."
+          # immutable per-commit release
+          gh release view "update-$short" >/dev/null 2>&1 || \
+            gh release create "update-$short" $files --target "$GITHUB_SHA" --title "update-$short" --notes "$notes"
+          # rolling release: move the tag, then create-or-update the release and replace its assets
+          git tag -f latest-update "$GITHUB_SHA"
+          git push -f origin latest-update
+          gh release view latest-update >/dev/null 2>&1 || \
+            gh release create latest-update --verify-tag --title "latest-update" --notes "$notes" --latest=false
+          gh release edit latest-update --notes "$notes"
+          gh release upload latest-update $files --clobber

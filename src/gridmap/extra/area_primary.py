@@ -33,15 +33,12 @@ LAYERS = [
     LayerMeta(
         id="primary_areas", title="Supply areas by demand headroom", group="Areas", type="pmtiles",
         geom="polygon", source_layer="primary_areas", minzoom=5, default_on=False, opacity=0.8,
-        description="Area fed by each primary (and, zoomed out, each bulk supply point) substation, shaded by the "
-                    "demand headroom the operator publishes for it (bright = lots of spare capacity, dark = little "
-                    "or none, grey = not published). Polygons and headroom from each network operator's open data, "
-                    "latest releases 2026. NGED publishes no polygons.",
+        description="Primary supply areas shaded by demand headroom. Grey is not published. NGED has no areas. 2026.",
         color={"prop": "d", "type": "steps", "default": "#c9ced3", "stops": STOPS},
         popup=[["n", "Substation", None], ["lv", "Level", None], ["op", "Operator", None],
                ["d", "Demand headroom", "MW or MVA (see unit)"], ["u", "Unit", None], ["g", "Generation headroom", "MW"],
                ["c", "LV readings coverage", "%"]],
-        legend=[["#440154", "Over-subscribed (<0)"], ["#3b528b", "0-2"], ["#2c728e", "2-5"], ["#21918c", "5-10"],
+        legend=[["#440154", "Over-subscribed (below 0)"], ["#3b528b", "0-2"], ["#2c728e", "2-5"], ["#21918c", "5-10"],
                 ["#28ae80", "10-20"], ["#7ad151", "20-40"], ["#fde725", "40+ MW"], ["#c9ced3", "Not published"]],
         attribution="Supply-area polygons and headroom: UK Power Networks, Electricity North West / SP Energy "
                     "Networks, SSEN Distribution, SP Energy Networks and Northern Powergrid open data portals "

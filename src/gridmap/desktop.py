@@ -81,6 +81,30 @@ def free_port() -> int:
         return s.getsockname()[1]
 
 
+def confirm_when_healthy(port: int) -> None:
+    """Running an updated payload that is still `pending`: once /api/manifest answers, promote it to good. If the server
+    is not healthy within 90 s, restart the shell, which finds the payload unconfirmed, marks it bad and falls back."""
+    from urllib.request import urlopen
+
+    from gridmap import payload, updater
+    sha = os.environ.get("GRIDMAP_PAYLOAD_SHA")
+    if not sha or payload.pending_sha() != sha:
+        return
+    deadline = time.time() + payload.HEALTH_S
+    while time.time() < deadline:
+        try:
+            with urlopen(f"http://127.0.0.1:{port}/api/manifest", timeout=5) as r:
+                if r.status == 200:
+                    payload.confirm(sha)
+                    log.info("payload %s is healthy", sha[:10])
+                    return
+        except Exception as e:  # noqa: BLE001 - not up yet
+            log.debug("health check: %s", e)
+        time.sleep(2)
+    log.error("payload %s not healthy after %s s; restarting to roll back", sha[:10], payload.HEALTH_S)
+    updater.restart()
+
+
 def alert(msg: str) -> None:
     subprocess.run(["osascript", "-e", f'display dialog "{msg}" with title "{APP_NAME}" buttons {{"OK"}}'],
                    check=False, capture_output=True)
@@ -109,6 +133,7 @@ def main() -> int:
                                            loop="asyncio", http="h11", ws="none", timeout_graceful_shutdown=3))
     th = threading.Thread(target=server.run, name="uvicorn", daemon=True)
     th.start()
+    threading.Thread(target=confirm_when_healthy, args=(port,), name="payload-health", daemon=True).start()
     t0 = time.time()
     while not server.started and th.is_alive() and time.time() - t0 < 60:
         time.sleep(0.05)

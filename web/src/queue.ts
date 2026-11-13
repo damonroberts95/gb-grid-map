@@ -16,7 +16,7 @@ async function main() {
   let op = new URLSearchParams(location.search).get('op') ?? ''
   const body = h('div', {})
   root.append(h('h1', {}, 'Connection queue'),
-    h('p', { class: 'sub' }, 'Substations ranked by queued MW: DNO accepted and offered projects (Embedded Capacity Registers) plus NESO TEC direct-connection projects that are consented or under construction. Scoping-stage projects are not counted.'),
+    h('p', { class: 'sub' }, 'Queued MW by substation. DNO accepted and offered, plus NESO TEC consented or building. No scoping.'),
     body)
 
   async function load() {
@@ -54,7 +54,7 @@ async function main() {
             onclick: () => { location.href = `/#map=12/${s.lat}/${s.lon}` },
           }
         }),
-      h('p', { class: 'note' }, 'Click a row to open the site on the map. DNO rows are rolled up to the substation they connect at; TEC rows are matched to sites by name and carry no coordinates of their own.'))
+      h('p', { class: 'note' }, 'Click a row to open it on the map.'))
   }
   await load()
 }

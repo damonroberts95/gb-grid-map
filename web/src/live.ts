@@ -16,7 +16,7 @@ function paintStatus(connected: boolean) {
   if (!el) return
   const busy = stage !== 'idle'
   el.className = `status ${connected ? (busy ? 'busy' : 'ok') : 'down'}`
-  el.textContent = !connected ? 'Offline — reconnecting…' : busy ? 'Updating data…' : `Data updated ${ago(builtAt)}`
+  el.textContent = !connected ? 'Offline' : busy ? 'Updating data…' : `Data updated ${ago(builtAt)}`
   el.title = builtAt ? `Map data built ${new Date(builtAt).toLocaleString()}` : ''
 }
 
@@ -67,6 +67,6 @@ export async function refreshNational() {
         top.map((f) => `${f.fuel} ${Math.round((100 * f.mw) / total)}%`).join(' · '))] : []),
     )
   } catch {
-    box.replaceChildren(h('div', { class: 'muted small' }, 'National data unavailable'))
+    box.replaceChildren(h('div', { class: 'muted small' }, 'No national data'))
   }
 }

@@ -30,9 +30,8 @@ LAYERS = [
     LayerMeta(
         id="live_pv", title="Solar generation now (PV_Live)", group="Live", type="pmtiles", geom="polygon",
         source_layer="live_pv", minzoom=0, live=True, default_on=False,
-        description="Estimated solar PV output right now for each of the 14 distribution regions, as a share of the "
-                    "PV capacity installed there (Sheffield Solar PV_Live, updated every half hour; the newest value "
-                    "is an early estimate that can be revised). Region level: PV_Live offers no bulk per-GSP feed.",
+        description="Solar output now as % of installed capacity, by region. Sheffield Solar PV_Live. Early values "
+                    "can change.",
         color={"prop": "pct", "type": "steps", "default": "#cfd6dd", "stops": STOPS},
         opacity=0.6,
         popup=[["n", "Region", None], ["mw", "PV output", "MW"], ["cap", "Installed PV", "MWp"],

@@ -47,21 +47,18 @@ LAYERS = [
     LayerMeta(
         id="repd", title="Planned & operating renewables (REPD)", group="Generation & planning", type="pmtiles",
         geom="point", source_layer="repd", minzoom=4,
-        description="Renewable and storage projects from the DESNZ Renewable Energy Planning Database (July 2026): "
-                    "operational, under construction, consented or in planning. Refused, withdrawn, abandoned, "
-                    "expired, decommissioned and superseded records are left out.",
+        description="Planned and built renewables and storage. DESNZ REPD, July 2026.",
         color=TECH_COLOR_SPEC, size=MW_SIZE, opacity=0.8,
         popup=[["n", "Project", None], ["t", "Technology", None], ["s", "Status", None], ["mw", "Capacity", "MW"],
-               ["op", "Operator / applicant", None], ["pa", "Planning authority", None],
+               ["op", "Operator or applicant", None], ["pa", "Planning authority", None],
                ["dop", "Operational since", None], ["duc", "Construction started", None],
                ["dpg", "Permission granted", None], ["dsub", "Application submitted", None]],
         legend=TECH_COLORS, attribution=REPD_ATTR),
     LayerMeta(
         id="ecr_projects", title="Connection-register projects (DNO)", group="Generation & planning",
         type="pmtiles", geom="point", source_layer="ecr_projects", minzoom=6,
-        description="Generation and storage projects on the six distribution networks' Embedded Capacity "
-                    "Registers and queues that publish coordinates, coloured by connection status and sized by "
-                    "export MW. Small sites are rounded or missing for some operators.",
+        description="Generation and storage projects with coordinates. DNO capacity registers. Small sites are "
+                    "rounded or missing.",
         color={"prop": "st", "type": "categorical", "default": "#9a9a9a",
                "stops": [["connected", "#2c7fb8"], ["accepted", "#8856a7"], ["offered", "#e377c2"],
                          ["other", "#9a9a9a"]]},
@@ -76,9 +73,8 @@ LAYERS = [
     LayerMeta(
         id="tec", title="Transmission connections (TEC)", group="Generation & planning", type="geojson",
         geom="point", minzoom=4,
-        description="NESO Transmission Entry Capacity register (10 Nov 2026) projects linked by name to grid "
-                    "supply points and transmission substations, totalled per site. Only sites we could name-match "
-                    "are shown; the register publishes no coordinates.",
+        description="Transmission projects matched to sites by name. NESO TEC, 10 Nov 2026. Unmatched sites are "
+                    "missing.",
         color={"prop": "q", "type": "steps", "default": "#cbc9e2",
                "stops": [[0, "#dadaeb"], [200, "#bcbddc"], [500, "#9e9ac8"], [1000, "#756bb1"], [2000, "#54278f"]]},
         size={"prop": "q", "stops": [[0, 4], [200, 6], [1000, 10], [3000, 15]]}, opacity=0.85,

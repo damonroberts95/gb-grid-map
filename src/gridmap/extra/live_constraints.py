@@ -23,9 +23,8 @@ LAYERS = [
     LayerMeta(
         id="live_constraints", title="Constraint loading now (UKPN)", group="Live", type="geojson", geom="point",
         minzoom=6, live=True, default_on=False,
-        description="UK Power Networks' real-time constraint meters: the busiest constrained circuit or transformer at "
-                    "each substation, as a percentage of its limit (generation is curtailed above 100%). Updated every "
-                    "minute; only sites with a name we could place are shown.",
+        description="Busiest constraint per substation, as % of limit. Above 100% means curtailment. UKPN, every "
+                    "minute.",
         color={"prop": "u", "type": "steps", "default": "#8a8a8a", "stops": STOPS},
         size={"prop": "u", "stops": [[0, 4], [50, 6], [100, 10]]}, opacity=0.9,
         popup=[["n", "Substation", None], ["u", "Of limit (worst constraint)", "%"], ["amp", "Flow", "A"],

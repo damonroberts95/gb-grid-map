@@ -14,6 +14,7 @@ import { addLayers, applyManifest, applyOutlines, applyState, refreshOutages, se
 import { connectLive, refreshNational, setBuiltAt } from './live'
 import { onChange, reset as resetState, state } from './state'
 import { gateOnSetup } from './setup'
+import { initUpdates } from './updates'
 import { applyThemeToDocument, basemap, INK, initialTheme, onTheme, setTheme, theme } from './theme'
 
 await gateOnSetup() // first run of the packaged app: show setup progress until data + basemap exist
@@ -90,7 +91,7 @@ onHierarchy((from, chain, children, how) =>
   setHierarchy(map, from, chain as unknown as HierNode[], children as unknown as HierNode[], how))
 
 // "Zoom in to see local substations" hint (LV tiles start at z11; newcomers otherwise think LV is missing)
-const zoomHint = h('div', { class: 'zoom-hint', hidden: true }, 'Zoom in to see local (street-level) substations')
+const zoomHint = h('div', { class: 'zoom-hint', hidden: true }, 'Zoom in for LV substations')
 document.body.append(zoomHint)
 const updateHint = () => { zoomHint.hidden = !(state.lv && !state.simple && map.getZoom() < 11) }
 map.on('zoomend', updateHint)
@@ -188,6 +189,7 @@ map.on('load', async () => {
 initGlossary()
 buildControls(map, onSearch)
 maybeShowWelcome()
+initUpdates()
 void refreshNational()
 setInterval(refreshNational, 60_000)
 
@@ -202,7 +204,7 @@ function outagePopup(f: MapGeoJSONFeature) {
         h('div', {}, `Ref ${p.ref ?? '—'} · ${p.status ?? ''}`),
         p.cust ? h('div', {}, `${p.cust} customers affected`) : null,
         p.start ? h('div', { class: 'muted' }, `Since ${new Date(String(p.start)).toLocaleString()}`) : null,
-        p.etr ? h('div', { class: 'muted' }, `Est. restore ${new Date(String(p.etr)).toLocaleString()}`) : null))
+        p.etr ? h('div', { class: 'muted' }, `Expected back ${new Date(String(p.etr)).toLocaleString()}`) : null))
       .addTo(map)
   })
 }

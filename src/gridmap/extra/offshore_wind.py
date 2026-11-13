@@ -39,30 +39,23 @@ LAYERS = [
     LayerMeta(
         id="offshore_wind", title="Offshore wind areas", group="Generation & planning", type="pmtiles",
         geom="polygon", source_layer="offshore_wind", minzoom=3,
-        description="Seabed areas leased or optioned for offshore wind by The Crown Estate and Crown Estate "
-                    "Scotland, coloured by project stage. Includes leasing-round and ScotWind/INTOG option areas "
-                    "that have not reached planning. Capacity is the operator's figure where published, "
-                    "otherwise taken from EMODnet or the renewables planning database.",
+        description="Leased and optioned offshore wind areas. Crown Estate and Crown Estate Scotland.",
         color=STATUS_SPEC, opacity=0.55,
         popup=[["n", "Site", None], ["s", "Stage", None], ["mw", "Capacity", "MW"], ["tur", "Turbines", None],
-               ["t", "Developer / tenant", None], ["rd", "Leasing round", None], ["km2", "Area", "km²"],
+               ["t", "Developer or tenant", None], ["rd", "Leasing round", None], ["km2", "Area", "km²"],
                ["src", "Capacity from", None]],
         legend=STATUS_COLORS[:5], attribution=ATTR),
     LayerMeta(
         id="offshore_cable_zones", title="Offshore cable corridors & OFTO sites", group="Network", type="pmtiles",
         geom="polygon", source_layer="offshore_cable_zones", minzoom=5,
-        description="Seabed corridors leased for wind farm export cables (Crown Estate, England/Wales/NI) and "
-                    "Scottish offshore transmission (OFTO) and offshore substation leases, coloured by stage. "
-                    "These are lease areas, not the exact cable route.",
+        description="Offshore cable and OFTO lease areas. Not exact routes. Crown Estate.",
         color=STATUS_SPEC, opacity=0.6,
         popup=[["n", "Name", None], ["s", "Stage", None], ["k", "Type", None], ["t", "Tenant", None]],
         legend=STATUS_COLORS[:3] + STATUS_COLORS[3:4] + STATUS_COLORS[5:], attribution=f"{TCE} {CES}"),
     LayerMeta(
         id="offshore_ssep", title="NESO offshore planning zones (SSEP)", group="Areas", type="pmtiles",
         geom="polygon", source_layer="offshore_ssep", minzoom=3,
-        description="Offshore zones NESO uses in the Strategic Spatial Energy Plan, the national plan for where "
-                    "new generation and grid should go. Scottish option areas are shown separately from the "
-                    "English and Welsh waters zones.",
+        description="Offshore zones in NESO's Strategic Spatial Energy Plan.",
         color={"prop": "g", "type": "categorical", "default": "#999999",
                "stops": [["Scottish waters", "#009E73"], ["England & Wales waters", "#F0E442"]]},
         opacity=0.35,

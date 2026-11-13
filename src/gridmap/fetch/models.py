@@ -9,8 +9,6 @@ from typing import Any
 
 import yaml
 
-from .. import settings
-
 REGISTRY_PATH = Path(__file__).resolve().parent.parent / "sources.yaml"
 
 OPERATORS = {"UKPN", "NPG", "ENW", "SPEN", "NGED", "SSEN", "SSEN-T", "NESO", "ELEXON", "CARBON",
@@ -73,25 +71,18 @@ class Result:
     snapshot: Path | None = None
 
 
-def registry_files(overlay: Path | None = None) -> tuple[Path, list[Path]]:
-    """(main registry, sources.d files). Overlay rule: a file in OVERLAY_DIR (pulled by gridmap.updater) replaces the
-    bundled file of the same name; bundled files without an overlay twin stay in use."""
-    overlay = settings.OVERLAY_DIR if overlay is None else overlay
-    main = overlay / "sources.yaml"
-    if not main.is_file():
-        main = REGISTRY_PATH
-    files = {f.name: f for f in (REGISTRY_PATH.parent / "sources.d").glob("*.yaml")}
-    files.update({f.name: f for f in (overlay / "sources.d").glob("*.yaml")})
-    return main, [files[k] for k in sorted(files)]
+def registry_files() -> tuple[Path, list[Path]]:
+    """(main registry, sources.d files), all next to this package (an updated payload ships its own copies)."""
+    return REGISTRY_PATH, sorted((REGISTRY_PATH.parent / "sources.d").glob("*.yaml"))
 
 
-def load_sources(path: Path | None = None, overlay: Path | None = None) -> list[Source]:
-    """Load and validate the registry (bundled + overlay, see registry_files). Raises ValueError on a bad entry.
+def load_sources(path: Path | None = None) -> list[Source]:
+    """Load and validate the registry (sources.yaml + sources.d/*.yaml). Raises ValueError on a bad entry.
     An explicit `path` loads just that file."""
     if path is not None:
         entries = list(yaml.safe_load(path.read_text())["sources"])
     else:  # extras ship their own registries: src/gridmap/sources.d/*.yaml (one file per extra)
-        main, extra_files = registry_files(overlay)
+        main, extra_files = registry_files()
         entries = list(yaml.safe_load(main.read_text())["sources"])
         for f in extra_files:
             entries += (yaml.safe_load(f.read_text()) or {}).get("sources", [])

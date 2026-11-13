@@ -49,14 +49,13 @@ export async function gateOnSetup(): Promise<void> {
   const err = h('p', { class: 'err', hidden: true })
   const root = h('div', { class: 'setup', role: 'status' },
     h('div', { class: 'setup-card' },
-      h('h1', {}, 'Setting up GB Grid (first run, ~10–20 min)'),
-      h('p', { class: 'sub' }, 'Downloading the map and the latest grid data, then building everything on this Mac.'),
+      h('h1', {}, 'Setting up GB Grid (10–20 min)'),
+      h('p', { class: 'sub' }, 'Downloading map and grid data.'),
       h('div', { class: 'setup-bar' }, bar),
       h('div', { class: 'setup-total' }, detail, pctText),
       err, list,
       h('div', { class: 'note' },
-        'This only happens once. It is fine to leave this window open in the background or to quit and reopen it: ' +
-        'setup carries on where it left off. Next time GB Grid opens straight to the map.')))
+        'One time only. Safe to quit. Setup resumes.')))
   document.body.append(root)
 
   const render = (x: Setup) => {

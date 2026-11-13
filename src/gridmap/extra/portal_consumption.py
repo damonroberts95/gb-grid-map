@@ -28,10 +28,7 @@ LAYERS = [
     LayerMeta(
         id="elec_postcode_kwh", title="Home electricity use by postcode (2024)", group="Demand & LV",
         type="pmtiles", geom="point", source_layer="elec_postcode_kwh", minzoom=6,
-        description="Average yearly electricity used per domestic meter in 2024, for each postcode (zoom in far) or "
-                    "postcode sector (zoomed out). High averages often mean electric heating or Economy 7 "
-                    "storage heaters. Only postcodes with at "
-                    "least 5 meters are published.",
+        description="Average yearly home electricity use per meter, 2024. Postcodes with 5 or more meters. DESNZ.",
         color={"prop": "kwh", "type": "steps", "default": "#cccccc", "stops": STOPS},
         size={"prop": "m", "stops": [[5, 1.5], [30, 2.5], [150, 3.5], [3000, 7]]}, opacity=0.8,
         popup=[["pc", "Postcode", None], ["kwh", "Mean per meter", "kWh/yr"],

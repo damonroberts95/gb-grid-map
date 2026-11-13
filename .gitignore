@@ -12,3 +12,4 @@ keys.env
 build/
 *.spec.bak
 packaging/bin/
+packaging/build_info.json

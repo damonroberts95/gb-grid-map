@@ -7,7 +7,7 @@ Serves, in the packaged app and in any run where the web build exists:
 The /api and /data routes are registered earlier in create_app and win; this must be installed LAST (the "/"
 mount is a catch-all). Dev mode (Vite on :5173, proxying /api and /data here) is unaffected.
 
-Web build location: $GRIDMAP_WEB_DIST, else the PyInstaller bundle (<bundle>/web/dist), else <repo>/web/dist.
+Web build location: the active update payload, else $GRIDMAP_WEB_DIST, else the PyInstaller bundle (<bundle>/web/dist), else <repo>/web/dist.
 Env: GRIDMAP_NO_BOOTSTRAP=1 skips the first-run basemap download.
 """
 
@@ -25,7 +25,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from .. import bootstrap
-from ..settings import REPO_ROOT
+from ..settings import PAYLOAD_DIR, REPO_ROOT
 
 log = logging.getLogger("gridmap.setup")
 
@@ -37,6 +37,8 @@ STAGES = [("basemap", "Downloading the GB map", 25), ("fetch", "Downloading grid
 
 def web_dist() -> Path | None:
     cands = []
+    if PAYLOAD_DIR:  # updated payload (gridmap.payload) beats the bundled copy
+        cands.append(PAYLOAD_DIR / "web" / "dist")
     if os.environ.get("GRIDMAP_WEB_DIST"):
         cands.append(Path(os.environ["GRIDMAP_WEB_DIST"]))
     if getattr(sys, "frozen", False):

@@ -1,40 +1,39 @@
-"""GET /api/updates and the background config-update thread (see gridmap.updater). Wired from app.py.
+"""GET /api/updates, POST /api/updates/apply and the background update thread (see gridmap.updater). Wired from app.py.
 
-Disabled in dev checkouts (git repo) unless GRIDMAP_UPDATES=1; also never started when the scheduler is off (tests).
+Disabled in dev checkouts (git repo) unless GRIDMAP_UPDATES=1; the thread also needs the scheduler on (tests turn it off) unless GRIDMAP_UPDATES=1.
 """
 
 from __future__ import annotations
 
 import logging
+import os
 import threading
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 
 from .. import updater
-from ..extra import reset_overlay
-from ..fetch.models import load_sources
 
 log = logging.getLogger("gridmap.updates")
 
 
 def install(app: FastAPI, st) -> None:
-    def activated() -> None:
-        reset_overlay()
-        try:
-            st.registry = {s.id: s for s in load_sources()}
-        except Exception:
-            log.exception("registry reload failed after update")
-        # the scheduler's next tick (<= 60 s) fetches new sources and rebuilds extras (refresh.py sees VERSION.json)
-
-    up = updater.Updater(on_activated=activated)
+    up = updater.Updater()
     app.state.updater = up
 
     @app.get("/api/updates")
     def get_updates():
-        return up.status()
+        return JSONResponse(up.status(), headers={"Cache-Control": "no-store"})
 
-    if not (st.scheduler and updater.enabled()):
-        log.info("config auto-update off (%s)", "dev checkout or no scheduler")
+    @app.post("/api/updates/apply")
+    def apply_update():
+        if up.state != "ready_to_restart":
+            return JSONResponse({"error": "no update is ready"}, status_code=409)
+        threading.Timer(0.5, updater.restart).start()  # let this response go out first
+        return {"restarting": True}
+
+    if not (updater.enabled() and (st.scheduler or os.environ.get("GRIDMAP_UPDATES") == "1")):
+        log.info("auto-update off (%s)", "dev checkout or no scheduler")
         return
 
     def loop() -> None:
@@ -43,4 +42,4 @@ def install(app: FastAPI, st) -> None:
             up.check()
             st.stop.wait(updater.INTERVAL_S)
 
-    threading.Thread(target=loop, name="config-updater", daemon=True).start()
+    threading.Thread(target=loop, name="updater", daemon=True).start()

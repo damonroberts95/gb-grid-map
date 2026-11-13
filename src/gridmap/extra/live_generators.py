@@ -29,10 +29,7 @@ LAYERS = [
     LayerMeta(
         id="live_generators", title="Large generators: output now (Elexon)", group="Live", type="geojson",
         geom="point", minzoom=4, live=True, default_on=False,
-        description="Power stations, wind farms and large batteries that Elexon lists as BM units, sized by the "
-                    "output they have notified for this minute (negative = charging or pumping). This is the notified "
-                    "plan, not meter readings. Only units we could match to a mapped site by name and capacity are "
-                    "shown, so coverage is partial (mostly transmission-connected plant).",
+        description="Large generators' notified output now. Plan, not meter readings. Elexon. Partial coverage.",
         color={"prop": "t", "type": "categorical", "default": "#6b6b6b", "stops": CLASS_COLORS},
         size={"prop": "a", "stops": [[0, 3], [20, 5], [100, 8], [400, 12], [1000, 16]]}, opacity=0.85,
         popup=[["n", "Generator", None], ["t", "Type", None], ["mw", "Notified output now", "MW"],

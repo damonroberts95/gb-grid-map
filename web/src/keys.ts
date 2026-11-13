@@ -31,7 +31,7 @@ async function main() {
   const cards = h('div', {})
   const foot = h('p', { class: 'note k-foot' })
   root.append(h('h1', {}, 'API keys'),
-    h('p', { class: 'sub' }, 'Many network operators lock their best data behind a free account. Paste each key here once and the map fills in the gaps. Keys are stored only on this computer, in the .env file.'),
+    h('p', { class: 'sub' }, 'Free keys unlock more data. Stored only on this computer.'),
     summary, cards, foot)
 
   let guide: Provider[] = []
@@ -103,14 +103,14 @@ async function main() {
       ...fields,
       h('div', { class: 'k-field' }, save, test),
       msg,
-      p.gotchas.length ? h('details', {}, h('summary', {}, 'Good to know'), h('ul', {}, ...p.gotchas.map((g) => h('li', {}, g)))) : null)
+      p.gotchas.length ? h('details', {}, h('summary', {}, 'Notes'), h('ul', {}, ...p.gotchas.map((g) => h('li', {}, g)))) : null)
   }
 
   try {
     guide = await getJson<Provider[]>('/api/keys/guide')
     await load()
   } catch (e) {
-    cards.replaceChildren(h('p', { class: 'err' }, `Could not load keys: ${e}. This page only works on the computer running the app.`))
+    cards.replaceChildren(h('p', { class: 'err' }, `Could not load keys: ${e}`))
     return
   }
   render()
@@ -124,8 +124,8 @@ async function main() {
   try {
     const u = await getJson<Updates>('/api/updates')
     foot.textContent = u.current_sha
-      ? `Data config updated ${ago(u.fetched_at)} (version ${u.current_sha.slice(0, 7)}).`
-      : u.enabled ? 'Data config: using the version bundled with the app; checks for updates every 6 hours.' : 'Data config updates are off (development checkout).'
+      ? `Config updated ${ago(u.fetched_at)} (${u.current_sha.slice(0, 7)}).`
+      : u.enabled ? 'Config: bundled version. Checks every 6 hours.' : 'Config updates off (dev).'
   } catch { /* optional footer */ }
 }
 

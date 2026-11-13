@@ -90,23 +90,22 @@ function breadcrumb(chain: Row[], self: { name: string; kind: string } | null, h
       ? h('i', { class: 'bc-lv' }) : shapeSvg(KIND_SHAPE[KIND_NUM[self.kind] ?? 3] ?? 'circle', 'var(--accent)', 12),
     h('span', {}, self.name)))
   }
-  return h('nav', { class: 'breadcrumb', 'aria-label': 'Connection hierarchy' },
-    h('div', { class: 'bc-title' }, term('parent', 'Connection hierarchy'),
-      how === 'nearest' ? h('small', { class: 'muted' }, ' · LV link inferred (nearest primary)') : null),
-    h('div', { class: 'bc-row' }, ...(nodes.length ? nodes : [h('span', { class: 'muted' }, 'Upstream not published')])))
+  return h('nav', { class: 'breadcrumb', 'aria-label': 'Fed from' },
+    h('div', { class: 'bc-title' }, term('parent', 'Fed from'),
+      how === 'nearest' ? h('small', { class: 'muted' }, ' · LV link inferred') : null),
+    h('div', { class: 'bc-row' }, ...(nodes.length ? nodes : [h('span', { class: 'muted' }, 'Not published')])))
 }
 
 /** One plain sentence answering "can I connect here?" for the current mode and threshold. */
 function verdict(mode: 'gen' | 'dem', v: number | null, unit: string): HTMLElement {
-  const what = mode === 'gen' ? 'new generation (e.g. solar, batteries)' : 'new demand (e.g. heat pumps, EV charging)'
+  const what = mode === 'gen' ? 'generation' : 'demand'
   let text: string
   let cls: string
-  if (v === null) { text = `The operator doesn’t publish spare capacity for ${what} here.`; cls = 'v-none' }
-  else if (v <= 0) { text = `No spare capacity for ${what}: new connections are likely to need network reinforcement.`; cls = 'v-red' }
-  else if (v < state.thr) { text = `Limited spare capacity for ${what}: about ${fmt(v)} ${unit}.`; cls = 'v-amber' }
-  else { text = `Good spare capacity for ${what}: about ${fmt(v)} ${unit}.`; cls = 'v-green' }
-  return h('p', { class: `verdict ${cls}` }, text,
-    h('span', { class: 'muted small' }, ' Indicative only: a formal application decides.'))
+  if (v === null) { text = `Not published for ${what}.`; cls = 'v-none' }
+  else if (v <= 0) { text = `No spare capacity for ${what}.`; cls = 'v-red' }
+  else if (v < state.thr) { text = `Limited spare capacity for ${what}: ~${fmt(v)} ${unit}.`; cls = 'v-amber' }
+  else { text = `Good spare capacity for ${what}: ~${fmt(v)} ${unit}.`; cls = 'v-green' }
+  return h('p', { class: `verdict ${cls}` }, text)
 }
 
 function render(d: SiteDetail) {
@@ -142,7 +141,7 @@ function render(d: SiteDetail) {
         fmt(num(f, 'rating_break_ka'), 2),
         fmt((num(f, 'rating_break_ka') ?? NaN) - (num(f, 'fl_3ph_break_ka') ?? NaN), 2),
       ]))
-    : h('p', { class: 'muted' }, s.operator === 'ENW' ? 'ENW does not publish fault levels.' : 'No fault level data published.')
+    : h('p', { class: 'muted' }, s.operator === 'ENW' ? 'ENW publishes no fault levels.' : 'No fault levels.')
 
   const statusRows = Object.entries(d.queue.by_status).filter(([, v]) => v)
   const techRows = Object.entries(d.queue.by_tech).filter(([, v]) => v).sort((a, b) => b[1] - a[1]).slice(0, 6)
@@ -157,13 +156,13 @@ function render(d: SiteDetail) {
     h('div', { class: 'stats' },
       stat(term('gen_headroom'), g, 'MW'),
       dm !== null ? stat(term('dem_headroom'), dm, 'MW') : stat(term('dem_headroom'), dmva, 'MVA'),
-      stat(term('fault_headroom', 'Fault headroom (min)'), fh.length ? Math.min(...fh) : null, 'kA', false),
-      stat(term('queue', 'Queued generation'), queued || null, 'MW', false)),
+      stat(term('fault_headroom', 'Fault headroom'), fh.length ? Math.min(...fh) : null, 'kA', false),
+      stat(term('queue', 'Queued'), queued || null, 'MW', false)),
     h('p', { class: 'muted small' }, term('basis', 'Headroom basis'), ': ',
       basis && !String(basis).toLowerCase().startsWith('unknown') ? String(basis)
-        : `not stated in ${String(s.operator)}’s published data`),
+        : `not stated`),
     h('div', { class: 'rel' },
-      d.children.length ? h('details', {}, h('summary', {}, `Feeds ${d.children.length} substations`),
+      d.children.length ? h('details', {}, h('summary', {}, `Feeds ${d.children.length}`),
         h('ul', { class: 'kids' }, ...d.children.map((c) => h('li', {}, link(c),
           h('span', { class: 'muted' }, ` ${fmt(num(c, state.mode === 'gen' ? 'g' : 'd'))}`)))))
         : null),
@@ -173,7 +172,7 @@ function render(d: SiteDetail) {
     statusRows.length
       ? h('div', {}, table(['Status', 'MW'], statusRows.map(([k, v]) => [GLOSSARY[k] ? term(k, k) : k, fmt(v)])),
         techRows.length ? table(['Technology', 'MW'], techRows.map(([k, v]) => [k, fmt(v)])) : null)
-      : h('p', { class: 'muted' }, 'No register entries linked to this site.'),
+      : h('p', { class: 'muted' }, 'None linked.'),
     h('h3', {}, 'Sources'),
     h('ul', { class: 'srcs' }, ...d.sources.map((r) => h('li', {},
       h('span', {}, `${r.source_id}`), h('span', { class: 'muted' }, ` · as of ${r.as_of ?? '?'} · ${r.licence ?? ''}`)))),
@@ -187,7 +186,7 @@ export async function showSite(id: string) {
   try {
     render(await api.site(id, ctl.signal))
   } catch (e) {
-    if ((e as Error).name !== 'AbortError') shell('Could not load site', String((e as Error).message))
+    if ((e as Error).name !== 'AbortError') shell('Could not load', String((e as Error).message))
   }
 }
 
@@ -212,6 +211,6 @@ export async function showLv(id: string, props: Record<string, unknown>, at?: [n
     drawer.querySelector('p.small')?.replaceWith(table(['Field', 'Value'], rows.map(([k, v]) => [k, v as string])))
   } catch (e) {
     if ((e as Error).name !== 'AbortError') drawer.querySelector('p.small')?.replaceWith(
-      h('p', { class: 'muted' }, 'Details unavailable.'))
+      h('p', { class: 'muted' }, 'No details.'))
   }
 }

@@ -1,6 +1,6 @@
 // Plain-English names for layers and groups (newcomer-friendly). Server titles stay in the hover help.
 export const FRIENDLY_TITLE: Record<string, string> = {
-  anm_zones: 'Areas where generation can be curtailed',
+  anm_zones: 'Areas where generation can be cut back',
   flex_zones: 'Areas buying flexibility',
   gsp_regions: 'Grid supply areas',
   offshore_ssep: 'Offshore planning zones',
@@ -21,7 +21,7 @@ export const FRIENDLY_TITLE: Record<string, string> = {
   tec: 'Large projects on the transmission grid',
   carbon_regions: 'How green the electricity is now',
   live_constraints: 'Network constraints now (East & London)',
-  curtailment: 'Generation switched off for constraints',
+  curtailment: 'Generation switched off by limits',
   live_gsp: 'Power flow at grid supply points now',
   live_generators: 'Big power stations: output now',
   nerda_sites: 'Live substation readings (South England)',

@@ -20,8 +20,7 @@ LAYERS = [
     LayerMeta(
         id="ssent_substations", title="SSEN Transmission substations", group="Network", type="geojson", geom="point",
         minzoom=5,
-        description="132-400 kV substation sites in the SSEN Transmission area (north of Scotland), from SSEN's open "
-                    "site polygons (Jan 2026) with ETYS 2025 winter year-1 fault levels where the site name matches.",
+        description="132-400 kV substations in north Scotland. SSEN, Jan 2026. ETYS 2025 fault levels where matched.",
         color={"prop": "kv", "type": "steps", "default": "#4575b4",
                "stops": [[0, "#4575b4"], [200, "#762a83"], [350, "#1b1b1b"]]},
         size={"prop": "kv", "stops": [[0, 3.5], [200, 5], [350, 6.5]]},
@@ -32,8 +31,7 @@ LAYERS = [
     ),
     LayerMeta(
         id="etys_boundaries", title="ETYS boundaries", group="Network", type="geojson", geom="line", minzoom=3,
-        description="NESO's Electricity Ten Year Statement study boundaries (March 2025): the lines across the GB "
-                    "transmission network where power-flow limits are assessed.",
+        description="Transmission study boundaries. NESO ETYS, March 2025.",
         color="#d95f02", size=2, opacity=0.8, popup=[["b", "Boundary", None]],
         legend=[["#d95f02", "ETYS boundary"]],
         attribution="Supported by National Energy SO Open Data",

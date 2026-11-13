@@ -1,26 +1,18 @@
-"""Config auto-update from GitHub: pulls `src/gridmap/sources.yaml`, `src/gridmap/sources.d/*.yaml` and
-`src/gridmap/extra/*.py` (data-source registry + layer modules) from the public repo, never app/server/web code.
+"""In-app updater: pulls the whole `gridmap` package + web UI from GitHub (see gridmap.payload and docs/UPDATES.md).
 
-How it decides
-  1. every 6 h (and at server start) ask the GitHub API for the branch head sha (anonymous, ETag / If-None-Match, so
-     an unchanged repo is a free 304). Same sha as overlay/VERSION.json -> nothing to do.
-  2. list the two directories at that sha, download only allow-listed files (see `allowed`) from raw.githubusercontent.com.
-  3. stage them in a temp dir next to OVERLAY_DIR and validate: YAML parses, `load_sources()` succeeds with the staged
-     overlay applied, every .py compiles, and importing all extras with the staged overlay works in a throw-away
-     subprocess (a module that raises on import, or that needs a newer app, is rejected before it can hurt the app).
-  4. atomic swap into OVERLAY_DIR and write overlay/VERSION.json {sha, fetched_at}. The map picks it up on the next
-     refresh tick (<= 60 s): new sources fetch and extras rebuild (refresh.py compares VERSION.json's mtime).
-
-Overlay rule (one rule, everywhere): a file in OVERLAY_DIR replaces the bundled file of the same name; bundled files
-without an overlay twin stay. Implemented in fetch.models.load_sources and extra.modules(). A file deleted upstream
-therefore keeps its bundled copy; deletions only take effect with a new app build.
-
-Dev mode: from a git checkout (REPO_ROOT/.git exists) updating is OFF so it never fights local edits; set
-GRIDMAP_UPDATES=1 to force on, GRIDMAP_UPDATES=0 to force off.
+Every 6 h (and at start) ask GitHub for the `latest-update` release (anonymous, ETag so an unchanged release is a free
+304). Its manifest.json says {sha, built_at, min_shell_version, deps_hash}.
+  same sha as the running payload      -> up_to_date
+  shell too old or deps_hash differs   -> needs_new_app (nothing is downloaded)
+  otherwise download update-bundle.zip, check its sha256, unzip into <home>/payload/<sha>.tmp, validate it in a
+  subprocess (imports the staged package, builds the FastAPI app without the scheduler, loads the registry, imports
+  every extra), rename to <home>/payload/<sha> and mark it pending -> ready_to_restart.
+A restart (POST /api/updates/apply) runs it. Dev checkouts (.git present) stay off unless GRIDMAP_UPDATES=1.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -30,38 +22,23 @@ import subprocess
 import sys
 import tempfile
 import threading
-from collections.abc import Callable
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import httpx
-import yaml
 
-from . import settings
-from .fetch.models import load_sources
+from . import payload, settings
+from .payload import UpdateError
 
 log = logging.getLogger("gridmap.updater")
-API = "https://api.github.com"
-RAW = "https://raw.githubusercontent.com"
-UA = "gridmap-local/0.1"
 INTERVAL_S = 6 * 3600
-MAX_FILE = 1_000_000
-MAX_FILES = 200
-_NAME = r"[A-Za-z0-9][A-Za-z0-9_\-]*"
-PATTERNS = (re.compile(r"src/gridmap/sources\.yaml"),
-            re.compile(rf"src/gridmap/sources\.d/{_NAME}\.yaml"),
-            re.compile(rf"src/gridmap/extra/(?!__init__\.py){_NAME}\.py"))
-LIST_DIRS = ("src/gridmap/sources.d", "src/gridmap/extra")
+UA = "gridmap-local/0.1"
+MAX_ZIP = 300_000_000
+ASSET_ZIP, ASSET_SHA, ASSET_MANIFEST = "update-bundle.zip", "update-bundle.zip.sha256", "manifest.json"
 
 
-class UpdateError(Exception):
-    pass
-
-
-def allowed(path: str) -> bool:
-    """Only the registry, the per-extra registries and extra layer modules (not extra/__init__.py, the framework)."""
-    return ".." not in path and any(p.fullmatch(path) for p in PATTERNS)
+def release_url() -> str:
+    return os.environ.get("GRIDMAP_UPDATE_URL") or f"https://api.github.com/repos/{settings.UPDATE_REPO}/releases/tags/latest-update"
 
 
 def enabled() -> bool:
@@ -71,155 +48,182 @@ def enabled() -> bool:
     return not (settings.REPO_ROOT / ".git").exists()
 
 
-def _rel(path: str) -> str:
-    return path.removeprefix("src/gridmap/")
+# --- gating + validation (no network) -------------------------------------------------------------------------------
+
+def check_manifest(m: dict) -> None:
+    if not (isinstance(m, dict) and re.fullmatch(payload.SHA_RE, str(m.get("sha", "")))):
+        raise UpdateError("update manifest has no valid sha")
 
 
-# --- validation + activation (no network) ------------------------------------------------------------------------
+def needs_new_app(m: dict) -> bool:
+    """True when this shell cannot run the payload: shell too old, or third-party deps / native tools changed."""
+    if payload.version_tuple(m.get("min_shell_version", "0")) > payload.version_tuple(payload.shell_version()):
+        return True
+    mine = payload.deps_hash()
+    return bool(mine) and m.get("deps_hash") != mine
 
-IMPORT_CHECK = (
-    "from gridmap.extra import modules\n"
-    "for m in modules():\n"
-    "    assert isinstance(m.LAYERS, list) and (not m.LAYERS or callable(m.build)), m.__name__\n"
-)
+
+VALIDATE = """\
+import sys
+from pathlib import Path
+STAGED = {staged!r}
+try:
+    use_payload(STAGED)  # frozen shell (packaging/launch.py): staged src in front of the bundled gridmap
+except NameError:
+    sys.path.insert(0, STAGED + "/src")
+import gridmap
+assert Path(gridmap.__file__).resolve().is_relative_to(Path(STAGED).resolve()), "staged package not first: " + gridmap.__file__
+from gridmap.fetch.models import load_sources
+from gridmap.server.app import create_app
+from gridmap.extra import modules
+create_app(Path({data!r}), scheduler=False)
+assert load_sources()
+for m in modules():
+    assert isinstance(m.LAYERS, list) and (not m.LAYERS or callable(m.build)), m.__name__
+"""
 
 
 def validate(staged: Path) -> None:
-    """Raise UpdateError unless the staged overlay is safe to activate."""
-    for f in sorted(staged.rglob("*.yaml")):
+    """Raise UpdateError unless the staged payload imports and starts cleanly. Runs in a throw-away subprocess:
+    in the frozen app sys.executable is the shell, whose launcher runs `-c <code>` instead of opening the GUI."""
+    if not (staged / "web" / "dist" / "index.html").is_file():
+        raise UpdateError("staged payload has no web UI")
+    with tempfile.TemporaryDirectory(prefix="gridmap-validate-") as data:
+        env = {**os.environ, "GRIDMAP_DATA_DIR": data, "GRIDMAP_NO_EXTRAS": "1", "GRIDMAP_NO_SCHEDULER": "1",
+               "GRIDMAP_NO_BOOTSTRAP": "1", "GRIDMAP_UPDATES": "0"}
+        env.pop("GRIDMAP_PAYLOAD_DIR", None)
         try:
-            doc = yaml.safe_load(f.read_text())
-        except yaml.YAMLError as e:
-            raise UpdateError(f"{f.name}: invalid YAML ({type(e).__name__})") from e
-        if f.name == "sources.yaml" and not (isinstance(doc, dict) and isinstance(doc.get("sources"), list)):
-            raise UpdateError("sources.yaml: no `sources` list")
-    try:
-        load_sources(overlay=staged)
-    except Exception as e:
-        raise UpdateError(f"registry rejected: {type(e).__name__}: {e}") from e
-    for f in sorted(staged.rglob("*.py")):
-        try:
-            compile(f.read_text(), str(f), "exec")
-        except (SyntaxError, ValueError) as e:
-            raise UpdateError(f"{f.name}: does not compile ({type(e).__name__}: {e})") from e
-    try:
-        r = subprocess.run([sys.executable, "-I", "-c", IMPORT_CHECK], check=False, capture_output=True, text=True, timeout=180,
-                           env={**os.environ, "GRIDMAP_OVERLAY_DIR": str(staged), "GRIDMAP_NO_EXTRAS": "1"})
-    except subprocess.TimeoutExpired as e:
-        raise UpdateError("extras import check timed out") from e
+            r = subprocess.run([sys.executable, "-I", "-c", VALIDATE.format(staged=str(staged), data=data)], check=False,
+                               capture_output=True, text=True, timeout=180, env=env)
+        except subprocess.TimeoutExpired as e:
+            raise UpdateError("staged payload check timed out") from e
     if r.returncode:
         tail = (r.stderr.strip().splitlines() or ["?"])[-1][:300]
-        raise UpdateError(f"extras failed to import: {tail}")
+        raise UpdateError(f"staged payload failed its check: {tail}")
 
 
-def apply(sha: str, files: dict[str, bytes], overlay: Path | None = None, now: datetime | None = None) -> bool:
-    """Stage `files` ({repo path: bytes}; anything not allow-listed is dropped), validate, and swap into the
-    overlay dir. Returns True when activated; raises UpdateError (overlay untouched) when invalid."""
-    overlay = overlay or settings.OVERLAY_DIR
-    files = {p: b for p, b in files.items() if allowed(p)}
-    if "src/gridmap/sources.yaml" not in files and not any(p.startswith("src/gridmap/") for p in files):
-        raise UpdateError("nothing to apply")
-    overlay.parent.mkdir(parents=True, exist_ok=True)
-    staged = Path(tempfile.mkdtemp(prefix=f".{overlay.name}.new-", dir=overlay.parent))
-    old = overlay.parent / f".{overlay.name}.old"
+def install(zip_path: Path, expect_sha256: str, sha: str) -> None:
+    """Verify, unzip, validate and mark pending. Raises UpdateError and leaves nothing behind on failure."""
+    got = hashlib.sha256(zip_path.read_bytes()).hexdigest()
+    if got != expect_sha256.lower():
+        raise UpdateError("download does not match its sha256; discarded")
+    root = payload.root()
+    tmp, final = root / f"{sha}.tmp", root / sha
+    shutil.rmtree(tmp, ignore_errors=True)
     try:
-        for p, b in files.items():
-            dest = staged / _rel(p)
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_bytes(b)
-        validate(staged)
-        stamp = (now or datetime.now(UTC)).strftime("%Y-%m-%dT%H:%M:%SZ")
-        (staged / "VERSION.json").write_text(json.dumps({"sha": sha, "fetched_at": stamp, "files": sorted(files)}, indent=1))
-        shutil.rmtree(old, ignore_errors=True)
-        if overlay.exists():
-            overlay.rename(old)
-        staged.rename(overlay)
-        shutil.rmtree(old, ignore_errors=True)
-        return True
+        m = payload.extract_bundle(zip_path, tmp)
+        if m.get("sha") != sha:
+            raise UpdateError("bundle manifest sha does not match the release")
+        validate(tmp)
+        shutil.rmtree(final, ignore_errors=True)
+        tmp.rename(final)
     finally:
-        shutil.rmtree(staged, ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+    payload.mark_pending(sha)
 
 
-def current_version(overlay: Path | None = None) -> dict:
-    try:
-        return json.loads(((overlay or settings.OVERLAY_DIR) / "VERSION.json").read_text())
-    except (OSError, ValueError):
-        return {}
-
-
-# --- network ----------------------------------------------------------------------------------------------------
+# --- network ----------------------------------------------------------------------------------------------------------
 
 class Updater:
-    def __init__(self, repo: str | None = None, branch: str | None = None, client: httpx.Client | None = None,
-                 on_activated: Callable[[], None] | None = None):
-        self.repo = repo or settings.UPDATE_REPO
-        self.branch = branch or settings.UPDATE_BRANCH
-        self.client = client or httpx.Client(timeout=30, headers={"User-Agent": UA}, follow_redirects=True)
-        self.on_activated = on_activated
+    def __init__(self, client: httpx.Client | None = None, url: str | None = None):
+        self.client = client or httpx.Client(timeout=60, headers={"User-Agent": UA}, follow_redirects=True)
+        self.url = url or release_url()
+        self.state = "up_to_date"
+        self.available_sha: str | None = None
         self.last_check: str | None = None
         self.last_error: str | None = None
         self._etag: str | None = None
         self._lock = threading.Lock()
+        pend = payload.pending_sha()
+        if pend and pend != payload.active_sha():
+            self.state, self.available_sha = "ready_to_restart", pend
 
     def status(self) -> dict[str, Any]:
-        v = current_version()
-        return {"enabled": enabled(), "current_sha": v.get("sha"), "fetched_at": v.get("fetched_at"),
-                "last_check": self.last_check, "last_error": self.last_error}
+        return {"shell_version": payload.shell_version(), "active_sha": payload.active_sha(),
+                "available_sha": self.available_sha, "state": self.state, "last_check": self.last_check,
+                "last_error": self.last_error, "enabled": enabled()}
 
-    def _head(self) -> str | None:
-        """Branch head sha, or None when unchanged since the last ETag."""
-        h = {"Accept": "application/vnd.github.sha"}
-        if self._etag:
-            h["If-None-Match"] = self._etag
-        r = self.client.get(f"{API}/repos/{self.repo}/commits/{self.branch}", headers=h)
-        if r.status_code == 304:
-            return None
+    def _get(self, url: str, **kw) -> httpx.Response:
+        r = self.client.get(url, **kw)
         if r.status_code in (403, 429):
             raise UpdateError(f"GitHub rate limit (HTTP {r.status_code}); will retry later")
-        if r.status_code != 200:
-            raise UpdateError(f"GitHub answered HTTP {r.status_code} for the branch head")
-        sha = r.text.strip()
-        if not re.fullmatch(r"[0-9a-f]{40}", sha):
-            raise UpdateError("unexpected branch head reply")
+        if r.status_code not in (200, 304):
+            raise UpdateError(f"HTTP {r.status_code} from {r.url.host}")
+        return r
+
+    def _release(self) -> dict[str, str] | None:
+        """{asset name: download url}, or None when unchanged since the last ETag."""
+        h = {"Accept": "application/vnd.github+json"}
+        if self._etag:
+            h["If-None-Match"] = self._etag
+        r = self._get(self.url, headers=h)
+        if r.status_code == 304:
+            return None
         self._etag = r.headers.get("etag")
-        return sha
-
-    def _list(self, directory: str, sha: str) -> list[str]:
-        r = self.client.get(f"{API}/repos/{self.repo}/contents/{directory}", params={"ref": sha})
-        if r.status_code != 200:
-            raise UpdateError(f"GitHub answered HTTP {r.status_code} listing {directory}")
-        return [f"{directory}/{e['name']}" for e in r.json() if e.get("type") == "file"]
-
-    def fetch_files(self, sha: str) -> dict[str, bytes]:
-        paths = ["src/gridmap/sources.yaml"] + [p for d in LIST_DIRS for p in self._list(d, sha)]
-        paths = [p for p in paths if allowed(p)]
-        if len(paths) > MAX_FILES:
-            raise UpdateError("too many files")
-        out = {}
-        for p in paths:
-            r = self.client.get(f"{RAW}/{self.repo}/{sha}/{p}")
-            if r.status_code != 200 or len(r.content) > MAX_FILE:
-                raise UpdateError(f"could not fetch {p} (HTTP {r.status_code})")
-            out[p] = r.content
-        return out
+        return {a["name"]: a["browser_download_url"] for a in r.json().get("assets", [])}
 
     def check(self) -> bool:
-        """One update pass. Returns True if a new overlay was activated. Never raises."""
+        """One pass. Returns True when a new payload was staged. Never raises."""
         with self._lock:
-            self.last_check = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+            self.last_check = payload.now_iso()
             try:
-                sha = self._head()
-                if sha is None or (sha == current_version().get("sha") and settings.OVERLAY_DIR.exists()):
-                    self.last_error = None
+                assets = self._release()
+                if assets is None:
                     return False
-                apply(sha, self.fetch_files(sha))
-            except (UpdateError, httpx.HTTPError, OSError, ValueError) as e:
-                self.last_error = f"{type(e).__name__}: {e}" if not isinstance(e, UpdateError) else str(e)
-                self._etag = None  # re-check fully next time
-                log.warning("config update skipped: %s", self.last_error)
+                if ASSET_MANIFEST not in assets:
+                    raise UpdateError("release has no manifest.json")
+                m = self._get(assets[ASSET_MANIFEST]).json()
+                check_manifest(m)
+                sha = m["sha"]
+                self.last_error = None
+                st = payload.read_state()
+                if sha == payload.active_sha():
+                    self.state, self.available_sha = "up_to_date", None
+                    return False
+                if needs_new_app(m):
+                    self.state, self.available_sha = "needs_new_app", sha
+                    return False
+                if sha == st["pending"] and (payload.root() / sha).is_dir():
+                    self.state, self.available_sha = "ready_to_restart", sha
+                    return False
+                if sha in st["bad"]:
+                    self.state, self.available_sha = "up_to_date", None
+                    self.last_error = f"update {sha[:7]} did not work on this Mac and was skipped"
+                    return False
+                if ASSET_ZIP not in assets or ASSET_SHA not in assets:
+                    raise UpdateError("release is missing its bundle")
+                self.state, self.available_sha = "downloading", sha
+                want = self._get(assets[ASSET_SHA]).text.split()[0]
+                with tempfile.TemporaryDirectory(prefix="gridmap-dl-") as d:
+                    z = Path(d) / ASSET_ZIP
+                    with self.client.stream("GET", assets[ASSET_ZIP]) as r:
+                        if r.status_code != 200:
+                            raise UpdateError(f"HTTP {r.status_code} downloading the bundle")
+                        n = 0
+                        with z.open("wb") as f:
+                            for chunk in r.iter_bytes(1 << 20):
+                                n += len(chunk)
+                                if n > MAX_ZIP:
+                                    raise UpdateError("bundle is too large")
+                                f.write(chunk)
+                    install(z, want, sha)
+                self.state = "ready_to_restart"
+                log.info("update staged: %s", sha[:10])
+                return True
+            except (UpdateError, httpx.HTTPError, OSError, ValueError, KeyError, IndexError) as e:
+                self.last_error = str(e) if isinstance(e, UpdateError) else f"{type(e).__name__}: {e}"
+                if self.state == "downloading":
+                    self.state, self.available_sha = "error", None
+                elif self.state != "ready_to_restart":
+                    self.state = "error"
+                self._etag = None  # look again next time
+                log.warning("update skipped: %s", self.last_error)
                 return False
-            self.last_error = None
-            log.info("config update activated: %s @ %s", self.repo, sha[:10])
-            if self.on_activated:
-                self.on_activated()
-            return True
+
+
+def restart() -> None:
+    """Re-run the shell (packaging/launch.py picks the newest payload). Does not return."""
+    cmd = json.loads(os.environ.get("GRIDMAP_SHELL_CMD", "null") or "null") or [sys.executable, *sys.argv]
+    log.info("restarting: %s", cmd[0])
+    logging.shutdown()
+    os.execv(cmd[0], cmd)

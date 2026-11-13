@@ -40,9 +40,7 @@ LAYERS = [
     LayerMeta(
         id="dno_lines", title="Overhead lines (DNO, 6.6-132 kV)", group="Network", type="pmtiles", geom="line",
         source_layer="dno_lines", minzoom=6,
-        description="Overhead EHV and HV line routes published by UKPN, NPG, ENW and SSEN (2025-26 releases), "
-                    "coloured by voltage. Underground cable is not published openly, so absence of a line does not "
-                    "mean absence of network. SPEN and NGED publish no open line data.",
+        description="Overhead lines, coloured by voltage. UKPN, NPG, ENW, SSEN. No cables. No SPEN or NGED data.",
         color={"prop": "kv", "type": "steps", "default": "#8c8c8c",
                "stops": [[0, "#cc79a7"], [30, "#009e9e"], [100, "#2c7bb6"], [250, "#7b3294"]]},
         size={"prop": "kv", "stops": [[0, 0.8], [11, 1.2], [33, 1.8], [66, 2.4], [132, 3.2]]},
@@ -54,8 +52,7 @@ LAYERS = [
     LayerMeta(
         id="lv_overhead", title="LV overhead lines (DNO)", group="Demand & LV", type="pmtiles", geom="line",
         source_layer="lv_overhead", minzoom=11,
-        description="Low-voltage (230-480 V) overhead mains published by UKPN, NPG and ENW (2026 releases). "
-                    "Underground LV cable is not openly published; SPEN, NGED and SSEN publish no open LV line data.",
+        description="Overhead LV lines. UKPN, NPG, ENW. 2026. No cables.",
         color="#009e73", size={"prop": "w", "stops": [[0, 0.6], [2, 1.2]]}, opacity=0.8,
         popup=[["op", "Operator", None], ["kv", "Voltage", "kV"]],
         legend=[["#009e73", "LV overhead line"]],

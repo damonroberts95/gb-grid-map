@@ -11,9 +11,9 @@ export function topbar(active: Page, right: Node[] = []): HTMLElement {
   return h('header', { class: 'topbar', role: 'banner' },
     h('a', { class: 'tb-brand', href: '/' }, 'GB Grid'),
     h('nav', { class: 'tb-nav', 'aria-label': 'Pages' },
-      tab('/', 'Map', 'map', 'Interactive grid map'),
-      tab('/stats.html', 'Stats', 'stats', 'Data coverage statistics'),
+      tab('/', 'Map', 'map', 'Map'),
+      tab('/stats.html', 'Stats', 'stats', 'Data coverage'),
       tab('/queue.html', 'Queue', 'queue', 'Connection queue by substation'),
-      tab('/keys.html', 'Keys', 'keys', 'Set up API keys for locked datasets')),
+      tab('/keys.html', 'Keys', 'keys', 'API keys')),
     h('div', { class: 'tb-right' }, ...right))
 }

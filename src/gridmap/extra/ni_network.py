@@ -25,8 +25,7 @@ ATTR = "Contains data from the NIE Networks open data portal, licensed under CC 
 LAYERS = [
     LayerMeta(
         id="ni_sites", title="NI substations (NIE Networks)", group="Network", type="geojson", geom="point",
-        description="Northern Ireland grid supply, bulk supply and primary substations published by NIE Networks. "
-                    "No capacity or headroom figures are published for NI.",
+        description="Northern Ireland grid, bulk and primary substations. NIE Networks. No headroom.",
         color={"prop": "k", "type": "categorical", "default": "#6a51a3",
                "stops": [["GSP", "#3f007d"], ["BSP", "#6a51a3"], ["Primary", "#9e9ac8"]]},
         size={"prop": "k", "stops": [["Primary", 3], ["BSP", 5], ["GSP", 7]]},
@@ -37,8 +36,7 @@ LAYERS = [
     LayerMeta(
         id="ni_secondary", title="NI secondary substations (LV)", group="Demand & LV", type="pmtiles",
         geom="point", source_layer="ni_secondary", minzoom=11,
-        description="Northern Ireland secondary (11 kV to LV) transformer sites from NIE Networks, sized by "
-                    "installed transformer rating. Asset register only: no loading data.",
+        description="Northern Ireland secondary transformers. Size is rating. NIE Networks. No loading.",
         color="#2b8cbe", size={"prop": "r", "stops": [[0, 2], [500, 3], [1000, 5]]},
         popup=[["n", "Site", None], ["c", "Transformers", None], ["r", "Installed rating", "kVA"]],
         legend=[["#2b8cbe", "Secondary transformer site"]],

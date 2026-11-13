@@ -20,8 +20,7 @@ LAYERS = [
     LayerMeta(
         id="gsp_regions", title="GSP areas", group="Areas", type="pmtiles", geom="polygon",
         source_layer="gsp_regions", minzoom=0,
-        description="Area supplied by each transmission grid supply point (NESO, Feb 2026), shaded by "
-                    "generation queued (accepted + offered) at distribution substations inside it.",
+        description="Grid supply point areas shaded by queued generation. NESO, Feb 2026.",
         color={"prop": "q", "type": "steps", "default": "#cfd6dd",
                "stops": [[0, "#e8eef3"], [50, "#c6dbef"], [200, "#6baed6"], [500, "#2171b5"], [1000, "#08306b"]]},
         opacity=0.7,

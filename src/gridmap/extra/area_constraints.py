@@ -31,10 +31,8 @@ LAYERS = [
     LayerMeta(
         id="curtailment", title="Generation curtailment", group="Live", type="geojson", geom="point",
         minzoom=5, opacity=0.8,
-        description="Grid supply points where distributed generation has been curtailed, sized by estimated energy "
-                    "lost (MWh) since 2023. UKPN publishes its GSP-level events and constraint breaches; Northern "
-                    "Powergrid publishes site-specific events (outage-related). Public rows to Nov 2026 (UKPN) / Mar 2026 (NPG); "
-                    "the two operators measure energy lost differently, so compare within an operator.",
+        description="Curtailed generation at grid supply points. Size is MWh lost since 2023. UKPN and NPG measure "
+                    "differently. UKPN, NPG.",
         color={"prop": "op", "type": "categorical", "default": "#555555", "stops": OP_COLORS[:2]},
         size={"prop": "e", "stops": [[0, 4], [100, 6], [1000, 9], [10000, 13], [100000, 18]]},
         popup=[["n", "Grid supply point / scheme", None], ["op", "Operator", None], ["ev", "Curtailment events", None],
@@ -46,9 +44,7 @@ LAYERS = [
     LayerMeta(
         id="anm_zones", title="ANM and curtailment areas", group="Areas", type="pmtiles", geom="polygon",
         source_layer="anm_zones", minzoom=5, opacity=0.7,
-        description="Areas where generation is managed by active network management or has been curtailed: SSEN's "
-                    "Orkney and Isle of Wight ANM schemes (drawn from the primary supply areas they cover) and the "
-                    "UKPN / Northern Powergrid GSP areas with curtailment events.",
+        description="Areas with active network management or curtailment. SSEN, UKPN, NPG.",
         color={"prop": "op", "type": "categorical", "default": "#555555", "stops": OP_COLORS},
         popup=[["n", "Area", None], ["op", "Operator", None], ["k", "Type", None], ["ev", "Curtailment events", None],
                ["e", "Energy curtailed", "MWh"], ["g", "Mean generation (2025)", "MW"],

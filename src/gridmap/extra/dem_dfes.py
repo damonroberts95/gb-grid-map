@@ -25,9 +25,8 @@ MIN_BASE_MW = 0.5  # below this a % growth is noise
 LAYERS = [
     LayerMeta(
         id="dfes", title="Forecast demand growth (DFES)", group="Demand & LV", type="geojson", geom="point", minzoom=6,
-        description="Forecast growth in peak demand at each primary substation between 2025 and 2035 under the "
-                    "Holistic Transition scenario, from each network's 2026-release DFES (UKPN, NPg, ENW, SPEN). "
-                    "UKPN demand is derived from its published headroom. NGED and SSEN publish no primary-level data.",
+        description="Peak demand growth by primary, 2025 to 2035. Holistic Transition. DFES 2026. UKPN, NPg, ENW, "
+                    "SPEN.",
         color={"prop": "g", "type": "steps", "default": "#bdbdbd",
                "stops": [[-1000, "#d9d9d9"], [0, "#c6dbef"], [25, "#6baed6"], [50, "#2171b5"], [100, "#08306b"]]},
         size={"prop": "gm", "stops": [[0, 3], [2, 4.5], [5, 6.5], [15, 9], [40, 13]]},
@@ -35,7 +34,7 @@ LAYERS = [
                ["p1", "Peak demand 2035", "MW"], ["gm", "Growth 2025-35", "MW"], ["g", "Growth 2025-35", "%"],
                ["ev", "EVs in 2035", None], ["hp", "Heat pumps in 2035", None], ["note", "Note", None]],
         legend=[["#d9d9d9", "demand falls"], ["#c6dbef", "0-25 % growth"], ["#6baed6", "25-50 %"],
-                ["#2171b5", "50-100 %"], ["#08306b", "100 %+"], ["#bdbdbd", "no baseline / % unavailable"]],
+                ["#2171b5", "50-100 %"], ["#08306b", "100 %+"], ["#bdbdbd", "no baseline or no % available"]],
         attribution="DFES 2026 data: UK Power Networks (CC BY 4.0), Northern Powergrid (NPg Open Data Licence v1.0), "
                     "Electricity North West (CC BY 4.0), SP Energy Networks (CC BY 4.0). Scenario: Holistic Transition.",
         inputs=["derived/site.parquet", "derived/asset_site.parquet"],

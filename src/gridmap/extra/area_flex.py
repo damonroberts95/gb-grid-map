@@ -25,9 +25,7 @@ LAYERS = [
     LayerMeta(
         id="flex_zones", title="Flexibility zones", group="Areas", type="pmtiles", geom="polygon",
         source_layer="flex_zones", minzoom=5, opacity=0.85,
-        description="Areas where UKPN, ENW, SPEN and Northern Powergrid have asked (or plan to ask) customers for "
-                    "flexibility rather than build new network: UKPN LV/HV zones by tender round, ENW tender sites, "
-                    "SPEN flexibility substations, NPG signposted needs. Operator open data, 2026 releases.",
+        description="Areas where operators seek flexibility instead of new network. UKPN, ENW, SPEN, NPG. 2026.",
         color={"prop": "s", "type": "categorical", "default": "#9aa8b5", "stops": STATUS_COLORS},
         popup=[["n", "Zone / substation", None], ["op", "Operator", None], ["k", "Type", None],
                ["s", "Status", None], ["r", "Tender round / period", None], ["m", "Max requirement", "MVA"],

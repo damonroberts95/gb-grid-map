@@ -277,7 +277,7 @@ function nerdaReadings(nrn: string): HTMLElement {
   const btn = h('button', { type: 'button', class: 'btn' }, 'Live readings')
   btn.onclick = async () => {
     btn.setAttribute('disabled', '')
-    out.replaceChildren(h('p', { class: 'muted small' }, 'Fetching from NeRDA (up to ~30 s)…'))
+    out.replaceChildren(h('p', { class: 'muted small' }, 'Fetching (up to 30 s)…'))
     try {
       const r = await fetch(`/api/nerda/${encodeURIComponent(nrn)}`)
       if (!r.ok) throw new Error(String(((await r.json()) as { error?: string }).error ?? r.status))
@@ -290,9 +290,9 @@ function nerdaReadings(nrn: string): HTMLElement {
           h('thead', {}, h('tr', {}, h('th', {}, 'Feeder'), ...used.map(([, u]) => h('th', {}, u)))),
           h('tbody', {}, ...d.lines.map((l) => h('tr', {}, h('td', {}, l.line.split('_').pop() ?? l.line),
             ...used.map(([k]) => h('td', {}, l.readings[k] ? fmt(l.readings[k].v, k === 'PowerFactor' ? 2 : 1, '') : '–')))))),
-        h('div', { class: 'muted small' }, `Latest values from the last 15 min (UTC ${d.fetched.slice(11, 16)}). Internal-use data.`))
+        h('div', { class: 'muted small' }, `Last 15 min, UTC ${d.fetched.slice(11, 16)}. Internal use only.`))
     } catch (e) {
-      out.replaceChildren(h('p', { class: 'muted small' }, `Readings unavailable: ${(e as Error).message}`))
+      out.replaceChildren(h('p', { class: 'muted small' }, `Failed: ${(e as Error).message}`))
     }
     btn.removeAttribute('disabled')
   }

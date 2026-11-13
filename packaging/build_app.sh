@@ -23,37 +23,36 @@ for t in tippecanoe pmtiles; do
 done
 cp .env packaging/keys.env; chmod 600 packaging/keys.env   # gitignored (keys.env); never print it
 
+echo "== build info (shell version, deps hash, commit): the updater compares these with each update"
+printf '{"deps_hash": "%s", "sha": "%s"}\n' "$(uv run python scripts/make_bundle.py --deps-hash)" "$(git rev-parse HEAD)" > packaging/build_info.json
+
 echo "== pyinstaller"
 rm -rf build dist/"GB Grid" dist/"GB Grid.app"
 uv run pyinstaller packaging/gbgrid.spec --noconfirm --distpath dist --workpath build
 
 echo "== zip"
 cat > dist/README-FIRST.txt <<'TXT'
-GB Grid  (Apple Silicon Macs only)
-==================================
+GB Grid (Apple Silicon Macs only)
+=================================
 
-1. Unzip, then drag "GB Grid.app" into your Applications folder.
+1. Unzip. Drag "GB Grid.app" to Applications.
 
-2. FIRST OPEN: this app is not signed by Apple, so double-clicking is blocked once.
-   Right-click (or Control-click) "GB Grid.app" -> Open -> Open.
-   If macOS still refuses (newer macOS: System Settings -> Privacy & Security -> "Open Anyway"), or says the
-   app is damaged, run this once in Terminal and try again:
+2. First open: right-click "GB Grid.app", then Open, then Open.
+   Still blocked? System Settings, Privacy & Security, "Open Anyway".
+   Says damaged? Run this once in Terminal:
        xattr -dr com.apple.quarantine "/Applications/GB Grid.app"
 
-3. The first run downloads the map and the latest grid data and builds everything on your Mac. That takes
-   about 10-20 minutes and needs internet. A progress screen shows what is happening; you can leave it open.
-   Later runs open straight to the map and refresh the data in the background.
+3. First run takes 10-20 minutes and needs internet.
+   Later runs open straight to the map.
 
-Good to know
-------------
-* The API keys for the network operators' open-data portals are inside the app, so please do not share the
-  app publicly.
-* Your data lives in:  ~/Library/Application Support/GB Grid
-  (downloaded data, the map, logs in "logs/app.log", and your copy of the keys in ".env").
-* To reset and start again from scratch: quit the app, then delete that folder
-  (Finder -> Go -> Go to Folder... -> paste the path above -> drag the folder to the Bin).
-  To keep the 1.5 GB map and only refetch the grid data, delete just its "data" folder except "data/basemap".
-* To uninstall: delete GB Grid.app and the folder above.
+Notes
+-----
+* The app holds operator API keys. Do not share it publicly.
+* Data folder: ~/Library/Application Support/GB Grid
+  (data, map, logs/app.log, keys in ".env").
+* Start over: quit, then delete that folder.
+  To keep the 1.5 GB map, delete "data" except "data/basemap".
+* Uninstall: delete the app and that folder.
 TXT
 rm -f dist/GB-Grid-mac.zip
 (cd dist && ditto -c -k --sequesterRsrc --keepParent "GB Grid.app" GB-Grid-mac.zip && zip -q -j GB-Grid-mac.zip README-FIRST.txt)

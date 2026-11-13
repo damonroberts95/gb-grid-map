@@ -31,31 +31,29 @@ LAYERS = [
     LayerMeta(
         id="lct", title="Low-carbon tech at LV substations", group="Demand & LV", type="pmtiles", geom="point",
         source_layer="lct", minzoom=9,
-        description="Connected EV chargers, heat pumps, solar PV and batteries per LV (secondary) substation: UKPN "
-                    "LCT register (Nov 2026) and ENW microgeneration-scheme installs (Jul 2026, no EV data). "
-                    "Size = total installs; colour = EV chargers + heat pumps (new demand).",
+        description="EV chargers, heat pumps, solar and batteries per LV substation. UKPN (Nov 2026), ENW (Jul 2026). "
+                    "Colour is EV plus heat pumps.",
         color={"prop": "dm", "type": "steps", "default": "#bdbdbd", "stops": _SEQ},
         size={"prop": "n", "stops": [[1, 2.5], [10, 4], [50, 7], [200, 11]]},
         popup=[["nm", "LV substation", None], ["op", "Network operator", None], ["n", "Total installs", None],
                ["ev", "EV chargers", None], ["hp", "Heat pumps", None], ["pv", "Solar PV", None],
                ["bat", "Batteries", None], ["pvkw", "PV export capacity", "kW"]],
-        legend=[["#bdbdbd", "no EV / heat-pump data"], ["#cbc9e2", "0-2 EV + HP"], ["#9e9ac8", "3-9"],
+        legend=[["#bdbdbd", "no EV or heat pump data"], ["#cbc9e2", "0-2 EV + HP"], ["#9e9ac8", "3-9"],
                 ["#756bb1", "10-29"], ["#54278f", "30+"]],
         attribution=_ATTR, inputs=[],
     ),
     LayerMeta(
         id="lct_primary", title="Low-carbon tech at primaries", group="Demand & LV", type="geojson", geom="point",
         minzoom=5,
-        description="Connected EV chargers, heat pumps, solar PV and batteries rolled up to primary substations "
-                    "(UKPN, NGED), SPEN primaries (kW only) and NPG postal districts. Size = total installs; "
-                    "colour = EV chargers + heat pumps.",
+        description="EV chargers, heat pumps, solar and batteries by primary. UKPN, NGED, SPEN, NPG. Colour is EV "
+                    "plus heat pumps.",
         color={"prop": "dm", "type": "steps", "default": "#bdbdbd", "stops": _SEQ_P},
         size={"prop": "n", "stops": [[100, 3], [1000, 6], [5000, 9], [20000, 13]]},
         popup=[["nm", "Substation / area", None], ["op", "Network operator", None], ["lvl", "Level", None],
                ["n", "Total installs", None], ["ev", "EV chargers", None], ["hp", "Heat pumps", None],
                ["pv", "Solar PV", None], ["bat", "Batteries", None], ["evkw", "EV demand (ADMD)", "kW"],
                ["hpkw", "Heating demand (ADMD)", "kW"], ["pvkw", "PV capacity", "kW"], ["src", "Source", None]],
-        legend=[["#bdbdbd", "no counts published (SPEN: kW only)"], ["#cbc9e2", "<100 EV + HP"], ["#9e9ac8", "100-499"],
+        legend=[["#bdbdbd", "no counts published (SPEN gives kW only)"], ["#cbc9e2", "<100 EV + HP"], ["#9e9ac8", "100-499"],
                 ["#756bb1", "500-1,999"], ["#54278f", "2,000+"]],
         attribution=_ATTR, inputs=["derived/site.parquet", "derived/asset_site.parquet"],
     ),

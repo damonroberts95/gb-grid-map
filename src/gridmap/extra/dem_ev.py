@@ -33,8 +33,7 @@ LAYERS = [
     LayerMeta(
         id="ev_chargers", title="EV charge points", group="Demand & LV", type="pmtiles", geom="point",
         source_layer="ev_chargers", minzoom=8,
-        description="Public EV charge points in Great Britain from Open Charge Map (crowd-sourced and operator "
-                    "feeds; operational or unknown status only), coloured by the fastest connector.",
+        description="Public EV charge points. Colour is fastest connector. Open Charge Map.",
         color={"prop": "kw", "type": "steps", "default": "#999999",
                "stops": [[0, "#56B4E9"], [7.01, "#0072B2"], [22.01, "#CC79A7"], [50.01, "#882255"], [150.01, "#1b1b3a"]]},
         size={"prop": "kw", "stops": [[0, 2.5], [22.01, 3.5], [50.01, 5], [150.01, 7]]},

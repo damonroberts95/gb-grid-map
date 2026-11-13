@@ -21,10 +21,8 @@ LAYERS = [
     LayerMeta(
         id="nerda_sites", title="SSEN live monitored substations (NeRDA)", group="Live", type="geojson", geom="point",
         minzoom=6, live=True, default_on=False,
-        description="SSEN South (SEPD) substations with live monitoring through NeRDA: primaries and about 3,800 "
-                    "secondary substations whose LV feeders report current every few minutes. Secondaries are coloured "
-                    "by the busiest LV feeder's latest current when the background sweep has it, otherwise by kind. "
-                    "Click one for live readings. NeRDA data is for internal use only.",
+        description="SSEN South live-monitored substations. LV feeder current every few minutes. Internal use only. "
+                    "NeRDA.",
         color={"prop": "c", "type": "categorical", "default": "#8a8a8a", "stops": [
             ["bsp", "#08306b"], ["primary", "#2171b5"], ["lvm", "#9aa5b1"], ["sec", "#c9c9c9"],
             ["a0", "#4daf4a"], ["a1", "#e6c229"], ["a2", "#f28e2b"], ["a3", "#d7301f"], ["other", "#b0b0b0"]]},

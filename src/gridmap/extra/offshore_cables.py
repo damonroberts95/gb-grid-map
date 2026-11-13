@@ -30,10 +30,8 @@ LAYERS = [
     LayerMeta(
         id="offshore_cables", title="Subsea power cables", group="Network", type="pmtiles", geom="line",
         source_layer="offshore_cables", minzoom=4,
-        description="Subsea electricity cables mapped in OpenStreetMap: wind farm export and inter-array cables, "
-                    "interconnectors to other countries and HVDC/island links. Interconnector capacity and status "
-                    "come from the NESO interconnector register. Volunteer-mapped, so routes are approximate and "
-                    "some cables are missing.",
+        description="Subsea power cables. OpenStreetMap, so approximate and incomplete. Capacity from the NESO "
+                    "interconnector register.",
         color={"prop": "k", "type": "categorical", "default": "#7f7f7f",
                "stops": [[n, c] for c, n in KIND_COLORS]},
         size=2, opacity=0.9,
@@ -43,9 +41,7 @@ LAYERS = [
     LayerMeta(
         id="landfalls", title="Cable landfalls & offshore substations", group="Network", type="geojson",
         geom="point", minzoom=4,
-        description="Where subsea cables come ashore (found where an OpenStreetMap subsea cable joins a land "
-                    "cable) and offshore substation or converter platforms. Approximate: derived from "
-                    "volunteer-mapped data.",
+        description="Cable landfalls and offshore platforms. Derived from OpenStreetMap. Approximate.",
         color={"prop": "k", "type": "categorical", "default": "#7f7f7f",
                "stops": [["Landfall", "#D55E00"], ["Offshore substation", "#009E73"]]},
         size=5, opacity=0.9,

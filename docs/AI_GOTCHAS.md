@@ -230,3 +230,9 @@ re-check before calling anything done. Add an entry (with date) whenever a new m
   edited; avoid editing src/ during long-running sweeps, or expect partial cycles.
 - **Python logging is off by default under uvicorn** for our `gridmap.*` loggers: sweep/refresh INFO lines were silently
   dropped, hiding a stalled sweep. app.py now attaches a handler. Check `grep gridmap. <server log>` for health.
+
+## 13. Updates (2026-11-13)
+
+- **Updatable code can only import what the .app already bundles.** A new third-party import passes tests in dev and breaks in the frozen app. Dependency changes change `deps_hash` and need `make app`; old apps then show "needs new app".
+- **Never import `gridmap` in `packaging/launch.py` before `use_payload()`.** It would load the bundled copy and the payload would be ignored. The launcher's `-c` branch (used by the updater's validation) runs before payload selection so it does not touch `current.json`.
+- **In the frozen app `sys.executable` is the GUI shell.** Run subprocess checks as `sys.executable -I -c <code>`; the launcher execs the code instead of opening a window.

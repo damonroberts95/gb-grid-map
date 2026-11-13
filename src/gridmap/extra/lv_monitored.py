@@ -28,9 +28,7 @@ LAYERS = [
     LayerMeta(
         id="lv_monitored", title="LV monitored substations", group="Demand & LV", type="pmtiles", geom="point",
         source_layer="lv_monitored", minzoom=9,
-        description="Secondary (LV) substations that the network operator publishes as having LV monitoring "
-                    "(ENW, SPEN, NPG and NGED lists, Nov 2026), plus NPG's shortlist of sites still to be fitted. "
-                    "No operator publishes the monitor vendor; UKPN and SSEN publish no list.",
+        description="LV substations with a published monitor. ENW, SPEN, NPG, NGED (Nov 2026). Plus NPG's shortlist.",
         color={"prop": "s", "type": "categorical", "default": "#0b7285",
                "stops": [["Monitored", "#0b7285"], ["Shortlisted", "#99d5da"]]},
         size=3.5, opacity=0.9,
@@ -38,7 +36,7 @@ LAYERS = [
                ["mon", "Monitor vendor", None], ["u", "Max utilisation (latest month)", "%"],
                ["pk", "Max demand (2024 baseline)", "kVA"], ["c", "Customers", None], ["w", "Reason selected", None],
                ["m", "Latest data", None], ["src", "Source", None]],
-        legend=[["#0b7285", "Monitored (published as installed / reporting)"],
+        legend=[["#0b7285", "Monitored (published as installed or reporting)"],
                 ["#99d5da", "Shortlisted for monitor (NPG)"]],
         attribution=ATTR,
         inputs=["norm/NGED/lv_site.parquet"],

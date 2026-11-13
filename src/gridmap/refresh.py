@@ -25,7 +25,7 @@ from .fetch.models import Source, load_sources
 from .fetch.store import DDL, Store
 from .normalise.__main__ import ADAPTERS
 from .normalise.common import DATA_DIR, latest_snapshot
-from .settings import OVERLAY_DIR, load_keys
+from .settings import PAYLOAD_DIR, load_keys
 
 LIVE = {"outage": "outages", "live_national": "national"}  # category -> feed name (docs/api.md events)
 FAIL_RETRY = (600, 3600)  # a failing source is retried after clamp(cadence, 10 min, 1 h)
@@ -194,7 +194,7 @@ def refresh(*, force: bool = False, on_stage: StageCb | None = None, con: duckdb
                                      if r["status"] == "ok" and cat[r["source"]] not in LIVE)
         if (chain or fetched_static or not (data_dir / "public" / "manifest.json").exists()
                 or code_newer_than(data_dir / "public" / "manifest.json", "build.py", "extra")
-                or _mtime(OVERLAY_DIR / "VERSION.json") > _mtime(data_dir / "public" / "manifest.json")):
+                or (_mtime(PAYLOAD_DIR / "manifest.json") if PAYLOAD_DIR else 0) > _mtime(data_dir / "public" / "manifest.json")):
             say("build", "building map files")
             out = build.build_all(data_dir)
             res["built"] = out["changed"]

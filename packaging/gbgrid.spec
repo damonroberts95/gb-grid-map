@@ -33,6 +33,10 @@ for tool in ("tippecanoe", "pmtiles"):
     if not p.is_file():
         raise SystemExit(f"missing {p}: run packaging/build_app.sh")
     datas.append((str(p), "bin"))
+# shell identity for the updater: SHELL_VERSION + build_info.json {deps_hash, sha} (written by build_app.sh)
+datas += [(str(ROOT / "SHELL_VERSION"), ".")]
+if (PKG_DIR / "build_info.json").is_file():
+    datas.append((str(PKG_DIR / "build_info.json"), "."))
 # API keys: copied from the developer's .env at build time; never committed (gitignored)
 keys = PKG_DIR / "keys.env"
 if keys.is_file():

@@ -20,9 +20,8 @@ LAYERS = [
     LayerMeta(
         id="lv_headroom_forecast", title="LV headroom forecast (ENW, 2030)", group="Demand & LV", type="pmtiles",
         geom="point", source_layer="lv_headroom_forecast", minzoom=9,
-        description="Forecast spare transformer capacity (kVA) in 2030 at ENW's ~30,000 secondary substations, "
-                    "ENW 'Best View' scenario from its 2024 DFES. Negative means forecast demand exceeds the "
-                    "transformer rating. Monitored sites use measured demand, the rest are modelled. North West England only.",
+        description="Spare transformer capacity in 2030, in kVA. Negative is over capacity. ENW, DFES 2024, Best View. North "
+                    "West only.",
         color={"prop": "hr", "type": "steps", "default": "#c7d7e5",
                "stops": [[-1e9, "#542788"], [0, "#8073ac"], [50, "#b2abd2"], [150, "#d8daeb"], [400, "#c7e0ea"]]},
         size=3, opacity=0.85,

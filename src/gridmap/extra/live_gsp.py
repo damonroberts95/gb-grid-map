@@ -29,14 +29,11 @@ LAYERS = [
     LayerMeta(
         id="live_gsp", title="Grid supply point flows now", group="Live", type="geojson", geom="point", minzoom=4,
         live=True, default_on=False,
-        description="Latest measured power drawn from the transmission grid at each GSP where a network operator "
-                    "publishes it live: NGED (all 55 GSPs, 5-minute data, with local generation, solar and wind) and "
-                    "UK Power Networks (half-hourly transformer flows). Blue = importing, orange = exporting back "
-                    "to the grid. Other networks do not publish GSP flows live.",
+        description="Live power at grid supply points. Blue imports, orange exports. NGED (55 GSPs) and UKPN only.",
         color={"prop": "mw", "type": "steps", "default": "#8a8a8a", "stops": STOPS},
         size={"prop": "a", "stops": [[0, 3], [50, 5], [150, 8], [400, 12], [1000, 16]]}, opacity=0.9,
         popup=[["n", "Grid supply point", None], ["op", "Network operator", None], ["mw", "Import from grid", "MW"],
-               ["dem", "Demand incl. local generation", "MW"], ["gen", "Local generation", "MW"],
+               ["dem", "Demand with local generation", "MW"], ["gen", "Local generation", "MW"],
                ["sol", "of which solar", "MW"], ["wnd", "of which wind", "MW"], ["mvar", "Reactive power", "MVAr"],
                ["t", "Data as of (UTC)", None]],
         legend=[["#e69f00", "Exporting to grid"], ["#c6dbef", "0-25 MW import"], ["#6baed6", "25-100"],

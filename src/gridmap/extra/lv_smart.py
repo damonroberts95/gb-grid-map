@@ -40,11 +40,8 @@ LAYERS = [
     LayerMeta(
         id="lv_smart", title="LV smart-meter demand", group="Demand & LV", type="pmtiles", geom="point",
         source_layer="lv_smart", minzoom=9,
-        description="Peak half-hourly demand of smart-metered customers on each secondary substation, per meter "
-                    "(kW per smart meter), latest published month: NGED all areas (Sep 2026), SPEN Wirral (Sep) "
-                    "and Ayrshire/Clyde South (Oct), UKPN a 21-substation sample. SSEN is a single day, 4 Sep 2024, from its development data feed "
-                    "(the production feed is access-denied), so it is stale and not a winter peak; SSEN positions are "
-                    "estimated from customer postcodes. Excludes customers without a smart meter.",
+        description="Peak demand per smart meter, in kW. Latest month. NGED, SPEN, UKPN (sample). SSEN is one old "
+                    "day, 4 Sep 2024, with estimated positions.",
         color={"prop": "pm", "type": "steps", "default": "#cccccc",
                "stops": [[0, "#c6dbef"], [0.5, "#9ecae1"], [1, "#6baed6"], [1.5, "#3182bd"], [2.5, "#08306b"]]},
         size={"prop": "pk", "stops": [[0, 2.5], [50, 4], [150, 6], [400, 9]]}, opacity=0.85,
