@@ -1,8 +1,8 @@
 # NIE Networks (Northern Ireland) Opendatasoft portal. All 20 datasets report data_visible=false anonymously:
-# exports are header-only. Needs a free account API key in NIE_API_KEY (not set at time of writing).
+# exports are header-only. Needs a free account API key in NIE_API_KEY (verified working 2026-11-25).
 sources:
   - id: nie_sites_grid_bulk_primary
-    operator: OTHER
+    operator: NIE
     portal: opendatasoft
     base_url: "https://nienetworks.opendatasoft.com"
     dataset: nie-networks-assets-sites-grid-bulk-and-primary-sites
@@ -14,7 +14,7 @@ sources:
     gated: true
     note: "All GSP/BSP/primary sites in one table; anonymous export is header-only (data_visible=false)"
   - id: nie_secondary_transformers
-    operator: OTHER
+    operator: NIE
     portal: opendatasoft
     base_url: "https://nienetworks.opendatasoft.com"
     dataset: nie-networks-assets-secondary-transformers
@@ -26,7 +26,7 @@ sources:
     gated: true
     note: "Secondary transformers; same gating"
   - id: nie_network_faults
-    operator: OTHER
+    operator: NIE
     portal: opendatasoft
     base_url: "https://nienetworks.opendatasoft.com"
     dataset: nie-networks-network-faults

@@ -128,7 +128,7 @@ class Index:
         return out
 
 
-DNOS = ("UKPN", "ENW", "NPG", "NGED", "SSEN", "SPEN")
+DNOS = ("UKPN", "ENW", "NPG", "NGED", "SSEN", "SPEN", "NIE")
 
 
 def _pct(n, d) -> float | None:
@@ -188,6 +188,7 @@ class State:
         self.refreshing = False
         self.stage = {"stage": "idle", "detail": ""}
         self.index: Index | None = None
+        self.lv_mon: dict[str, tuple[str, str | None]] = {}  # LV uid -> (monitor source, NeRDA nrn)
         self.con: duckdb.DuckDBPyConnection | None = None
         self.registry = {s.id: s for s in load_sources()}
 
@@ -203,6 +204,11 @@ class State:
             self.index = Index(self.cur())
         except duckdb.Error as e:  # tables not loaded yet
             log.info("search index not built yet: %s", e)
+        try:  # same flags as the LV tiles, so a panel opened from search shows them too
+            from ..extra.lv_monitored import monitored
+            self.lv_mon = {u: (ms, nrn) for u, ms, nrn in monitored(self.data_dir).iter_rows()}
+        except Exception as e:  # noqa: BLE001 - optional enrichment
+            log.warning("monitored LV list not loaded: %r", e)
 
     def set_stage(self, stage: str, detail: str = "") -> None:
         self.stage = {"stage": stage, "detail": detail}
@@ -432,7 +438,10 @@ def create_app(data_dir: Path | None = None, scheduler: bool | None = None) -> F
             if near:
                 up, how = near["site_id"], "nearest"
         chain = ancestors(up)
-        return {**r, "upstream_site_id": up, "upstream_how": how, "chain": chain}
+        from ..extra.lv_monitored import nged_reading
+        ms, nrn = st.lv_mon.get(asset_uid, (None, None))
+        return {**r, "upstream_site_id": up, "upstream_how": how, "chain": chain, "monitor": nged_reading(asset_uid),
+                "ms": ms, "nrn": nrn}
 
     @app.get("/api/search")
     def search(q: str = "", limit: int = Query(20, ge=1, le=100)):

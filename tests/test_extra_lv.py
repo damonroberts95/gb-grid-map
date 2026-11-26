@@ -80,7 +80,7 @@ def test_headroom_build_and_values(data, tmp_path):
 
 def test_monitored_union(data):
     df = mon.monitored(data)
-    assert df.columns == ["asset_uid", "ms"]
+    assert df.columns == ["asset_uid", "ms", "nrn"]
     assert df["asset_uid"].n_unique() == df.height
     ms = dict(df.group_by("ms").len().iter_rows())
     assert ms["ENW PreSense"] == 10 and ms["SPEN"] == 7 and ms["NGED"] == 8
@@ -95,10 +95,21 @@ def test_monitored_nerda_join(data):
     ssen.write_parquet(data / "norm" / "SSEN" / "lv_site.parquet")
     lines = [{"name": "6108_002_570_01", "m": [{"id": "x", "type": "LineCurrent"}]}]
     idx = {"snapshot": "s", "sites": [
-        {"k": "secondary", "lat": 51.0001, "lon": -1.0, "lines": lines},   # ~11 m from a
+        {"k": "secondary", "nrn": "6108_002_570_00", "lat": 51.0001, "lon": -1.0, "lines": lines},   # ~11 m from a
         {"k": "secondary", "lat": 52.01, "lon": -1.0, "lines": lines},     # >1 km from b
         {"k": "primary", "lat": 51.0, "lon": -1.0, "lines": lines}]}
     (data / "derived").mkdir()
     (data / "derived" / "nerda_index.json").write_text(json.dumps(idx))
     df = mon.monitored(data)
-    assert df.filter(pl.col("ms") == "NeRDA")["asset_uid"].to_list() == ["SSEN:SEPD|a"]
+    assert df.filter(pl.col("ms") == "NeRDA").select("asset_uid", "nrn").rows() == [("SSEN:SEPD|a", "6108_002_570_00")]
+
+
+def test_nged_reading_from_latest_snapshot(tmp_path, monkeypatch):
+    from gridmap.normalise import common
+    snap = tmp_path / "raw" / "nged_lv_monitor_latest" / "20260101T000000Z"
+    snap.mkdir(parents=True)
+    (snap / "meta.json").write_text(json.dumps({"status": "ok"}))
+    (snap / "latest.json").write_text(json.dumps({"512247": {"t": "2026-04-14T00:20:00", "bus": {"kw": 5.0}}}))
+    monkeypatch.setattr(common, "DATA_DIR", tmp_path)
+    assert mon.nged_reading("NGED:512247")["bus"]["kw"] == 5.0
+    assert mon.nged_reading("NGED:512246") is None and mon.nged_reading("SSEN:x") is None

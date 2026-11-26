@@ -145,3 +145,25 @@ pipeline/ (Python 3.12, uv)          server/ (FastAPI, same venv)            web
 
 ## Review
 _(filled in at end of each phase)_
+
+## 2026-11-25: NIE as a full operator + monitored-LV clarity (PLAN, awaiting OK)
+
+Why: NIE is an add-on layer today. No search, no detail panel, no substation shapes, no LV in the one LV layer,
+no kind filters. Other DNOs go through normalise -> match -> build. NIE should too.
+
+NIE as operator
+- [ ] fetch/models.py OPERATORS += NIE; sources.d/ni.yaml operator OTHER -> NIE
+- [ ] normalise/nie.py: asset (GSP/BSP/Primary from sites table, Irish Grid -> WGS84), lv_site (secondary tx
+      grouped per site: kVA, count). No capacity/queue/fault (NIE publishes none) -> sites grey "not published"
+- [ ] ADAPTERS += NIE; match/build/search pick it up (check hard-coded operator lists)
+- [ ] Retire extra/ni_network.py (layers replaced by core sites + LV)
+- [ ] UI: NIE chip filters core layers like the others (already added); colour #999933
+- [ ] Tests: adapter fixture from real rows; build includes NIE sites + LV
+
+Monitored LV clarity (NGED/SSEN rings with no numbers)
+- [ ] LV panel: say where the ring comes from (ms) and where the % comes from (annual max demand vs monitor)
+- [ ] SSEN: carry NeRDA NRN onto the LV point; "Live readings" button in the LV panel
+- [ ] NGED: fetch the 301 per-substation monitor CSVs (key) and show latest reading (separate, bigger step)
+
+Done today (in working tree, not committed): pan bounds, NIE key + fetch, keys-file retry, updater skips
+releases older than the app, text selection, NIE chip gating NI layers.

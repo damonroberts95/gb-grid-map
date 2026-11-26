@@ -109,3 +109,19 @@ sources:
     licence: "Open Government Licence v3.0"
     attribution: "Contains OS data (c) Crown copyright and database right. Code-Point Open, OGL v3."
     note: "Postcode unit centroids (BNG eastings/northings), used to place SSEN smart-meter feeders (lv_smart)."
+  - id: nged_lv_monitor_latest
+    operator: NGED
+    portal: ckan
+    base_url: "https://connecteddata.nationalgrid.co.uk"
+    dataset: lv-load-monitor-data
+    mode: latest
+    select: {format: CSV}
+    category: lv_usage
+    cadence: 7d
+    gated: true
+    auth_env: NGED_API_KEY
+    timeout_s: 3600  # ~300 datastore calls, 5-10 min; slow under load
+    keep: 1
+    licence: "NGED (WPD) Open Data Licence"
+    attribution: "Contains data (c) National Grid Electricity Distribution, used under the NGED (WPD) Open Data Licence."
+    note: "Newest 10-minute reading per monitored substation (299 resources, 1.6 GB as CSV) via datastore_search, one request each (~1 to 3 s, sorted by Timestamp; max_mb only raises the 15 min wall-clock limit to 60). Files hold 10-minute busbar, feeder and transformer-temperature rows, Jan to mid Apr 2026. Reduced to latest.json, read by the server for the LV panel."

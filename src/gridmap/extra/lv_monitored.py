@@ -130,23 +130,45 @@ def _nged(data_dir: Path) -> list[tuple[str | None, dict]]:
     return out
 
 
-def _nerda(data_dir: Path) -> list[str]:
-    """SSEN SEPD lv_site uids of NeRDA secondaries with at least one LV feeder current channel (static snapshot,
-    spatial join within 40 m: the NRN is not in the open lv_site table). Empty when NeRDA data is absent."""
+def _nerda(data_dir: Path) -> dict[str, str]:
+    """{SSEN SEPD lv_site uid: NeRDA NRN} of NeRDA secondaries with at least one LV feeder current channel (static
+    snapshot, spatial join within 40 m: the NRN is not in the open lv_site table). Empty when NeRDA data is absent."""
     from . import nerda_client as nc
     ip = data_dir / "derived" / "nerda_index.json"  # built by nerda_client.load_index; never rebuilt here
     p = data_dir / "norm" / "SSEN" / "lv_site.parquet"
     if not ip.exists() or not p.exists():
-        return []
+        return {}
     try:
         idx = json.loads(ip.read_text())
     except ValueError:
-        return []
-    sec = [(s["lat"], s["lon"]) for s in idx["sites"]
+        return {}
+    sec = [(s["lat"], s["lon"], s.get("nrn")) for s in idx["sites"]
            if s.get("k") == "secondary" and s.get("lat") is not None
            and any(nc.line_current_id(ln) for ln in nc.lv_feeders(s["lines"]))]
     lv = pl.read_parquet(p).filter(pl.col("asset_uid").str.contains("SEPD") & pl.col("lat").is_not_null())
-    return sorted({u for u in nearest_uids(sec, lv) if u})
+    out: dict[str, str] = {}
+    for u, (_, _, nrn) in zip(nearest_uids([(a, b) for a, b, _ in sec], lv), sec, strict=True):
+        if u and nrn:
+            out.setdefault(u, nrn)
+    return dict(sorted(out.items()))
+
+
+_LATEST: dict[str, tuple[float, dict]] = {}
+
+
+def nged_reading(asset_uid: str) -> dict | None:
+    """Newest 10-minute monitor reading for an NGED substation (`NGED:<number>`), from the latest
+    `nged_lv_monitor_latest` snapshot (fetch/ckan.py mode latest). None when not monitored or not fetched yet."""
+    snap = latest_snapshot("nged_lv_monitor_latest")
+    f = snap / "latest.json" if snap else None
+    if f is None or not f.exists() or not asset_uid.startswith("NGED:"):
+        return None
+    mt = f.stat().st_mtime
+    key = str(f)
+    if key not in _LATEST or _LATEST[key][0] != mt:
+        _LATEST.clear()
+        _LATEST[key] = (mt, json.loads(f.read_text()))
+    return _LATEST[key][1].get(asset_uid[5:])
 
 
 def input_files(data_dir: Path) -> list[Path]:
@@ -161,18 +183,18 @@ def _all(data_dir: Path) -> list[tuple[str | None, dict]]:
 
 
 def monitored(data_dir: Path | None = None) -> pl.DataFrame:
-    """LV substations with a published monitor, as DataFrame[asset_uid, ms]: ms = monitor source (+ vendor where
-    published, e.g. 'ENW PreSense'). Only installed/reporting monitors (not NPG's shortlist). One row per uid; if
+    """LV substations with a published monitor, as DataFrame[asset_uid, ms, nrn]: ms = monitor source (+ vendor where
+    published, e.g. 'ENW PreSense'); nrn = NeRDA reference for live readings (SSEN only, else null). Only installed/reporting monitors (not NPG's shortlist). One row per uid; if
     several sources cover a site, the first in order ENW, SPEN, NPG, NGED, NeRDA wins."""
     from ..normalise.common import DATA_DIR
     data_dir = data_dir or DATA_DIR
-    rows: list[tuple[str, str]] = []
+    rows: list[tuple[str, str, str | None]] = []
     for uid, f in _all(data_dir):
         pr = f["properties"]
         if uid and pr["s"] == "Monitored":
-            rows.append((uid, "ENW PreSense" if pr["op"] == "ENW" else pr["op"]))
-    rows += [(u, "NeRDA") for u in _nerda(data_dir)]
-    df = pl.DataFrame(rows, schema={"asset_uid": pl.Utf8, "ms": pl.Utf8}, orient="row")
+            rows.append((uid, "ENW PreSense" if pr["op"] == "ENW" else pr["op"], None))
+    rows += [(u, "NeRDA", nrn) for u, nrn in _nerda(data_dir).items()]
+    df = pl.DataFrame(rows, schema={"asset_uid": pl.Utf8, "ms": pl.Utf8, "nrn": pl.Utf8}, orient="row")
     return df.unique("asset_uid", keep="first", maintain_order=True)
 
 

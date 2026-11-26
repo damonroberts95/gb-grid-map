@@ -138,7 +138,8 @@ if __name__ == "__main__":
         info = json.loads(read_text("build_info.json") or "{}")
     except ValueError:
         info = {}
-    for k, env in (("deps_hash", "GRIDMAP_DEPS_HASH"), ("sha", "GRIDMAP_BUILD_SHA")):
+    for k, env in (("deps_hash", "GRIDMAP_DEPS_HASH"), ("sha", "GRIDMAP_BUILD_SHA"),
+                   ("commit_time", "GRIDMAP_BUILD_COMMIT_TIME")):
         if info.get(k):
             os.environ[env] = info[k]
     os.environ.pop("GRIDMAP_PAYLOAD_SHA", None)  # inherited when we re-exec ourselves

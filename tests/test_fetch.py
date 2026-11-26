@@ -9,7 +9,7 @@ import httpx
 import pytest
 import respx
 
-from gridmap.fetch import common
+from gridmap.fetch import ckan, common
 from gridmap.fetch.models import Source, load_sources
 from gridmap.fetch.runner import arun
 from gridmap.fetch.store import Store
@@ -171,6 +171,52 @@ def test_ckan_open_package_downloads_all_resources(tmp_path):
         assert route.calls.last.request.headers["authorization"] == "k"
     row = status_of(out, "c")
     assert (row["status"], row["rows"]) == ("ok", 8)
+
+
+def _mrow(t, kind, desc, v, feeder=None):
+    return {"Substation Name": "X", "Timestamp": t, "Attribute Type": kind, "Feeder ID": feeder, "Description": desc, "Value": v}
+
+
+MONITOR_ROWS = [
+    _mrow("2026-04-14T00:10:00", "busbar", "L1 Current (RMS)", 99.0),  # older timestamp is ignored
+    _mrow("2026-04-14T00:30:00", "busbar", "L1 Current (RMS)", 5.0),  # newest but half written: ignored
+    _mrow("2026-04-14T00:20:00", "busbar", "L1 Current (RMS)", 154.0),
+    _mrow("2026-04-14T00:20:00", "busbar", "L2 Current (RMS)", 76.2),
+    _mrow("2026-04-14T00:20:00", "busbar", "L1 Active Power", 34.5),
+    _mrow("2026-04-14T00:20:00", "busbar", "L2 Active Power", 15.5),
+    _mrow("2026-04-14T00:20:00", "busbar", "L1 Voltage (RMS)", 239.9),
+    _mrow("2026-04-14T00:20:00", "transformer", "Temperature", 16.1),
+    _mrow("2026-04-14T00:20:00", "feeder", "L1 Current (RMS)", 75.5, feeder=10),
+    _mrow("2026-04-14T00:20:00", "feeder", "N Current (RMS)", 37.0, feeder=10),
+]
+
+
+def test_latest_reading_keeps_newest_complete_timestamp():
+    got = ckan.latest_reading(MONITOR_ROWS)
+    assert got["t"] == "2026-04-14T00:20:00" and got["temp"] == 16.1
+    assert got["bus"] == {"i": [154.0, 76.2, None], "kw": 50.0, "v": [239.9, None, None]}
+    assert got["fd"] == {"10": {"i": [75.5, None, None]}}  # neutral current is not a phase
+    assert ckan.latest_reading([]) is None
+
+
+def test_ckan_latest_mode_reads_datastore_not_files(tmp_path):
+    res = [{"id": f"r{n}", "name": n, "format": "CSV", "url": f"https://x.test/{n}.csv", "size": 10**10} for n in ("1", "2")]
+    pkg = {"success": True, "result": {"metadata_modified": "2026-09-24", "resources": res + [
+        {"id": "p", "name": "Data Sharing Assessment", "format": "PDF", "url": "https://x.test/a.pdf"}]}}
+    with respx.mock:
+        respx.get(f"{NGED}/api/3/action/package_show").respond(json=pkg)
+        ds = respx.get(f"{NGED}/api/3/action/datastore_search").mock(side_effect=lambda req: (
+            httpx.Response(200, json={"result": {"records": MONITOR_ROWS}}) if req.url.params["resource_id"] == "r1"
+            else httpx.Response(404)))
+        out = run(tmp_path, [ckan_src("m", "lv-load-monitor-data", mode="latest", select={"format": "CSV"}, cadence="7d")],
+                  env={"NGED_API_KEY": "k"})
+        assert ds.calls.last.request.headers["authorization"] == "k"
+        assert ds.calls.last.request.url.params["sort"] == "Timestamp desc"
+    row = status_of(out, "m")
+    assert (row["status"], row["rows"]) == ("ok", 1)  # 10 GB declared is ignored; the failed resource is left out
+    snap = next((tmp_path / "raw" / "m").iterdir())
+    latest = json.loads((snap / "latest.json").read_text())
+    assert list(latest) == ["1"] and latest["1"]["bus"]["kw"] == 50.0
 
 
 def test_http_retries_then_succeeds(tmp_path):

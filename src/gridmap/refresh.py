@@ -25,7 +25,7 @@ from .fetch.models import Source, load_sources
 from .fetch.store import DDL, Store
 from .normalise.__main__ import ADAPTERS
 from .normalise.common import DATA_DIR, latest_snapshot
-from .settings import PAYLOAD_DIR, load_keys
+from .settings import KEYS_FILE, PAYLOAD_DIR, load_keys
 
 LIVE = {"outage": "outages", "live_national": "national"}  # category -> feed name (docs/api.md events)
 FAIL_RETRY = (600, 3600)  # a failing source is retried after clamp(cadence, 10 min, 1 h)
@@ -51,15 +51,26 @@ def is_due(src: Source, last_ok: float | None, last_any: float | None, now: floa
     return now - last_ok >= src.cadence_seconds
 
 
+def _keys_mtime() -> float | None:
+    try:
+        return KEYS_FILE.stat().st_mtime
+    except OSError:
+        return None
+
+
 def due_sources(registry: list[Source], con: duckdb.DuckDBPyConnection, now: float | None = None,
-                force: bool = False) -> list[Source]:
+                force: bool = False, keys_mtime: float | None = None) -> list[Source]:
+    """A source whose last attempt was needs_key is due as soon as the keys file changes after that attempt,
+    so a newly saved key fetches on the next cycle instead of after the 1 h failure backoff."""
     now = time.time() if now is None else now
-    runs = {}
-    for sid, ok, anyr in con.execute(
-        "SELECT source_id, max(fetched_at) FILTER (WHERE status IN ('ok','unchanged')), max(fetched_at) "
-        "FROM source_run GROUP BY source_id"
+    keys_mtime = _keys_mtime() if keys_mtime is None else keys_mtime
+    runs, last_status = {}, {}
+    for sid, ok, anyr, st in con.execute(
+        "SELECT source_id, max(fetched_at) FILTER (WHERE status IN ('ok','unchanged')), max(fetched_at), "
+        "arg_max(status, fetched_at) FROM source_run GROUP BY source_id"
     ).fetchall():
         runs[sid] = (_ts(ok), _ts(anyr))
+        last_status[sid] = st
     out = []
     for s in registry:
         if s.large:
@@ -68,7 +79,10 @@ def due_sources(registry: list[Source], con: duckdb.DuckDBPyConnection, now: flo
             snap = latest_snapshot(s.id)
             if snap is not None:
                 runs[s.id] = (snap.stat().st_mtime, snap.stat().st_mtime)
-        if force or is_due(s, *runs.get(s.id, (None, None)), now):
+        last_any = runs.get(s.id, (None, None))[1]
+        new_key = (last_status.get(s.id) == "needs_key" and keys_mtime is not None and last_any is not None
+                   and keys_mtime > last_any)
+        if force or new_key or is_due(s, *runs.get(s.id, (None, None)), now):
             out.append(s)
     return out
 

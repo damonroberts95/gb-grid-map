@@ -3,7 +3,9 @@
 import { hashGet, hashSet } from './dom'
 
 export type Mode = 'gen' | 'dem'
-export const OPERATORS = ['UKPN', 'NPG', 'ENW', 'SPEN', 'NGED', 'SSEN'] as const
+export const OPERATORS = ['UKPN', 'NPG', 'ENW', 'SPEN', 'NGED', 'SSEN', 'NIE'] as const
+// operators an old link's 'o' list could name; any operator added since starts on
+const LEGACY_OPS = ['UKPN', 'NPG', 'ENW', 'SPEN', 'NGED', 'SSEN']
 export const THRESHOLDS = [1, 2, 5, 10, 20] as const
 
 export interface State {
@@ -44,7 +46,7 @@ export function onChange(l: Listener) {
 
 function save() {
   hashSet({
-    m: state.mode, t: String(state.thr), o: state.ops.join(','), k: state.kinds.join(','),
+    m: state.mode, t: String(state.thr), o: null, ox: OPERATORS.filter((o) => !state.ops.includes(o)).join(','), k: state.kinds.join(','),
     l: [state.links && 'links', state.outages && 'out', state.neso && 'neso'].filter(Boolean).join(','),
     s: state.simple ? '1' : '0', mt: state.mounts.join(','),
   })
@@ -59,7 +61,12 @@ function load(): State {
   return {
     mode: p.get('m') === 'gen' ? 'gen' : 'dem',
     thr: THRESHOLDS.includes(thr as (typeof THRESHOLDS)[number]) ? thr : DEFAULT.thr,
-    ops: (p.get('o') ?? '').split(',').filter((o) => (OPERATORS as readonly string[]).includes(o)),
+    // hidden operators ('ox'), so a new operator starts on; old links listed the shown ones ('o')
+    ops: (() => {
+      const off = p.has('ox') ? (p.get('ox') ?? '').split(',')
+        : LEGACY_OPS.filter((o) => !(p.get('o') ?? '').split(',').includes(o))
+      return OPERATORS.filter((o) => !off.includes(o))
+    })(),
     // old links had a separate LV toggle ('l=lv'): fold it into kind 4
     kinds: [...(p.get('k') ?? '').split(',').map(Number).filter((k) => [1, 2, 3, 4].includes(k)),
       ...(layers.includes('lv') && !(p.get('k') ?? '').split(',').includes('4') ? [4] : [])],

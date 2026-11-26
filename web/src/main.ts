@@ -9,7 +9,7 @@ import { hide, initDetail, onHierarchy, showLv, showSite } from './detail'
 import { h } from './dom'
 import { initGlossary } from './glossary'
 import { maybeShowWelcome } from './help'
-import { applyExtras, extraLayerIds, extraPopup, resetExtras } from './extras'
+import { applyExtras, bindOperatorChips, extraLayerIds, extraPopup, resetExtras } from './extras'
 import { addShapeImages } from './shapes'
 import { addLayers, applyManifest, applyOutlines, applyState, refreshOutages, setHierarchy, type HierNode } from './layers'
 import { connectLive, refreshNational, setBuiltAt } from './live'
@@ -49,12 +49,13 @@ const map = new MlMap({
   style,
   center: [-2.5, 54.5],
   zoom: 5.3,
-  maxBounds: [[-11, 49], [4, 61.5]],
+  maxBounds: [[-16, 46], [8, 64]], // loose: lets NI and Shetland sit mid-screen beside the panel
   hash: 'map',
   attributionControl: { compact: true },
   fadeDuration: 0,
 })
 if (import.meta.env.DEV) (window as unknown as { __map: MlMap }).__map = map // perf checks
+bindOperatorChips(map)
 map.touchZoomRotate.disableRotation()
 map.dragRotate.disable()
 

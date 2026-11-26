@@ -11,7 +11,7 @@ import yaml
 
 REGISTRY_PATH = Path(__file__).resolve().parent.parent / "sources.yaml"
 
-OPERATORS = {"UKPN", "NPG", "ENW", "SPEN", "NGED", "SSEN", "SSEN-T", "NESO", "ELEXON", "CARBON",
+OPERATORS = {"UKPN", "NPG", "ENW", "SPEN", "NGED", "SSEN", "NIE", "SSEN-T", "NESO", "ELEXON", "CARBON",
              "DESNZ", "OSM", "OCM", "ONS", "OFGEM", "OTHER"}
 PORTALS = {"opendatasoft", "ckan", "http", "json_attachment", "govuk", "ssen_gql", "smart_agg", "ocm"}
 CATEGORIES = {
@@ -40,6 +40,7 @@ class Source:
     large: bool = False  # skipped unless --include-large
     format: str = "csv"  # ODS export format: csv | geojson | parquet; http: json | file
     max_mb: int | None = None  # per-source download cap override (default common.MAX_BYTES, 200 MB)
+    timeout_s: int | None = None  # wall-clock cap override (default 15 min, 60 min when max_mb is set)
     strict_rows: bool = True  # False: export rows may differ from catalog records_count (e.g. partly public datasets)
     keep: int | None = None  # raw snapshots to keep (default: 3 for cadence <= 1h, else 6)
     mode: str = "file"  # ckan: file | datastore

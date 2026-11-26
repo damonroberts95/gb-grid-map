@@ -3,6 +3,7 @@
 import { api, type Row, type SiteDetail } from './api'
 import { fmt, h } from './dom'
 import { GLOSSARY, term } from './glossary'
+import { nerdaReadings } from './extras'
 import { C } from './layers'
 import { state } from './state'
 import { KIND_SHAPE, shapeSvg } from './shapes'
@@ -190,6 +191,40 @@ export async function showSite(id: string) {
   }
 }
 
+/** Where the ring and the % come from, in a few words. */
+const RING_SRC: Record<string, string> = { NeRDA: 'SSEN NeRDA', 'ENW PreSense': 'ENW monitor list' }
+const PCT_SRC: Record<string, string> = {
+  NGED: '% is annual max demand over rating. Not a live monitor.',
+  ENW: '% is published peak load over rating.',
+  SPEN: '% is max utilisation from the SPEN monitor, latest month.',
+  UKPN: '% is the middle of a published band.',
+}
+
+function lvNotes(props: Record<string, unknown>): HTMLElement | null {
+  const ms = typeof props.ms === 'string' ? props.ms : null
+  const src = ms ? `Monitor fitted. Source: ${RING_SRC[ms] ?? `${ms} monitor list`}.` : null
+  const pct = typeof props.u === 'number' ? PCT_SRC[String(props.op)] ?? null : null
+  if (!src && !pct) return null
+  return h('p', { class: 'muted note' }, [src, pct].filter(Boolean).join(' '))
+}
+
+interface LvMonitor { t: string; bus?: LvBox; fd?: Record<string, LvBox>; temp?: number }
+interface LvBox { i?: (number | null)[]; kw?: number; v?: (number | null)[] }
+
+/** NGED 10-minute monitor reading: busbar and feeders, current per phase and power. */
+function monitorTable(m: LvMonitor): HTMLElement {
+  const row = (name: string, b: LvBox) => [name, ...[0, 1, 2].map((k) => fmt(b.i?.[k] ?? null, 0, '')), fmt(b.kw ?? null, 1, '')]
+  const rows = [...(m.bus?.i ? [row('Busbar', m.bus)] : []),
+    ...Object.entries(m.fd ?? {}).sort(([a], [b]) => Number(a) - Number(b)).map(([f, b]) => row(`Feeder ${f}`, b))]
+  const v = m.bus?.v?.filter((x): x is number => typeof x === 'number' && x > 100)
+  return h('div', {},
+    h('h3', {}, 'Monitor reading'),
+    table(['', 'L1 A', 'L2 A', 'L3 A', 'kW'], rows),
+    h('div', { class: 'muted small' }, [`Taken ${m.t.replace('T', ' ').slice(0, 16)}.`,
+      v?.length ? `Volts ${fmt(v.reduce((a, b) => a + b, 0) / v.length, 0, '')}.` : '',
+      typeof m.temp === 'number' ? `Transformer ${fmt(m.temp, 0, '')} C.` : ''].filter(Boolean).join(' ')))
+}
+
 export async function showLv(id: string, props: Record<string, unknown>, at?: [number, number]) {
   ctl?.abort()
   ctl = new AbortController()
@@ -200,6 +235,8 @@ export async function showLv(id: string, props: Record<string, unknown>, at?: [n
         h('div', { class: 'stat-l' }, term('utilisation'))),
       stat('Transformer', typeof props.kva === 'number' ? props.kva : null, 'kVA', false),
       stat('Customers', typeof props.cu === 'number' ? props.cu : null, '', false)),
+    lvNotes(props),
+    typeof props.nrn === 'string' ? nerdaReadings(props.nrn) : null,
     h('p', { class: 'muted small' }, 'Loading details…'))
   try {
     const r = await api.lv(id, ctl.signal)
@@ -208,7 +245,14 @@ export async function showLv(id: string, props: Record<string, unknown>, at?: [n
     drawHier(pos, chain, [], String(r.upstream_how ?? 'published'))
     drawer.querySelector('.d-head')?.after(breadcrumb(chain, { name: `LV ${id.split(':').pop()}`, kind: 'LV' }, r.upstream_how as string))
     const rows = Object.entries(r).filter(([k, v]) => v !== null && v !== '' && typeof v !== 'object' && !k.startsWith('upstream_'))
+    const mon = r.monitor as LvMonitor | null | undefined
     drawer.querySelector('p.small')?.replaceWith(table(['Field', 'Value'], rows.map(([k, v]) => [k, v as string])))
+    if (mon?.t) drawer.querySelector('.stats')?.after(monitorTable(mon))
+    // opened from search: no tile props, so take the ring note and live-readings button from the API
+    if (typeof props.ms !== 'string' && typeof r.ms === 'string') {
+      const extra = [lvNotes({ ...props, op: r.operator, ms: r.ms }), typeof r.nrn === 'string' ? nerdaReadings(r.nrn) : null]
+      drawer.querySelector('.stats')?.after(...extra.filter((x): x is HTMLElement => x !== null))
+    }
   } catch (e) {
     if ((e as Error).name !== 'AbortError') drawer.querySelector('p.small')?.replaceWith(
       h('p', { class: 'muted' }, 'No details.'))

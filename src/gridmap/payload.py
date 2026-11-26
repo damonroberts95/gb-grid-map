@@ -91,6 +91,19 @@ def active_sha() -> str | None:
     return os.environ.get("GRIDMAP_PAYLOAD_SHA") or os.environ.get("GRIDMAP_BUILD_SHA") or None
 
 
+def older_than_bundle(m: dict) -> bool:
+    """True when a release's code is older than the code bundled in this app (a local build ahead of GitHub).
+    Same rule as newer_than_bundle in packaging/launch.py. Unknown times -> False (old behaviour)."""
+    def ts(s: object) -> float | None:
+        try:
+            return datetime.strptime(str(s), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC).timestamp()
+        except ValueError:
+            return None
+    bundle_t = ts(os.environ.get("GRIDMAP_BUILD_COMMIT_TIME"))
+    rel_t = ts(m.get("commit_time")) or ts(m.get("built_at"))
+    return bundle_t is not None and rel_t is not None and rel_t <= bundle_t
+
+
 # --- current.json ---------------------------------------------------------------------------------------------------
 
 def read_state() -> dict:

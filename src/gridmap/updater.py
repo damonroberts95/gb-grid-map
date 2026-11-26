@@ -177,7 +177,9 @@ class Updater:
                 sha = m["sha"]
                 self.last_error = None
                 st = payload.read_state()
-                if sha == payload.active_sha():
+                if sha == payload.active_sha() or payload.older_than_bundle(m):
+                    # older_than_bundle: a local build ahead of GitHub. Staging it would only make the launcher
+                    # discard it after a restart, and the "Update ready" banner would come back every check.
                     self.state, self.available_sha = "up_to_date", None
                     return False
                 if needs_new_app(m):

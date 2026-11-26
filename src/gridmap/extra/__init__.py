@@ -61,6 +61,7 @@ class LayerMeta:
     label: str | None = None      # property to draw as a text label (polygons: from Point features in the same file)
     label_maxzoom: float = 24     # hide labels above this zoom (e.g. region names only at country scale)
     inputs: list[str] = field(default_factory=list)  # extra input paths relative to data/ (e.g. "derived/site.parquet")
+    op: str | None = None         # operator chip that also shows/hides this layer (e.g. "NIE"); None = always
 
 
 @dataclass

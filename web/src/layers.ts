@@ -10,6 +10,7 @@ import { type State } from './state'
 // keep in sync with src/gridmap/extra/dno_areas.py OP_COLOURS
 export const OP_COLOURS: Record<string, string> = {
   UKPN: '#0072B2', NPG: '#E69F00', ENW: '#CC79A7', SPEN: '#56B4E9', NGED: '#996633', SSEN: '#009E73',
+  NIE: '#999933', // Northern Ireland: no NESO licence area
 }
 
 // Point outlines by theme: dark rim on the light basemap, light rim on the dark one (contrast for every fill colour)

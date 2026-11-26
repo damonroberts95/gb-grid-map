@@ -103,7 +103,7 @@ def build_sites_links(derived: Path) -> tuple[bytes, bytes]:
 
 
 def lv_frame(norm: Path, data_dir: Path | None = None) -> pl.DataFrame:
-    """lv_site rows with coordinates + tile props: mt/mti (mount type, inferred flag), mon (1) and ms (monitor source)."""
+    """lv_site rows with coordinates + tile props: mt/mti (mount type, inferred flag), mon (1), ms (monitor source) and nrn (NeRDA ref)."""
     from .extra.lv_common import with_mount
     from .extra.lv_monitored import monitored
     files = sorted(norm.glob("*/lv_site.parquet"))
@@ -114,17 +114,17 @@ def lv_frame(norm: Path, data_dir: Path | None = None) -> pl.DataFrame:
         mon = monitored(data_dir)
     except Exception as e:  # noqa: BLE001 - monitor lists are optional enrichment
         print(f"build_lv: monitored() failed, no mon flags: {e!r}")
-        mon = pl.DataFrame(schema={"asset_uid": pl.Utf8, "ms": pl.Utf8})
+        mon = pl.DataFrame(schema={"asset_uid": pl.Utf8, "ms": pl.Utf8, "nrn": pl.Utf8})
     return (df.join(mon, on="asset_uid", how="left").with_columns(pl.col("ms").is_not_null().alias("mon"))
             .select("asset_uid", "operator", "lat", "lon", "utilisation_pct", "transformer_kva", "customers",
-                    "mt", "mti", "mon", "ms"))
+                    "mt", "mti", "mon", "ms", "nrn"))
 
 
 def _lv_geojsonl(df: pl.DataFrame, out: Path) -> str:
     with tempfile.NamedTemporaryFile("w", suffix=".geojsonl", delete=False, dir=out.parent, prefix="tmp_lv_") as tf:
-        for uid, op, lat, lon, u, kva, cu, mt, mti, mon, ms in df.iter_rows():
+        for uid, op, lat, lon, u, kva, cu, mt, mti, mon, ms, nrn in df.iter_rows():
             props = {"id": uid, "op": op, "u": _num(u, 1), "kva": None if kva is None else int(kva), "cu": cu,
-                     "mt": mt, "mti": mti, "mon": 1 if mon else None, "ms": ms}
+                     "mt": mt, "mti": mti, "mon": 1 if mon else None, "ms": ms, "nrn": nrn}
             tf.write(json.dumps({"type": "Feature", "geometry": {"type": "Point", "coordinates": [round(lon, 6), round(lat, 6)]},
                                  "tippecanoe": {"minzoom": 4 if mon else 11},
                                  "properties": {k: v for k, v in props.items() if v is not None}},

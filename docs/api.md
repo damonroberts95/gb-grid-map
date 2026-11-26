@@ -68,7 +68,7 @@ Events: `manifest` (data = manifest JSON) when any layer changes; `live` (data =
   "sources": [{"source_id","operator","licence","attribution","as_of","fetched_at"}] }
 ```
 
-## `GET /api/lv/{asset_uid}` — one LV site row + `upstream_site_id`, `upstream_how` ("published" | "nearest" = inferred nearest primary) and `chain` (feed path from that primary upwards).
+## `GET /api/lv/{asset_uid}` — one LV site row + `upstream_site_id`, `upstream_how` ("published" | "nearest" = inferred nearest primary) and `chain` (feed path from that primary upwards) and `monitor` (NGED only: newest 10-minute monitor reading, else null).
 
 ## `GET /api/search?q=text&limit=20`
 Matches site names (and LV names when q >= 4 chars), then offline streets / places / postcodes. Returns

@@ -18,7 +18,7 @@ SOURCES = ["neso_dno_licence_areas"]
 # Okabe-Ito based, distinct from headroom RAG (green/amber/red) and the violet outage colour.
 # Keep in sync with web/src/layers.ts OP_COLOURS.
 OP_COLOURS = {"UKPN": "#0072B2", "NPG": "#E69F00", "ENW": "#CC79A7", "SPEN": "#56B4E9",
-              "NGED": "#996633", "SSEN": "#009E73"}
+              "NGED": "#996633", "SSEN": "#009E73"}  # NIE (#999933) has no NESO area
 OP_NAME = {"ENWL": "ENW"}  # NESO file says ENWL; we use ENW everywhere else
 
 LAYERS = [

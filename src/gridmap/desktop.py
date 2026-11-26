@@ -152,7 +152,8 @@ def main() -> int:
         stop.wait()
     else:
         import webview
-        webview.create_window(APP_NAME, url, width=1440, height=900, min_size=(900, 600))
+        webview.create_window(APP_NAME, url, width=1440, height=900, min_size=(900, 600),
+                              text_select=True)  # pywebview blocks selection by default; detail text must copy
         webview.start()  # blocks until the window is closed
 
     log.info("window closed; stopping server")

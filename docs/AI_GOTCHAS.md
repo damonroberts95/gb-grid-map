@@ -195,7 +195,9 @@ re-check before calling anything done. Add an entry (with date) whenever a new m
 - **`osmium export` can emit RS-prefixed GeoJSONSeq**: use `-x print_record_separator=false`.
 - **Extras input hash covers only the module file + its sources**: editing a shared helper (e.g. `lv_common.py`) needs the module touched to rebuild.
 - **Missing ≠ absent network:** DNO line layers are overhead-only (underground cables are gated/shared-licence). Say so in descriptions.
-- **NIE Networks Opendatasoft datasets are login-gated** (catalog public, data not).
+- **NIE Networks Opendatasoft datasets are login-gated** (catalog public, data not). Key works (2026-11-25). Faults feed has postcode districts only, no coordinates.
+- **A new operator needs four edits:** `OPERATORS` in `fetch/models.py`, `ADAPTERS` in `normalise/__main__.py`, `DNOS` in `server/app.py`, and the web `OPERATORS` list. Match, load, build, search and the detail APIs are generic. NIE uses Irish Grid (EPSG:29903), not BNG, and NI bounds, so it cannot use `common.from_bng`. (2026-11-25)
+- **Appending to `.env`:** check it ends in a newline first. A blind `>>` glued a key onto the previous line (2026-11-25).
 - **SSEN smart meter (GraphQL, gql.internal.datopian.com/v1/graphql):** `ssen_smart_meter_prod_*` tables return
   BigQuery 403; `ssen_smart_meter_dev_*` work but stop at 2024-09-05 and have null geo. Base URL `/v1/` 404s; use
   `/v1/graphql`. Date-typed columns reject ISO timestamps. Feeder ids don't join to SSEN substation numbers: locate via
@@ -254,3 +256,10 @@ re-check before calling anything done. Add an entry (with date) whenever a new m
   `Path(mod.__file__)` fails, and that silently broke every refresh in the bundled app (stale manifest, empty LV).
   The spec now ships `gridmap` as .py (`module_collection_mode`), and `extra._module_bytes` falls back to compiled
   code. Always run a full refresh in the *built app* (fresh or existing home) and grep its log for ERROR. (2026-11-13)
+
+## LV monitor ring vs % (2026-11-25)
+
+- **The blue ring and the % are different things.** Ring = published monitor list (`ms` on the tile). NGED % = annual day/night max demand over rating, so unringed NGED sites have numbers and ringed ones may not (no rating). The panel says which is which.
+- **NGED monitor CSVs are 1.6 GB in all (299 resources, 10-minute long-format rows).** Never download them. `ckan` mode `latest` reads the newest rows with `datastore_search`. A ckan source with `mode: latest` skips the size cap on purpose.
+- **Sort NGED monitor datastore by `Timestamp desc`, not `_id desc`.** Row ids are not in time order at the tail, so the newest `_id` rows gave a partial reading (no feeders). Data ends mid April 2026: show the reading time in the UI.
+- **SSEN ring = NeRDA secondary with an LV current channel**, joined within 40 m. The NRN rides on the tile as `nrn`. Search-hit panels have no tile props, so they show no ring note and no button.

@@ -221,6 +221,19 @@ def test_due_sources_uses_source_run_and_force():
     assert [s.id for s in rf.due_sources(reg, con, NOW, force=True)] == ["fresh", "stale", "unch", "never"]
 
 
+def test_needs_key_source_retried_once_keys_file_changes():
+    con = duckdb.connect()
+    from gridmap.fetch.store import DDL
+    con.execute(DDL)
+    t = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(NOW - 600))
+    con.execute("INSERT INTO source_run (source_id, status, fetched_at) VALUES ('gated', 'needs_key', ?)", [t])
+    reg = [_src("gated", cadence="7d")]
+    # keys unchanged since the failed attempt: wait out the 1 h backoff
+    assert rf.due_sources(reg, con, NOW, keys_mtime=NOW - 900) == []
+    # key saved after the failed attempt: due now
+    assert [s.id for s in rf.due_sources(reg, con, NOW, keys_mtime=NOW - 60)] == ["gated"]
+
+
 def test_live_fetches_never_trigger_rebuild_chain(tmp_path, monkeypatch):
     root = make_data(tmp_path)
     (root / "public").mkdir()

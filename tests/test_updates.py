@@ -183,6 +183,14 @@ def test_up_to_date_and_known_bad_skipped(home, tree, tmp_path, monkeypatch):
     assert up.check() is False and up.status()["state"] == "up_to_date" and "skipped" in up.status()["last_error"]
 
 
+def test_release_older_than_bundle_not_staged(home, tree, tmp_path, monkeypatch):
+    z = bundle(tree, tmp_path, SHA2)
+    monkeypatch.setenv("GRIDMAP_BUILD_COMMIT_TIME", "2999-01-01T00:00:00Z")
+    up = fake_github(z)
+    assert up.check() is False and up.status()["state"] == "up_to_date"
+    assert payload.read_state()["pending"] is None
+
+
 # --- shell: selection, rollback, pruning -------------------------------------------------------------------------
 
 def make_payload(sha: str):

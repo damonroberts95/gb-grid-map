@@ -17,3 +17,4 @@ packaging/build_info.json
 # Local build notes (not published)
 docs/BUILD_LOG.md
 docs/build-commands.md
+docs/my-inputs.md

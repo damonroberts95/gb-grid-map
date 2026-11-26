@@ -52,9 +52,13 @@ export function hashGet(key: string): string | null {
   return null
 }
 
-export function hashSet(values: Record<string, string>) {
+/** null removes the key (e.g. a key replaced by a newer one). */
+export function hashSet(values: Record<string, string | null>) {
   const parts = location.hash.slice(1).split('&').filter(Boolean)
   const map = new Map(parts.map((p) => { const i = p.indexOf('='); return [i > 0 ? p.slice(0, i) : p, i > 0 ? p.slice(i + 1) : ''] }))
-  for (const [k, v] of Object.entries(values)) map.set(k, encodeURIComponent(v).replace(/%2F/g, '/').replace(/%2C/g, ','))
+  for (const [k, v] of Object.entries(values)) {
+    if (v === null) map.delete(k)
+    else map.set(k, encodeURIComponent(v).replace(/%2F/g, '/').replace(/%2C/g, ','))
+  }
   history.replaceState(null, '', `#${[...map].map(([k, v]) => `${k}=${v}`).join('&')}`)
 }

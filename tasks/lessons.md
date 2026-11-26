@@ -16,3 +16,12 @@ models.py accepted it) → registry ValueError → user saw HTTP 502 on every si
 Rule: while the user is using the app, change schema/model code BEFORE data/config that depends on it, batch related
 edits in one write, and run `uv run python -I -c "from gridmap.fetch.models import load_sources; load_sources()"`
 right after editing any registry. After src edits, curl /api/manifest and one /api/site to confirm the server is up.
+
+## 2026-11-25
+- **A new operator must behave like the others.** I shipped NIE as an add-on layer (no search, panel, shapes, filters).
+  The user expects parity. Rule: new DNO data goes through normalise -> match -> build, not extras.
+- **Check data reached the running app, not just dev.** Dev showed NIE; the app had none (1 h needs_key backoff).
+  Rule: after a key or data change, verify the app's own manifest and raw dir before saying done.
+- **Local app builds can lose to the updater.** A GitHub release older than the local build kept staging and
+  restarting the app. Rule: after rebuilding, check the app log for "update staged" / "restarting".
+- **Appending to .env:** check for a trailing newline first.

@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import json
 import re
+from collections import Counter
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -23,6 +24,40 @@ from .common import (
 from .models import Result, Source
 
 PAGE = 32000  # CKAN datastore_search hard limit
+LATEST_ROWS = 600  # mode "latest": newest rows per resource (one request); the newest timestamp is complete
+PHASES = ("L1", "L2", "L3")
+
+
+def latest_reading(records: list[dict]) -> dict | None:
+    """Newest complete timestamp of long-format monitor rows (Timestamp, Attribute Type busbar|feeder|transformer, Feeder ID,
+    Description like 'L1 Current (RMS)' / 'L2 Active Power' / 'L1 Voltage (RMS)' / 'Temperature', Value) as
+    {n, t, bus: {i: [L1..L3 A], kw, kvar, v: [L1..L3 V]}, temp, fd: {feeder: {i: [A x3], kw}}}. None if no rows."""
+    rows = [r for r in records if r.get("Timestamp") and r.get("Value") is not None]
+    if not rows:
+        return None
+    counts = Counter(r["Timestamp"] for r in rows)  # the tail of a file can hold a half-written timestamp
+    t = max(ts for ts, n in counts.items() if n >= 0.9 * max(counts.values()))
+    out: dict = {"n": rows[0].get("Substation Name"), "t": t, "bus": {}, "fd": {}}
+    for r in rows:
+        if r["Timestamp"] != t:
+            continue
+        kind, d, v = r.get("Attribute Type"), str(r.get("Description") or ""), float(r["Value"])
+        if kind == "transformer" and d == "Temperature":
+            out["temp"] = v
+            continue
+        box = out["bus"] if kind == "busbar" else out["fd"].setdefault(str(r.get("Feeder ID")), {}) if kind == "feeder" else None
+        if box is None:
+            continue
+        ph = d[:2]
+        if ph in PHASES and d.endswith("Current (RMS)"):
+            box.setdefault("i", [None] * 3)[PHASES.index(ph)] = v
+        elif ph in PHASES and d.endswith("Voltage (RMS)"):
+            box.setdefault("v", [None] * 3)[PHASES.index(ph)] = v
+        elif ph in PHASES and d.endswith("Active Power"):
+            box["kw"] = round(box.get("kw", 0) + v, 2)
+        elif ph in PHASES and d.endswith("Reactive Power"):
+            box["kvar"] = round(box.get("kvar", 0) + v, 2)
+    return out
 
 
 def select_resources(resources: list[dict], select: dict) -> list[dict]:
@@ -68,7 +103,7 @@ async def fetch(src: Source, ctx: Ctx) -> Result:
     if (res := ctx.unchanged(src, modified)) is not None:
         res.url = url
         return res
-    declared = sum(int(r.get("size") or 0) for r in usable)
+    declared = 0 if src.mode == "latest" else sum(int(r.get("size") or 0) for r in usable)  # latest: CSVs not downloaded
     note = f"{len(usable)} resources, {declared / 2**20:.1f} MB declared" + (f", {redacted} redacted" if redacted else "")
     if declared > MAX_BYTES:
         return Result("skipped", url=url, portal_modified=modified, note=f"{note}: over size cap")
@@ -77,7 +112,9 @@ async def fetch(src: Source, ctx: Ctx) -> Result:
 
     snap = ctx.store.new_snapshot(src.id)
     try:
-        if src.mode == "datastore":
+        if src.mode == "latest":
+            files, sizes, hashes, counts, expected = await _latest(ctx, api, usable, snap, headers)
+        elif src.mode == "datastore":
             files, sizes, hashes, counts, expected = await _datastore(src, ctx, api, usable, snap, headers)
         else:
             files, sizes, hashes, counts, expected = await _files(ctx, usable, snap, headers, src)
@@ -141,3 +178,26 @@ async def _datastore(src: Source, ctx: Ctx, api: str, resources: list[dict], sna
         counts.append(n)
         expected += total or 0
     return files, sizes, hashes, counts, expected
+
+
+async def _latest(ctx: Ctx, api: str, resources: list[dict], snap: Path, headers: dict):
+    """Newest readings per resource through datastore_search (the CSVs are ~1.6 GB in total and only the latest
+    values are shown), one `latest.json` {resource name: latest_reading}. Resources that fail are left out."""
+    out: dict[str, dict] = {}
+    denied = 0
+
+    async def one(r: dict) -> None:
+        nonlocal denied
+        resp = await get(ctx, f"{api}/datastore_search", headers=headers,
+                         params={"resource_id": r["id"], "limit": LATEST_ROWS, "sort": "Timestamp desc"})
+        if resp.status_code in (401, 403):
+            denied += 1
+        elif resp.status_code == 200 and (got := latest_reading(resp.json()["result"]["records"])):
+            out[str(r["name"]).strip()] = got
+
+    await asyncio.gather(*(one(r) for r in resources))
+    if not out and denied:
+        raise HttpError(403, f"{api}/datastore_search")
+    data = json.dumps(out, separators=(",", ":"), sort_keys=True).encode()
+    (snap / "latest.json").write_bytes(data)
+    return ["latest.json"], [len(data)], [hashlib.sha256(data).hexdigest()], [len(out)], None

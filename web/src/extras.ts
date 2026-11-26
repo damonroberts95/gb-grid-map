@@ -5,6 +5,7 @@
 import type { ExpressionSpecification, GeoJSONSource, LayerSpecification, Map as MlMap, VectorTileSource } from 'maplibre-gl'
 import { fmt, h, hashGet, hashSet } from './dom'
 import { FRIENDLY_GROUP, FRIENDLY_TITLE, POPULAR } from './friendly'
+import { onChange, state } from './state'
 
 export interface ExtraMeta {
   id: string
@@ -26,6 +27,7 @@ export interface ExtraMeta {
   live?: boolean
   label?: string | null
   label_maxzoom?: number
+  op?: string | null // operator chip that also gates this layer
 }
 
 const GROUP_ORDER = ['Live', 'Demand & LV', 'Network', 'Generation & planning', 'Areas'] // live data is the priority
@@ -71,7 +73,7 @@ function layerSpecs(m: ExtraMeta): LayerSpecification[] {
   const src = `x_${m.id}`
   const common = {
     source: src, minzoom: m.minzoom,
-    layout: { visibility: enabled.has(m.id) ? 'visible' : 'none' },
+    layout: { visibility: shown(m) ? 'visible' : 'none' },
     ...(m.type === 'pmtiles' ? { 'source-layer': m.source_layer ?? m.id } : {}),
   } as const
   const labels: LayerSpecification[] = m.label ? [{
@@ -148,6 +150,20 @@ export function applyExtras(map: MlMap, extras: Record<string, ExtraMeta> | unde
   for (const l of changeListeners) l()
 }
 
+/** On in the layer list and, for an operator's layer (e.g. NIE), that operator's chip is on. */
+function shown(m: ExtraMeta): boolean {
+  return enabled.has(m.id) && (!m.op || state.ops.includes(m.op))
+}
+
+function applyVisibility(map: MlMap, m: ExtraMeta) {
+  for (const l of layerSpecs(m)) if (map.getLayer(l.id)) map.setLayoutProperty(l.id, 'visibility', shown(m) ? 'visible' : 'none')
+}
+
+/** Operator chips also gate operator-tagged extras. Call once the map exists. */
+export function bindOperatorChips(map: MlMap) {
+  onChange(() => { for (const m of Object.values(metas)) if (m.op) applyVisibility(map, m) })
+}
+
 function setEnabled(map: MlMap, id: string, on: boolean) {
   if (on) enabled.add(id)
   else enabled.delete(id)
@@ -156,7 +172,7 @@ function setEnabled(map: MlMap, id: string, on: boolean) {
     else switchedOff.add(id)
   }
   const m = metas[id]
-  if (m) for (const l of layerSpecs(m)) if (map.getLayer(l.id)) map.setLayoutProperty(l.id, 'visibility', on ? 'visible' : 'none')
+  if (m) applyVisibility(map, m)
   writeHash()
 }
 
@@ -178,7 +194,7 @@ export function clearExtras(map: MlMap) {
 /** Hide/restore all extras without changing the user's choices (LV monitoring mode keeps only operator areas). */
 export function setExtrasSuppressed(map: MlMap, suppressed: boolean, keep: string[] = ['dno_areas']) {
   for (const m of Object.values(metas)) {
-    const on = enabled.has(m.id) && (!suppressed || keep.includes(m.id))
+    const on = shown(m) && (!suppressed || keep.includes(m.id))
     for (const l of layerSpecs(m)) if (map.getLayer(l.id)) map.setLayoutProperty(l.id, 'visibility', on ? 'visible' : 'none')
   }
 }
@@ -281,7 +297,7 @@ interface NerdaFamily { v: number; unit: string; ts: string | null }
 interface NerdaLine { line: string; readings: Record<string, NerdaFamily> }
 
 /** "Live readings" button for NeRDA substations: fetches /api/nerda/<nrn> (can take ~30 s: one request per measurement). */
-function nerdaReadings(nrn: string): HTMLElement {
+export function nerdaReadings(nrn: string): HTMLElement {
   const out = h('div', { class: 'nerda-live' })
   const btn = h('button', { type: 'button', class: 'btn' }, 'Live readings')
   btn.onclick = async () => {
