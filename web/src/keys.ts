@@ -25,14 +25,41 @@ function status(p: Provider, rows: Map<string, KeyRow>): 'ok' | 'bad' | 'saved' 
   return t ? (t.ok ? 'ok' : 'bad') : 'saved'
 }
 
+/** NAME=value lines from a keys file, forgiving: BOM, Windows line ends, 'export ', quotes, spaces around '='.
+ * Rich text (TextEdit's default) is refused with a hint, since its markup would end up in the values. */
+export function parseKeys(text: string): { pairs: [string, string][]; rich: boolean } {
+  const t = text.replace(/^\uFEFF/, '')
+  if (/^\s*\{\\rtf/.test(t)) return { pairs: [], rich: true }
+  const pairs: [string, string][] = []
+  for (const raw of t.split(/\r?\n|\r/)) {
+    const line = raw.trim().replace(/^export\s+/, '')
+    if (!line || line.startsWith('#')) continue
+    const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*[=:]\s*(.*)$/.exec(line)
+    if (!m) continue
+    let v = m[2].trim()
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1)
+    else v = v.replace(/\s+#.*$/, '')
+    if (v) pairs.push([m[1].toUpperCase(), v])
+  }
+  return { pairs, rich: false }
+}
+
 async function main() {
   const root = shell('keys')
   const summary = h('div', { class: 'k-summary' })
   const cards = h('div', {})
   const foot = h('p', { class: 'note k-foot' })
+  // import a whole keys file (e.g. a .env a colleague sent): drop it here or pick it; values go only to this app
+  const importMsg = h('div', { class: 'k-msg', role: 'status' })
+  const picker = h('input', { type: 'file', accept: '.env,.txt,text/plain,*/*', hidden: true }) as HTMLInputElement
+  const drop = h('div', { class: 'k-import', tabindex: '0' },
+    h('b', {}, 'Have a keys file?'), ' Drop it here, or ',
+    h('button', { type: 'button', onclick: () => picker.click() }, 'Choose file'),
+    h('span', { class: 'note' }, ' Any name works: .env, env.txt, keys.txt. Plain text, one NAME=value per line.'),
+    picker, importMsg)
   root.append(h('h1', {}, 'API keys'),
     h('p', { class: 'sub' }, 'Free keys unlock more data. Stored only on this computer.'),
-    summary, cards, foot)
+    drop, summary, cards, foot)
 
   let guide: Provider[] = []
   let rows = new Map<string, KeyRow>()
@@ -55,9 +82,21 @@ async function main() {
         placeholder: row?.set ? `saved ${row.masked}`.trim() : 'paste here' }) as HTMLInputElement
       inputs.set(k.env, input)
       const show = h('button', { type: 'button', 'aria-label': `Show or hide ${k.label}` }, 'Show')
-      show.addEventListener('click', () => {
-        input.type = input.type === 'password' ? 'text' : 'password'
-        show.textContent = input.type === 'password' ? 'Show' : 'Hide'
+      let shown = '' // saved value put in the box by Show; cleared again by Hide
+      show.addEventListener('click', async () => {
+        if (input.type === 'password') {
+          if (!input.value && row?.set) {
+            const r = await fetch(`/api/keys/${k.env}/value`, { headers: { 'X-GB-Grid': '1' } })
+            if (r.ok) input.value = shown = String(((await r.json()) as { value?: string }).value ?? '')
+          }
+          input.type = 'text'
+          show.textContent = 'Hide'
+        } else {
+          if (shown && input.value === shown) input.value = ''
+          shown = ''
+          input.type = 'password'
+          show.textContent = 'Show'
+        }
       })
       return h('div', { class: 'k-field' }, h('label', { for: `k-${k.env}` }, k.label), input, show,
         k.hint ? h('span', { class: 'note' }, k.hint) : null)
@@ -105,6 +144,33 @@ async function main() {
       msg,
       p.gotchas.length ? h('details', {}, h('summary', {}, 'Notes'), h('ul', {}, ...p.gotchas.map((g) => h('li', {}, g)))) : null)
   }
+
+  const sayImport = (text: string, cls = '') => { importMsg.className = `k-msg ${cls}`; importMsg.textContent = text }
+  async function importFile(f: File) {
+    const { pairs, rich } = parseKeys(await f.text())
+    if (rich) return sayImport('That file is rich text. In TextEdit choose Format, Make Plain Text, save, then try again.', 'bad')
+    const known = new Set(guide.flatMap((p) => p.keys.map((k) => k.env)))
+    const use = pairs.filter(([k]) => known.has(k))
+    const skipped = pairs.filter(([k]) => !known.has(k)).map(([k]) => k)
+    if (!use.length) return sayImport(`No known keys found in ${f.name}. Each line should look like UKPN_API_KEY=abc123.`, 'bad')
+    const failed: string[] = []
+    for (const [k, v] of use) if (!(await send('PUT', `/api/keys/${k}`, { value: v })).ok) failed.push(k)
+    await load()
+    render()
+    sayImport([`Imported ${use.length - failed.length} key${use.length - failed.length === 1 ? '' : 's'} from ${f.name}.`,
+      failed.length ? `Rejected: ${failed.join(', ')}.` : '', skipped.length ? `Not used: ${skipped.join(', ')}.` : '',
+      'Testing them now.'].filter(Boolean).join(' '), failed.length ? 'bad' : 'ok')
+    for (const p of guide) if (status(p, rows) === 'saved') { await send('POST', `/api/keys/${p.keys[0].env}/test`).catch(() => null); await load(); render() }
+  }
+  picker.addEventListener('change', () => { if (picker.files?.[0]) void importFile(picker.files[0]); picker.value = '' })
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over') })
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'))
+  drop.addEventListener('drop', (e) => {
+    e.preventDefault()
+    drop.classList.remove('over')
+    const f = (e as DragEvent).dataTransfer?.files?.[0]
+    if (f) void importFile(f)
+  })
 
   try {
     guide = await getJson<Provider[]>('/api/keys/guide')

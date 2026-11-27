@@ -176,6 +176,7 @@ def test_api_site_and_search_on_tiny_db(tmp_path):
     con.execute("INSERT INTO queue_site VALUES ('p1','UKPN:b'),('p2','UKPN:b')")
     con.execute("INSERT INTO queue_project VALUES ('p1','UKPN','x','accepted','solar',10,NULL,NULL,NULL,'s','2026-11-01'),"
                 "('p2','UKPN','y','connected','wind',4,NULL,NULL,NULL,'s',NULL)")
+    con.execute(f"CREATE TABLE lv_site AS SELECT *, NULL::VARCHAR AS name, NULL::VARCHAR AS upstream_primary FROM read_parquet('{root}/norm/UKPN/lv_site.parquet')")
     con.close()
     with TestClient(create_app(root, scheduler=False)) as c:
         d = c.get("/api/site/UKPN:b").json()
@@ -189,6 +190,13 @@ def test_api_site_and_search_on_tiny_db(tmp_path):
         r = c.get("/api/search?q=alp").json()
         assert r == [{"type": "site", "id": "UKPN:a", "name": "Alpha", "op": "UKPN", "kind": 1, "lat": 51.5, "lon": -0.1}]
         assert c.get("/api/search?q=brav&limit=1").json()[0]["id"] == "UKPN:b"
+        # stats by level: map rules (coords only, MW else MVA, green >= thr), LV by utilisation band
+        lv = {r["level"]: r for r in c.get("/api/stats/levels?mode=gen&thr=10&ops=UKPN").json()["rows"]}
+        assert (lv["BSP"]["green"], lv["GSP"]["none"], lv["PRIMARY"]["total"]) == (1, 1, 1)
+        assert (lv["LV"]["total"], lv["LV"]["green"], lv["LV"]["none"]) == (2, 1, 1)
+        dem = {r["level"]: r for r in c.get("/api/stats/levels?mode=dem&thr=5&ops=UKPN&kinds=2,3").json()["rows"]}
+        assert set(dem) == {"BSP", "PRIMARY"} and dem["PRIMARY"]["green"] == 1 and dem["BSP"]["none"] == 1
+        assert c.get("/api/stats/levels?ops=NPG").json()["rows"] == []
 
 
 def test_is_due_cadence_and_failure_backoff():

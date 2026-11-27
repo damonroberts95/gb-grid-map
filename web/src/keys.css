@@ -25,3 +25,7 @@
 .k-card details { margin-top: 8px; color: var(--muted); font-size: 12.5px; }
 .k-card details ul { margin: 6px 0; padding-left: 20px; }
 .k-foot { margin-top: 24px; }
+
+.k-import { border: 1.5px dashed var(--line); border-radius: 8px; padding: 12px 14px; margin: 12px 0 18px; }
+.k-import.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.k-import button { margin: 0 4px; }

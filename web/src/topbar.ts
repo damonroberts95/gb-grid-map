@@ -7,7 +7,9 @@ export type Page = 'map' | 'stats' | 'queue' | 'keys'
 
 export function topbar(active: Page, right: Node[] = []): HTMLElement {
   const tab = (href: string, label: string, page: Page, title: string) =>
-    h('a', { href, class: active === page ? 'on' : undefined, 'aria-current': active === page ? 'page' : undefined, title }, label)
+    // carry the hash (map filters and view) so Stats counts what the map shows and Map comes back as it was
+    h('a', { href, class: active === page ? 'on' : undefined, 'aria-current': active === page ? 'page' : undefined, title,
+      onclick: (e: Event) => { (e.currentTarget as HTMLAnchorElement).href = href + location.hash } }, label)
   return h('header', { class: 'topbar', role: 'banner' },
     h('a', { class: 'tb-brand', href: '/' }, 'GB Grid'),
     h('nav', { class: 'tb-nav', 'aria-label': 'Pages' },

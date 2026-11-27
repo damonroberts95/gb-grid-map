@@ -57,6 +57,7 @@ export function hashGet(key: string): string | null {
   for (const part of location.hash.slice(1).split('&')) {
     const i = part.indexOf('=')
     if (i > 0 && part.slice(0, i) === key) return decodeURIComponent(part.slice(i + 1))
+    if (part === key) return '' // 'ox' with no '=' (some browsers drop it): empty, not missing
   }
   return null
 }

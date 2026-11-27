@@ -45,3 +45,11 @@ table.t tr.link { cursor: pointer; }
 
 /* shared fixed top bar: keep page content clear of it */
 body.page { padding-top: var(--topbar-h, 44px); }
+
+/* stats: map-coloured counts */
+.band { white-space: nowrap; }
+.band .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+.h-detail { margin-top: 40px; }
+.mon-how { margin: 6px 0; }
+.mon-how summary { cursor: pointer; font-weight: 600; }
+.mon-how ol { margin: 6px 0 6px 18px; line-height: 1.5; }

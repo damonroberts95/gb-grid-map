@@ -245,6 +245,17 @@ def install(app: FastAPI, st=None) -> None:
         log.info("key %s removed", id)
         return {"id": id, "set": False, "masked": ""}
 
+    @app.get("/api/keys/{id}/value")
+    def show_key(id: str, request: Request):
+        """The saved value, for the Keys page Show button. Same-machine only (guard), plus a custom header so a
+        cross-site page cannot ask without a CORS preflight, which this server never grants."""
+        guard(request)
+        known(id)
+        if request.headers.get("x-gb-grid") != "1":
+            raise HTTPException(403, "missing app header")
+        log.info("key %s shown on the Keys page", id)  # never the value
+        return {"id": id, "value": os.environ.get(id, "")}
+
     @app.post("/api/keys/{id}/test")
     def test_key(id: str, request: Request):
         guard(request)

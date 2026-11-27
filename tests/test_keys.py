@@ -115,3 +115,26 @@ def test_test_endpoint_unset_and_scrubbed(env_file, monkeypatch):
     assert "tokentokentoken1" not in str(r) and "[key]" in r["detail"]
     assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", r["at"])
     assert next(k for k in c.get("/api/keys").json() if k["id"] == "NGED_API_KEY")["last_test"]["ok"] is False
+
+
+def test_show_key_needs_app_header_and_same_origin(env_file):
+    c = client(env_file)
+    c.put("/api/keys/NPG_API_KEY", json={"value": "SECRETVALUE-abcd1234"})
+    assert c.get("/api/keys/NPG_API_KEY/value").status_code == 403  # no app header
+    h = {"X-GB-Grid": "1"}
+    assert c.get("/api/keys/NPG_API_KEY/value", headers=h).json()["value"] == "SECRETVALUE-abcd1234"
+    assert c.get("/api/keys/NPG_API_KEY/value", headers={**h, "Origin": "https://evil.example"}).status_code == 403
+    assert client(env_file, host="10.0.0.5").get("/api/keys/NPG_API_KEY/value", headers=h).status_code == 403
+    assert c.get("/api/keys/NOPE/value", headers=h).status_code == 404
+
+
+def test_load_keys_reads_hand_made_files_with_bom_and_crlf(tmp_path, monkeypatch):
+    from gridmap import settings
+    monkeypatch.setattr(settings, "KEYS_FILE", tmp_path / ".env")
+    monkeypatch.delenv("NPG_API_KEY", raising=False)
+    monkeypatch.delenv("UKPN_API_KEY", raising=False)  # restored after the test, so no key leaks to others
+    (tmp_path / "env.txt").write_bytes(b"\xef\xbb\xbfNPG_API_KEY = abc123456789\r\nexport UKPN_API_KEY=\"q1w2e3r4t5y6\"\r\n")
+    names = settings.load_keys()
+    import os
+    assert names == ["NPG_API_KEY", "UKPN_API_KEY"] and os.environ["NPG_API_KEY"] == "abc123456789"
+    assert os.environ["UKPN_API_KEY"] == "q1w2e3r4t5y6"

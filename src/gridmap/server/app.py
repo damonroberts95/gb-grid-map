@@ -624,6 +624,55 @@ def create_app(data_dir: Path | None = None, scheduler: bool | None = None) -> F
                 "freshness": {"by_operator": sorted(fresh.values(), key=lambda f: f["operator"] or ""), "sources": runs},
                 "transmission_assets_held": sorted(asset_ops - set(DNOS))}
 
+    @app.get("/api/stats/levels")
+    def stats_levels(mode: str = "dem", thr: float = 5.0, ops: str = "", kinds: str = "1,2,3,4"):
+        """Substations the map shows, by level, in the map's colour bands. Same rules as the map:
+        sites need coordinates; colour from gen or demand headroom (MW, else MVA): <=0 red, <thr amber, else green.
+        LV colour from utilisation: <60 green, <85 amber, else red. ops: operator list (NESO adds transmission sites)."""
+        cur = st.cur()
+        op_list = [o for o in ops.split(",") if o] or list(DNOS)
+        ks = {int(k) for k in kinds.split(",") if k.strip().isdigit()}
+        val = ("c.gen_headroom_mw" if mode == "gen"
+               else "coalesce(c.demand_headroom_mw, c.demand_headroom_mva)")
+        band = """count(*) total,
+                   count(*) FILTER (WHERE v >= ?) green, count(*) FILTER (WHERE v > 0 AND v < ?) amber,
+                   count(*) FILTER (WHERE v <= 0) red, count(*) FILTER (WHERE v IS NULL) none"""
+        names = {"GSP": 1, "BSP": 2, "PRIMARY": 3}
+        sites = rows(cur, f"""SELECT kind, operator, {band} FROM (
+                                SELECT s.kind, s.operator, {val} v FROM site s LEFT JOIN site_capacity c USING (site_id)
+                                WHERE s.kind IN ('GSP','BSP','PRIMARY') AND s.lat IS NOT NULL
+                                  AND list_contains(?, s.operator))
+                              GROUP BY ALL""", [thr, thr, op_list])
+        out = [{"level": r["kind"], **r} for r in sites if names[r["kind"]] in ks]
+        if 4 in ks and _has(cur, "lv_site"):
+            lv = rows(cur, """SELECT operator, count(*) total,
+                                     count(*) FILTER (WHERE utilisation_pct < 60) green,
+                                     count(*) FILTER (WHERE utilisation_pct >= 60 AND utilisation_pct < 85) amber,
+                                     count(*) FILTER (WHERE utilisation_pct >= 85) red,
+                                     count(*) FILTER (WHERE utilisation_pct IS NULL) none
+                              FROM lv_site WHERE lat IS NOT NULL AND lon IS NOT NULL AND list_contains(?, operator)
+                              GROUP BY 1""", [op_list])
+            out += [{"level": "LV", **r} for r in lv]
+        for r in out:
+            r.pop("kind", None)
+        return {"mode": mode, "thr": thr, "ops": op_list, "rows": out}
+
+    def compute_lv_monitors() -> dict:
+        from .. import lv_monitor_estimate as lme
+        cur = st.cur()
+        sites = {r["operator"]: r["n"] for r in rows(cur, "SELECT operator, count(*) n FROM lv_site GROUP BY 1")} \
+            if _has(cur, "lv_site") else {}
+        pub: dict[str, int] = {}
+        for uid in st.lv_mon:  # published monitored LV sites (extra/lv_monitored.monitored)
+            op = uid.split(":", 1)[0]
+            pub[op] = pub.get(op, 0) + 1
+        return lme.all_estimates(pub, sites)
+
+    @app.get("/api/stats/lv-monitors")
+    def stats_lv_monitors():
+        """Estimated LV monitors installed per operator, with the steps, sources and assumptions behind each."""
+        return versioned("lv_monitors", compute_lv_monitors)
+
     @app.get("/api/stats")
     def stats():
         return versioned("stats", compute_stats)

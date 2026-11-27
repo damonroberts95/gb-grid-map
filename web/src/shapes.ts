@@ -20,6 +20,40 @@ function path(ctx: CanvasRenderingContext2D, shape: Shape, s: number, inset: num
   else { ctx.moveTo(c, c - r); ctx.lineTo(c + r, c); ctx.lineTo(c, c + r); ctx.lineTo(c - r, c); ctx.closePath() }
 }
 
+const SDF_RADIUS = 8 // px of falloff each side of the edge: room for the halo
+const SDF_CUTOFF = 0.25 // edge sits at alpha 0.75, as MapLibre's SDF shader expects
+
+/** Signed distance field from a drawn shape (alpha mask). A plain on/off mask has no falloff, so the halo
+ * fills the whole icon square at some sizes ("flickering grey squares"). */
+function toSdf(rgba: Uint8ClampedArray): Uint8Array {
+  const n = PX * PX
+  const inside = new Uint8Array(n)
+  for (let i = 0; i < n; i++) inside[i] = rgba[i * 4 + 3] > 127 ? 1 : 0
+  // edge pixels: inside pixels with an outside 4-neighbour, and the reverse
+  const edges: [number, number, number][] = []
+  for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) {
+    const v = inside[y * PX + x]
+    const nb = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]
+    if (nb.some(([a, b]) => a >= 0 && b >= 0 && a < PX && b < PX && inside[b * PX + a] !== v)) edges.push([x, y, v])
+  }
+  const out = new Uint8Array(n * 4)
+  for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) {
+    const v = inside[y * PX + x]
+    let best = Infinity
+    for (const [ex, ey, ev] of edges) {
+      if (ev === v) continue
+      const d = (ex - x) ** 2 + (ey - y) ** 2
+      if (d < best) best = d
+    }
+    const dist = (Math.sqrt(best) - 0.5) * (v ? -1 : 1)
+    const a = Math.max(0, Math.min(255, Math.round(255 - 255 * (dist / SDF_RADIUS + SDF_CUTOFF))))
+    const i = (y * PX + x) * 4
+    out[i] = out[i + 1] = out[i + 2] = 255
+    out[i + 3] = a
+  }
+  return out
+}
+
 export function addShapeImages(map: MlMap) {
   for (const shape of ['diamond', 'square', 'circle', 'diamond-ring'] as Shape[]) {
     if (map.hasImage(`shape-${shape}`)) continue
@@ -37,7 +71,7 @@ export function addShapeImages(map: MlMap) {
       ctx.fill()
     }
     const img = ctx.getImageData(0, 0, PX, PX)
-    map.addImage(`shape-${shape}`, { width: PX, height: PX, data: new Uint8Array(img.data.buffer) }, { sdf: true, pixelRatio: 2 })
+    map.addImage(`shape-${shape}`, { width: PX, height: PX, data: toSdf(img.data) }, { sdf: true, pixelRatio: 2 })
   }
 }
 

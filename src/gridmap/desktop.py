@@ -73,6 +73,18 @@ def setup_keys() -> None:
     log.info("no bundled keys.env; running without API keys")
 
 
+def log_keys() -> None:
+    """Say in the log which keys file was read and which key names it held (never values), to debug "keys not
+    working" from logs/app.log alone."""
+    from . import keys_catalog as kc
+    files = settings.keys_files()
+    names = settings.load_keys()
+    known = [n for n in names if n in kc.BY_ENV]
+    log.info("keys files: %s", ", ".join(str(f) for f in files) or f"none (looked for {settings.KEYS_FILE})")
+    log.info("keys loaded: %d known (%s); unrecognised names: %s", len(known), ", ".join(known) or "-",
+             ", ".join(n for n in names if n not in kc.BY_ENV and n.isupper()) or "-")
+
+
 def free_port() -> int:
     if os.environ.get("GRIDMAP_PORT"):
         return int(os.environ["GRIDMAP_PORT"])
@@ -123,6 +135,7 @@ def main() -> int:
         return 1
     log.info("starting; home=%s frozen=%s", home, getattr(sys, "frozen", False))
     setup_keys()
+    log_keys()
 
     import uvicorn
 

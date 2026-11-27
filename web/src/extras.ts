@@ -69,6 +69,9 @@ function sizeExpr(s: ExtraMeta['size'], base: number): number | ExpressionSpecif
     ...s.stops.flat()] as ExpressionSpecification)
 }
 
+/** Extras whose labels sit above every other layer (operator names over substations, lines and LV). */
+const TOP_LABELS = ['dno_areas']
+
 function layerSpecs(m: ExtraMeta): LayerSpecification[] {
   const src = `x_${m.id}`
   const common = {
@@ -81,7 +84,9 @@ function layerSpecs(m: ExtraMeta): LayerSpecification[] {
     filter: ['==', ['geometry-type'], 'Point'],
     layout: {
       ...common.layout, 'text-field': ['get', m.label], 'text-font': ['Noto Sans Medium'],
-      'text-size': ['interpolate', ['linear'], ['zoom'], 4, 11, 8, 15], 'text-allow-overlap': false,
+      'text-size': ['interpolate', ['linear'], ['zoom'], 4, 11, 8, 15],
+      // operator names always show, drawn over everything (see TOP_LABELS)
+      'text-allow-overlap': TOP_LABELS.includes(m.id), 'text-ignore-placement': TOP_LABELS.includes(m.id),
       'text-letter-spacing': 0.04, 'text-max-width': 9,
     },
     paint: { 'text-color': colorExpr(m.color), 'text-halo-color': 'rgba(255,255,255,0.9)', 'text-halo-width': 1.6 },
@@ -154,6 +159,7 @@ export function applyExtras(map: MlMap, extras: Record<string, ExtraMeta> | unde
     urls[id] = m.url
   }
   metas = { ...extras }
+  for (const id of TOP_LABELS) if (map.getLayer(`x_${id}_label`)) map.moveLayer(`x_${id}_label`) // no beforeId: top
   for (const l of changeListeners) l()
 }
 

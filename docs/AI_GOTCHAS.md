@@ -288,3 +288,6 @@ re-check before calling anything done. Add an entry (with date) whenever a new m
 
 ## MapLibre: zoom expressions must be top level
 `['+', ['interpolate', ['linear'], ['zoom'], ...], 3]` is invalid. `addLayer` throws and the layer is silently missing. Put `['zoom']` only as the input of a top-level `interpolate` or `step`. Highlight layers by feature id also need tile ids: build line tiles with tippecanoe `--generate-ids`.
+
+## SDF icons need a real distance field
+`addImage(..., { sdf: true })` with a plain on/off alpha mask has no falloff. The halo then fills the whole icon square at some sizes and flickers on zoom ("grey squares"). `web/src/shapes.ts` builds a proper signed distance field (edge at alpha 0.75, 8 px falloff).

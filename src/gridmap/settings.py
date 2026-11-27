@@ -24,8 +24,24 @@ UPDATE_REPO = os.environ.get("GRIDMAP_UPDATE_REPO", "damonroberts95/gb-grid-map"
 PAYLOAD_DIR = Path(os.environ["GRIDMAP_PAYLOAD_DIR"]) if os.environ.get("GRIDMAP_PAYLOAD_DIR") else None
 
 
-def load_keys() -> None:
-    """Load API keys into os.environ (values are never printed or logged)."""
-    from dotenv import load_dotenv
-    if KEYS_FILE.exists():
-        load_dotenv(KEYS_FILE, override=True)
+# Names people end up with when making the keys file by hand on a Mac: Finder hides or refuses a leading dot,
+# TextEdit adds .txt. Read any of them (after .env, which the Keys page writes).
+KEYS_ALT = ("env", "env.txt", ".env.txt", "keys.txt", "keys.env")
+
+
+def keys_files() -> list[Path]:
+    """Keys files present in the app home, .env first."""
+    return [f for f in (KEYS_FILE, *(KEYS_FILE.parent / n for n in KEYS_ALT)) if f.is_file()]
+
+
+def load_keys() -> list[str]:
+    """Load API keys into os.environ. Returns the names loaded (values are never printed or logged).
+    utf-8-sig: a byte-order mark would otherwise glue itself to the first key's name."""
+    from dotenv import dotenv_values
+    names: list[str] = []
+    for f in reversed(keys_files()):  # .env last, so it wins over hand-made copies
+        for k, v in dotenv_values(f, encoding="utf-8-sig").items():
+            if k and v:
+                os.environ[k.strip()] = v.strip()
+                names.append(k.strip())
+    return sorted(set(names))
