@@ -37,3 +37,95 @@ sources:
     auth_env: NIE_API_KEY
     gated: true
     note: "Live outages, refreshed c.30 min; same gating"
+  - id: ons_ni_outline
+    operator: OTHER
+    portal: http
+    base_url: "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Countries_December_2025_Boundaries_UK_BUC/FeatureServer/0/query"
+    params: {where: "CTRY25NM='Northern Ireland'", outFields: "CTRY25CD,CTRY25NM", outSR: "4326", f: geojson}
+    format: json
+    rows_path: features
+    category: boundary
+    cadence: 30d
+    licence: "OGL v3.0"
+    attribution: "Source: Office for National Statistics licensed under the Open Government Licence v3.0. Contains OS data (c) Crown copyright and database right."
+    note: "Northern Ireland outline (= NIE licence area) for the Operator areas layer. ONS Countries Dec 2025 BUC, one MultiPolygon, WGS84, ~40 KB."
+  - id: nie_powercheck_faults
+    operator: NIE
+    portal: http
+    base_url: "https://powercheck.nienetworks.co.uk/NIEPowerCheckerWebAPI/api/faults"
+    format: json
+    rows_path: outageMessage
+    category: outage
+    cadence: 10m
+    licence: "No licence stated"
+    attribution: "NIE Networks Powercheck. No licence stated."
+    note: "Keyless JSON, exact points in Irish Grid (EPSG:29903). Preferred over nie_network_faults (postcode sectors only) when current."
+  - id: eirgrid_ni_wind
+    operator: OTHER
+    portal: http
+    base_url: "https://www.smartgriddashboard.com/api"
+    path: "chart/"
+    retry_empty: 4
+    format: json
+    rows_path: Rows
+    params: {region: NI, chartType: wind, dateRange: day, dateFrom: "{today:%d-%b-%Y} 00:00", dateTo: "{today:%d-%b-%Y} 23:59", areas: windactual}
+    category: live_national
+    cadence: 15m
+    licence: "No licence stated"
+    attribution: "EirGrid Smart Grid Dashboard (Northern Ireland, with SONI). No licence stated."
+    note: "15 min steps for today, future slots are null. Empty Rows are returned now and then: readers fall back to an older snapshot."
+  - id: eirgrid_ni_solar
+    operator: OTHER
+    portal: http
+    base_url: "https://www.smartgriddashboard.com/api"
+    path: "chart/"
+    retry_empty: 4
+    format: json
+    rows_path: Rows
+    params: {region: NI, chartType: solar, dateRange: day, dateFrom: "{today:%d-%b-%Y} 00:00", dateTo: "{today:%d-%b-%Y} 23:59", areas: solaractual}
+    category: live_national
+    cadence: 15m
+    licence: "No licence stated"
+    attribution: "EirGrid Smart Grid Dashboard (Northern Ireland, with SONI). No licence stated."
+  - id: eirgrid_ni_demand
+    operator: OTHER
+    portal: http
+    base_url: "https://www.smartgriddashboard.com/api"
+    path: "chart/"
+    retry_empty: 4
+    format: json
+    rows_path: Rows
+    params: {region: NI, chartType: demand, dateRange: day, dateFrom: "{today:%d-%b-%Y} 00:00", dateTo: "{today:%d-%b-%Y} 23:59", areas: demandactual}
+    category: live_national
+    cadence: 15m
+    licence: "No licence stated"
+    attribution: "EirGrid Smart Grid Dashboard (Northern Ireland, with SONI). No licence stated."
+    note: "chartType is demand (system returns nothing). Field SYSTEM_DEMAND."
+  - id: eirgrid_ni_interconnection
+    operator: OTHER
+    portal: http
+    base_url: "https://www.smartgriddashboard.com/api"
+    path: "chart/"
+    retry_empty: 4
+    format: json
+    rows_path: Rows
+    params: {region: NI, chartType: interconnection, dateRange: day, dateFrom: "{today:%d-%b-%Y} 00:00", dateTo: "{today:%d-%b-%Y} 23:59", areas: interconnection}
+    category: live_national
+    cadence: 15m
+    licence: "No licence stated"
+    attribution: "EirGrid Smart Grid Dashboard (Northern Ireland, with SONI). No licence stated."
+    note: "INTER_MOYLE and INTER_NET_NI. Positive = import into NI."
+  - id: eirgrid_ni_co2
+    operator: OTHER
+    portal: http
+    base_url: "https://www.smartgriddashboard.com/api"
+    path: "chart/"
+    retry_empty: 4
+    format: json
+    rows_path: Rows
+    params: {region: NI, chartType: co2, dateRange: day, dateFrom: "{today:%d-%b-%Y} 00:00", dateTo: "{today:%d-%b-%Y} 23:59", areas: co2intensity}
+    category: live_national
+    cadence: 15m
+    licence: "No licence stated"
+    attribution: "EirGrid Smart Grid Dashboard (Northern Ireland, with SONI). No licence stated."
+    note: "CO2_INTENSITY in g/kWh"

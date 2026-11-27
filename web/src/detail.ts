@@ -1,10 +1,10 @@
 // Right-hand detail drawer for a selected site or LV substation. Fetched lazily per click.
 
-import { api, type Row, type SiteDetail } from './api'
-import { fmt, h } from './dom'
+import { api, type PowerRoute, type Row, type SiteDetail } from './api'
+import { ago, day, fmt, h } from './dom'
 import { GLOSSARY, term } from './glossary'
 import { nerdaReadings } from './extras'
-import { C } from './layers'
+import { C, setRoute } from './layers'
 import { state } from './state'
 import { KIND_SHAPE, shapeSvg } from './shapes'
 
@@ -33,6 +33,7 @@ export function initDetail(close: () => void, navigate: (siteId: string) => void
 export function hide() {
   drawer.hidden = true
   drawHier(null, [], [])
+  setRoute(null)
   ctl?.abort()
   onClose()
 }
@@ -97,6 +98,19 @@ function breadcrumb(chain: Row[], self: { name: string; kind: string } | null, h
     h('div', { class: 'bc-row' }, ...(nodes.length ? nodes : [h('span', { class: 'muted' }, 'Not published')])))
 }
 
+/** "as of 3 Nov 2026", or "as of 1 Apr to 3 Nov 2026" when rows differ. Empty when no row is dated. */
+function asOf(dates: unknown[]): string {
+  const ds = [...new Set(dates.filter((x): x is string => typeof x === 'string' && x !== ''))].sort()
+  if (!ds.length) return ''
+  return ds.length === 1 || day(ds[0]) === day(ds.at(-1))
+    ? `as of ${day(ds[0])}` : `as of ${day(ds[0])} to ${day(ds.at(-1))}`
+}
+
+function dated(title: Node | string, dates: unknown[]): HTMLElement {
+  const when = asOf(dates)
+  return h('h3', {}, title, when ? h('small', { class: 'muted' }, ` · ${when}`) : null)
+}
+
 /** One plain sentence answering "can I connect here?" for the current mode and threshold. */
 function verdict(mode: 'gen' | 'dem', v: number | null, unit: string): HTMLElement {
   const what = mode === 'gen' ? 'generation' : 'demand'
@@ -147,6 +161,9 @@ function render(d: SiteDetail) {
   const statusRows = Object.entries(d.queue.by_status).filter(([, v]) => v)
   const techRows = Object.entries(d.queue.by_tech).filter(([, v]) => v).sort((a, b) => b[1] - a[1]).slice(0, 6)
   const basis = caps.map((c) => c.basis).find(Boolean)
+  // a row with no date of its own takes its source's date
+  const srcDate: Record<string, unknown> = Object.fromEntries(d.sources.map((r) => [String(r.source_id), r.as_of ?? r.fetched_at]))
+  const rowDate = (r: Row | null | undefined) => r?.as_of ?? srcDate[String(r?.source_id)]
 
   const here: [number, number] | null = typeof s.lon === 'number' && typeof s.lat === 'number' ? [s.lon, s.lat] : null
   drawHier(here, d.chain ?? [], d.children)
@@ -161,31 +178,58 @@ function render(d: SiteDetail) {
       stat(term('queue', 'Queued'), queued || null, 'MW', false)),
     h('p', { class: 'muted small' }, term('basis', 'Headroom basis'), ': ',
       basis && !String(basis).toLowerCase().startsWith('unknown') ? String(basis)
-        : `not stated`),
+        : `not stated`,
+      asOf(caps.map(rowDate)) ? `. Figures ${asOf(caps.map(rowDate))}.` : ''),
     h('div', { class: 'rel' },
       d.children.length ? h('details', {}, h('summary', {}, `Feeds ${d.children.length}`),
         h('ul', { class: 'kids' }, ...d.children.map((c) => h('li', {}, link(c),
           h('span', { class: 'muted' }, ` ${fmt(num(c, state.mode === 'gen' ? 'g' : 'd'))}`)))))
         : null),
-    h('h3', {}, term('busbar', 'Busbars'), ' & capacity'), assetsTbl,
-    h('h3', {}, term('fault_level', 'Fault levels')), faultsTbl,
-    h('h3', {}, term('queue', 'Connection queue')),
+    dated(h('span', {}, term('busbar', 'Busbars'), ' & capacity'), d.assets.map((a) => rowDate(a.capacity) ?? rowDate(a))), assetsTbl,
+    dated(term('fault_level', 'Fault levels'), d.faults.map(rowDate)), faultsTbl,
+    dated(term('queue', 'Connection queue'), d.queue.projects.map(rowDate)),
     statusRows.length
       ? h('div', {}, table(['Status', 'MW'], statusRows.map(([k, v]) => [GLOSSARY[k] ? term(k, k) : k, fmt(v)])),
         techRows.length ? table(['Technology', 'MW'], techRows.map(([k, v]) => [k, fmt(v)])) : null)
       : h('p', { class: 'muted' }, 'None linked.'),
     h('h3', {}, 'Sources'),
     h('ul', { class: 'srcs' }, ...d.sources.map((r) => h('li', {},
-      h('span', {}, `${r.source_id}`), h('span', { class: 'muted' }, ` · as of ${r.as_of ?? '?'} · ${r.licence ?? ''}`)))),
+      h('span', {}, `${r.source_id}`), h('span', { class: 'muted' },
+        [r.as_of ? `data ${day(r.as_of)}` : null, r.fetched_at ? `fetched ${ago(String(r.fetched_at))}` : null,
+          r.licence ? String(r.licence) : null].filter(Boolean).map((x) => ` · ${x}`).join(''))))),
   )
+}
+
+/** One plain line on how much of the drawn route follows published lines. */
+function routeNote(r: PowerRoute): HTMLElement {
+  const km = (m: number) => `${fmt(m / 1000, 1, '')} km`
+  const to = (r.hops.at(-1)?.hop.split('-')[1] ?? 'bsp').toUpperCase()
+  const text = r.summary.line_m > 0
+    ? `Route to ${to}: ${km(r.summary.line_m)} on published lines. ${km(r.summary.jump_m)} drawn straight where no line data.`
+    : `Route to ${to}: no published lines here. Drawn straight.`
+  return h('p', { class: 'muted small route-note', title: 'Overhead lines only. Cables are not published.' }, text)
+}
+
+/** Fetch and draw the power route for the open item (q: `lv=<uid>` or `site=<id>`). Quiet on failure. */
+async function loadRoute(q: string, signal: AbortSignal) {
+  try {
+    const r = await api.route(q, signal)
+    if (signal.aborted || !r.features.length) return
+    setRoute(r)
+    const at = drawer.querySelector('nav.breadcrumb') ?? drawer.querySelector('.d-head')
+    drawer.querySelector('.route-note')?.remove()
+    at?.after(routeNote(r))
+  } catch { /* the straight hierarchy links stay */ }
 }
 
 export async function showSite(id: string) {
   ctl?.abort()
   ctl = new AbortController()
+  const signal = ctl.signal
   shell('Loading…', '')
   try {
-    render(await api.site(id, ctl.signal))
+    render(await api.site(id, signal))
+    void loadRoute(`site=${encodeURIComponent(id)}`, signal)
   } catch (e) {
     if ((e as Error).name !== 'AbortError') shell('Could not load', String((e as Error).message))
   }
@@ -239,14 +283,25 @@ export async function showLv(id: string, props: Record<string, unknown>, at?: [n
     typeof props.nrn === 'string' ? nerdaReadings(props.nrn) : null,
     h('p', { class: 'muted small' }, 'Loading details…'))
   try {
-    const r = await api.lv(id, ctl.signal)
+    const signal = ctl.signal
+    const r = await api.lv(id, signal)
     const chain = (r.chain as Row[] | undefined) ?? []
     const pos: [number, number] | null = at ?? (typeof r.lon === 'number' && typeof r.lat === 'number' ? [r.lon, r.lat] : null)
     drawHier(pos, chain, [], String(r.upstream_how ?? 'published'))
-    drawer.querySelector('.d-head')?.after(breadcrumb(chain, { name: `LV ${id.split(':').pop()}`, kind: 'LV' }, r.upstream_how as string))
+    void loadRoute(`lv=${encodeURIComponent(id)}`, signal)
+    // SSEN publishes a number, not a name: add the locality so the title reads as a place
+    const loc = (r.native_ids as Record<string, unknown> | null)?.locality
+    const short = typeof r.name === 'string' && r.name ? r.name : String(id.split(':').pop())
+    const place = typeof loc === 'string' && loc ? ` · ${loc.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}` : ''
+    const title = drawer.querySelector('.d-head h2')
+    if (title) title.textContent = `LV substation ${short}${place}`
+    drawer.querySelector('.d-head')?.after(breadcrumb(chain, { name: `LV ${short}`, kind: 'LV' }, r.upstream_how as string))
     const rows = Object.entries(r).filter(([k, v]) => v !== null && v !== '' && typeof v !== 'object' && !k.startsWith('upstream_'))
     const mon = r.monitor as LvMonitor | null | undefined
-    drawer.querySelector('p.small')?.replaceWith(table(['Field', 'Value'], rows.map(([k, v]) => [k, v as string])))
+    const when = day(r.as_of)
+    drawer.querySelector('p.small')?.replaceWith(
+      ...(when ? [h('p', { class: 'muted small' }, `Data as of ${when}${r.source_id ? ` (${String(r.source_id)})` : ''}.`)] : []),
+      table(['Field', 'Value'], rows.map(([k, v]) => [k, v as string])))
     if (mon?.t) drawer.querySelector('.stats')?.after(monitorTable(mon))
     // opened from search: no tile props, so take the ring note and live-readings button from the API
     if (typeof props.ms !== 'string' && typeof r.ms === 'string') {

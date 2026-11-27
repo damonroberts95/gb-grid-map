@@ -40,7 +40,7 @@ LAYERS = [
     LayerMeta(
         id="dno_lines", title="Overhead lines (DNO, 6.6-132 kV)", group="Network", type="pmtiles", geom="line",
         source_layer="dno_lines", minzoom=4,
-        description="Overhead lines, coloured by voltage. UKPN, NPG, ENW, SSEN. No cables. No SPEN or NGED data.",
+        description="Overhead lines by voltage. 132 kV shows zoomed out, 33/66 kV at county zoom, 11 kV at town zoom. UKPN, NPG, ENW, SSEN. No cables. SPEN, NGED and NIE publish none.",
         color={"prop": "kv", "type": "steps", "default": "#8c8c8c",
                "stops": [[0, "#cc79a7"], [30, "#009e9e"], [100, "#2c7bb6"], [250, "#7b3294"]]},
         size={"prop": "kv", "stops": [[0, 0.8], [11, 1.2], [33, 1.8], [66, 2.4], [132, 3.2]]},
@@ -51,8 +51,8 @@ LAYERS = [
     ),
     LayerMeta(
         id="lv_overhead", title="LV overhead lines (DNO)", group="Demand & LV", type="pmtiles", geom="line",
-        source_layer="lv_overhead", minzoom=4,
-        description="Overhead LV lines. UKPN, NPG, ENW. 2026. No cables.",
+        source_layer="lv_overhead", minzoom=11,
+        description="Overhead LV lines at street zoom. UKPN, NPG, ENW. Other DNOs publish none. No cables.",
         color="#009e73", size={"prop": "w", "stops": [[0, 0.6], [2, 1.2]]}, opacity=0.8,
         popup=[["op", "Operator", None], ["kv", "Voltage", "kV"]],
         legend=[["#009e73", "LV overhead line"]],
@@ -175,10 +175,17 @@ def _ssen_feats(snap: Path) -> Iterator[tuple[dict, bool]]:
                     "properties": {"op": "SSEN", "kv": kv if kv is not None else 0}}, kv is not None and kv < 1)
 
 
+def min_zoom(kv: float) -> int:
+    """Zoom a line first appears at, by voltage, the same for every DNO: 132 kV at country scale, 33/66 kV at
+    county scale, HV and unknown voltage at town scale, LV at street scale. Without this tippecanoe thins dense
+    networks (UKPN, SSEN 11 kV) at random, so zoomed-out views looked different from one DNO to the next."""
+    return 4 if kv >= 100 else 7 if kv >= 30 else 11 if 0 < kv < 1 else 9
+
+
 def _tile(feats_path: Path, out: Path, layer: str, minz: int, maxz: int) -> None:
     subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out), "-l", layer, f"-Z{minz}", f"-z{maxz}",
                     "--drop-densest-as-needed", "--drop-smallest-as-needed", "--simplification=4",
-                    "--extend-zooms-if-still-dropping", "--maximum-tile-bytes=150000", str(feats_path)], check=True)
+                    "--extend-zooms-if-still-dropping", "--maximum-tile-bytes=150000", "--generate-ids", str(feats_path)], check=True)
 
 
 def build(ctx: Ctx) -> dict[str, Path]:
@@ -194,11 +201,13 @@ def build(ctx: Ctx) -> dict[str, Path]:
                 if f is None:
                     continue
                 for feat in _geojson_feats(f, op, is_lv):
+                    feat["tippecanoe"] = {"minzoom": min_zoom(feat["properties"]["kv"])}
                     (lv if is_lv else hv).write(json.dumps(feat, separators=(",", ":")) + "\n")
                     counts["lv" if is_lv else "hv"] += 1
         snap = latest_snapshot("ssen_overhead_lines_routes")
         if snap is not None:
             for feat, is_lv in _ssen_feats(snap):
+                feat["tippecanoe"] = {"minzoom": min_zoom(feat["properties"]["kv"])}
                 (lv if is_lv else hv).write(json.dumps(feat, separators=(",", ":")) + "\n")
                 counts["lv" if is_lv else "hv"] += 1
     out: dict[str, Path] = {}
@@ -207,5 +216,5 @@ def build(ctx: Ctx) -> dict[str, Path]:
         _tile(hv_p, out["dno_lines"], "dno_lines", 4, 13)
     if counts["lv"]:
         out["lv_overhead"] = ctx.tmp / "lv_overhead.pmtiles"
-        _tile(lv_p, out["lv_overhead"], "lv_overhead", 4, 15)
+        _tile(lv_p, out["lv_overhead"], "lv_overhead", 11, 15)
     return out

@@ -26,6 +26,16 @@ export interface National {
   frequency_at?: string | null
   carbon?: { national?: number | null; regions?: { region: string; intensity: number; index: string }[] }
   as_of?: string | null
+  /** Northern Ireland (EirGrid dashboard). Import into NI is positive. */
+  ni?: {
+    demand_mw?: number; wind_mw?: number; solar_mw?: number; moyle_mw?: number
+    net_import_mw?: number; co2_g_kwh?: number; as_of?: string
+  } | null
+  /** Republic of Ireland (EirGrid dashboard). Import into Ireland is positive. */
+  roi?: {
+    demand_mw?: number; wind_mw?: number; solar_mw?: number; ewic_mw?: number; greenlink_mw?: number
+    net_import_mw?: number; co2_g_kwh?: number; as_of?: string
+  } | null
 }
 
 export interface SourceRow {
@@ -55,6 +65,17 @@ export const api = {
     get<SearchHit[]>(`/api/search?q=${encodeURIComponent(q)}&limit=12`, signal),
   national: () => get<National>('/api/live/national'),
   sources: () => get<SourceRow[]>('/api/sources'),
+  /** q: `lv=<uid>` or `site=<id>` */
+  route: (q: string, signal?: AbortSignal) => get<PowerRoute>(`/api/route?${q}`, signal),
+}
+
+/** Feed route up to the BSP: features are kind 'line' (published overhead line) or 'jump' (straight, no line data). */
+export interface PowerRoute {
+  type: 'FeatureCollection'
+  features: { type: 'Feature'; properties: { kind: 'line' | 'jump'; kv: number | null; hop: string; op: string; m: number }
+    geometry: { type: 'LineString'; coordinates: [number, number][] } }[]
+  hops: { hop: string; to: string }[]
+  summary: { line_m: number; jump_m: number }
 }
 
 export type Row = Record<string, unknown>

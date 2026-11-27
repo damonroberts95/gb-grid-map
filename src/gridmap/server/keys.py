@@ -161,7 +161,16 @@ def _test_ocm(p: kc.Provider, env: str, key: str) -> tuple[bool, str]:
     return False, f"Open Charge Map answered HTTP {r.status_code}; try again later."
 
 
-TESTS = {"ods": _test_ods, "ckan": _test_ckan, "nerda": _test_nerda, "ocm": _test_ocm}
+def _test_esb(p: kc.Provider, env: str, key: str) -> tuple[bool, str]:
+    r = httpx.get(p.test["base_url"], headers={"api-subscription-key": key, "User-Agent": UA}, timeout=30)
+    if r.status_code == 200:
+        return True, "ESB Networks accepted the key."
+    if r.status_code in (401, 403):
+        return False, "ESB Networks rejected this key. Check the subscription is active."
+    return False, f"ESB Networks answered HTTP {r.status_code}; try again later."
+
+
+TESTS = {"ods": _test_ods, "ckan": _test_ckan, "nerda": _test_nerda, "ocm": _test_ocm, "esb": _test_esb}
 
 
 def run_test(env: str) -> dict:

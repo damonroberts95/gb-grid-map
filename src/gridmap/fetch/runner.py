@@ -10,7 +10,17 @@ from typing import Any
 
 import httpx
 
-from . import ckan, govuk, http, ocm, opendatasoft, smart_agg, ssen_gql
+from . import (
+    arcgis,
+    ckan,
+    govuk,
+    http,
+    ocm,
+    opendatasoft,
+    page_link,
+    smart_agg,
+    ssen_gql,
+)
 from .common import USER_AGENT, Ctx, FetchError, Limiter
 from .models import Result, Source, load_sources
 from .store import Store, utcnow
@@ -21,6 +31,8 @@ FETCHERS = {
     "ckan": ckan.fetch,
     "http": http.fetch,
     "govuk": govuk.fetch,
+    "page_link": page_link.fetch,
+    "arcgis": arcgis.fetch,
     "ssen_gql": ssen_gql.fetch,
     "smart_agg": smart_agg.fetch,
     "ocm": ocm.fetch,

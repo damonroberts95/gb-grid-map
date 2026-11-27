@@ -21,3 +21,16 @@ def test_carbon_join_and_reproject():
 
 def test_mix_text_drops_zero():
     assert lc.mix_text([{"fuel": "gas", "perc": 0}, {"fuel": "wind", "perc": 60.5}]) == "wind 60.5%"
+
+
+def test_ni_outline_is_nie_area(tmp_path, monkeypatch):
+    from gridmap.extra import dno_areas
+    d = tmp_path / "20261127T000000Z"
+    d.mkdir()
+    sq = [[-7.0, 54.0], [-6.0, 54.0], [-6.0, 55.0], [-7.0, 55.0], [-7.0, 54.0]]
+    (d / "data.json").write_text(json.dumps({"features": [
+        {"properties": {}, "geometry": {"type": "Polygon", "coordinates": [sq]}}]}))
+    monkeypatch.setattr(dno_areas, "latest_snapshot", lambda sid: d if sid == "ons_ni_outline" else None)
+    area, label = dno_areas.ni_area()
+    assert area["properties"]["op"] == "NIE" and area["geometry"]["type"] == "MultiPolygon"
+    assert label["properties"]["lbl"] == "NIE\nNorthern Ireland" and label["geometry"]["coordinates"] == [-6.6, 54.4]

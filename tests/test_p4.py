@@ -172,10 +172,10 @@ def test_api_site_and_search_on_tiny_db(tmp_path):
     con.execute("CREATE TABLE queue_site(project_uid VARCHAR, site_id VARCHAR)")
     con.execute("CREATE TABLE queue_project(project_uid VARCHAR, operator VARCHAR, site_name VARCHAR, status VARCHAR, "
                 "technology VARCHAR, export_mw DOUBLE, import_mw DOUBLE, storage_mw DOUBLE, connection_date VARCHAR, "
-                "source_id VARCHAR)")
+                "source_id VARCHAR, as_of VARCHAR)")
     con.execute("INSERT INTO queue_site VALUES ('p1','UKPN:b'),('p2','UKPN:b')")
-    con.execute("INSERT INTO queue_project VALUES ('p1','UKPN','x','accepted','solar',10,NULL,NULL,NULL,'s'),"
-                "('p2','UKPN','y','connected','wind',4,NULL,NULL,NULL,'s')")
+    con.execute("INSERT INTO queue_project VALUES ('p1','UKPN','x','accepted','solar',10,NULL,NULL,NULL,'s','2026-11-01'),"
+                "('p2','UKPN','y','connected','wind',4,NULL,NULL,NULL,'s',NULL)")
     con.close()
     with TestClient(create_app(root, scheduler=False)) as c:
         d = c.get("/api/site/UKPN:b").json()
@@ -298,3 +298,68 @@ def test_live_parsers_skip_unmappable_and_broken_feeds(tmp_path, monkeypatch):
         "kind": "planned"}
     nat = live.national(tmp_path)
     assert nat["fuel_mix"] == [] and nat["carbon"] == {"national": None, "regions": []} and nat["demand_mw"] is None
+
+
+def test_nie_faults_placed_at_postcode_sector_centre(tmp_path, monkeypatch):
+    tx = tmp_path / "nie_secondary_transformers" / "20261101T000000Z"
+    tx.mkdir(parents=True)
+    (tx / "export.csv").write_text("site_postcode;site_geopoint\nBT51 4AB;55.0, -6.6\nBT51 4XY;55.2, -6.4\n"
+                                   "BT74 5QQ;54.3, -7.6\n;54.0, -6.0\n")
+    d = tmp_path / "nie_network_faults" / "20261125T121333Z"
+    d.mkdir(parents=True)
+    (d / "meta.json").write_text("{}")
+    (d / "export.csv").write_text(
+        "outageid;outagetype;starttime;estrestorefulldatetime;postcode;numcustaffected;statusmessage;updatedtimestamp\n"
+        "5952544;Fault;8:17 PM, 24 Nov;Not available - Update to follow;BT51 4;1;x;12:01 PM, 25 Nov\n"
+        '2026/35289;Planned;8:56 AM, 25 Nov;5:00 PM, 25 Nov 2026;"BT74 4 ;BT74 5";49;x;12:01 PM, 25 Nov\n'
+        "9;Fault;8:17 PM, 24 Nov;;BT99 9;1;x;x\n")  # unknown sector: skipped
+    monkeypatch.setattr(live, "MAX_AGE_S", 10**9)
+    out = {f["properties"]["ref"]: f for f in live.outages(tmp_path)["features"]}
+    assert sorted(out) == ["2026/35289", "5952544"]
+    lon, lat = out["5952544"]["geometry"]["coordinates"]
+    assert abs(lat - 55.1) < 1e-9 and abs(lon + 6.5) < 1e-9
+    p = out["2026/35289"]["properties"]
+    assert p["kind"] == "planned" and p["cust"] == 49 and p["area"] == "BT74 4 ;BT74 5"
+    assert p["etr"] == "2026-11-25T17:00:00+00:00" and p["start"].endswith("-11-25T08:56:00+00:00")
+    assert out["5952544"]["properties"]["etr"] is None
+
+
+_NI_FX = Path(__file__).parent / "fixtures" / "extra" / "live_ni"
+
+
+def _snap(raw, sid, name, src, stamp="20261127T090000Z"):
+    d = raw / sid / stamp
+    d.mkdir(parents=True)
+    (d / "meta.json").write_text("{}")
+    (d / "data.json").write_text((_NI_FX / src).read_text() if isinstance(src, str) else json.dumps(src))
+    return d
+
+
+def test_nie_powercheck_exact_points_and_preferred(tmp_path, monkeypatch):
+    monkeypatch.setattr(live, "MAX_AGE_S", 10**9)
+    _snap(tmp_path, "nie_powercheck_faults", "data.json", "powercheck.json")
+    d = tmp_path / "nie_network_faults" / "20261127T090000Z"  # fallback feed: skipped while Powercheck is current
+    d.mkdir(parents=True)
+    (d / "meta.json").write_text("{}")
+    (d / "export.csv").write_text("outageid;outagetype;starttime;postcode;numcustaffected\n7;Fault;8:17 PM, 24 Nov;BT51 4;1\n")
+    out = {f["properties"]["ref"]: f for f in live.outages(tmp_path)["features"]}
+    assert sorted(out) == ["2026/35481", "5952818", "5952851"]
+    lon, lat = out["5952818"]["geometry"]["coordinates"]
+    assert abs(lat - 54.65) < 0.02 and abs(lon + 6.56) < 0.02  # BT80, Cookstown
+    p = out["5952818"]["properties"]
+    assert p["op"] == "NIE" and p["cust"] == 3 and p["kind"] == "unplanned" and p["etr"] is None
+    assert p["start"].startswith("2026-11-26T20:44") and p["area"] == "BT80 0"
+    assert out["5952851"]["properties"]["etr"].startswith("2026-11-27T09:30")
+    assert out["2026/35481"]["properties"]["kind"] == "planned"
+
+
+def test_ni_national_block_and_empty_snapshot_fallback(tmp_path, monkeypatch):
+    monkeypatch.setattr(live, "MAX_AGE_S", 10**9)
+    for sid, f in [("demand", "demand"), ("wind", "wind"), ("solar", "solar"), ("interconnection", "interconnection"),
+                   ("co2", "co2")]:
+        _snap(tmp_path, f"eirgrid_ni_{sid}", "data.json", f"{f}.json")
+    _snap(tmp_path, "eirgrid_ni_interconnection", "data.json", {"Rows": []}, "20261127T091500Z")  # API hiccup
+    ni = live.national(tmp_path)["ni"]
+    assert ni == {"demand_mw": 1184, "wind_mw": 164, "solar_mw": 3, "moyle_mw": 190, "net_import_mw": 190,
+                  "co2_g_kwh": 276, "as_of": "2026-11-27T09:00:00+00:00"}
+    assert live.national(tmp_path / "none")["ni"] is None

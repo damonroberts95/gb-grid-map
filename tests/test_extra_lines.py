@@ -100,3 +100,7 @@ def test_transmission_build(data, tmp_path):
     lon, lat = bound[0]["geometry"]["coordinates"][0] if bound[0]["geometry"]["type"] == "LineString" \
         else bound[0]["geometry"]["coordinates"][0][0]
     assert -9 < lon < 2 and 49 < lat < 61
+
+
+def test_line_min_zoom_by_voltage_same_for_every_dno():
+    assert [lines.min_zoom(kv) for kv in (132, 66, 33, 11, 6.6, 0, 0.4)] == [4, 7, 7, 9, 9, 9, 11]

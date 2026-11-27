@@ -167,3 +167,46 @@ Monitored LV clarity (NGED/SSEN rings with no numbers)
 
 Done today (in working tree, not committed): pan bounds, NIE key + fetch, keys-file retry, updater skips
 releases older than the app, text selection, NIE chip gating NI layers.
+
+## 2026-11-27: NI parity, queue by level, line zooms, power routes along real lines
+
+Done in working tree (tested, not in app yet)
+- [x] NIE faults on the map: postcode sector centre from NIE transformer postcodes (open, CC BY 4.0)
+- [x] Queue page: level buttons GSP / BSP / Primary, totals include everything below, no double count
+- [x] Overhead lines: voltage sets first zoom (132 kV country, 33/66 kV county, 11 kV town, LV street), same for
+      every DNO. Before: tippecanoe thinned dense DNOs at random
+
+NI (PLAN)
+- [ ] NI outline in Operator areas: ONS Countries Dec 2025 BUC, NI only (OGL v3, 38 KB GeoJSON, WGS84)
+- [ ] Optional: NIE Powercheck faults API (exact points, Irish Grid). No licence stated; site says use=reference
+- [ ] Optional: EirGrid Smart Grid Dashboard NI demand, wind, solar, Moyle + N-S tie flow, CO2. No terms page
+
+Power routes along real lines (PLAN)
+Probe: HV segments share endpoints (ENW 36k segs, UKPN 103k, NPG 44k), so overhead networks form graphs.
+Gaps: underground cables not published (towns mostly cable), no line data for SPEN, NGED, NIE.
+- [x] Build: per operator, graph of line segments by voltage band (11 kV-ish, 33/66 kV, 132 kV). Nodes = ends
+      snapped to ~5 m. Compact file in data/derived.
+- [x] Server /api/route?lv=<uid> (and ?site=<id>): LV site -> primary on HV graph, primary -> BSP on EHV graph.
+      Snap each end to the nearest line node within a limit. Shortest path. Where the graph breaks, bridge the
+      gap with the shortest straight jump between the two pieces (penalised), so jumps only cover missing data.
+      No graph or no path: one straight jump, as today.
+- [x] UI: selecting an LV site or substation draws its route to the BSP. Solid along real lines (voltage colour),
+      dashed for jumps. Legend: "line data" vs "no line data (straight)".
+- [x] Tests: tiny synthetic graph (path, gap bridge, no graph). Real-data check: share of route length on real
+      lines per DNO.
+Review: done (routes.py, /api/route, refresh hook, layers route-line/route-jump, panel note instead of a map
+legend). Mean share on lines, 30 random LV per DNO: NPG 55%, SSEN 52%, ENW 43%, UKPN 26%, NGED/SPEN 0%.
+~3 ms per route after a 50-200 ms first load. Details: docs/sources/lines.md. Not yet checked by eye in the app.
+
+## 2026-11-27: Republic of Ireland (user: "if data is available, use it. not commercial")
+- [x] Basemap bbox west to -11 (Ireland), re-extract for existing installs (bbox marker gb.pmtiles.bbox, background swap)
+- [x] ESB Networks as operator ESB from customer heatmap XLSX: 548 sites (115 GSP, 9 BSP, 424 primary) with headroom;
+      45,868 LV sites (kVA, pole/ground, derived utilisation). Parent group -> hierarchy. `page_link` portal resolves newest file
+- [x] EirGrid transmission (ArcGIS, new `arcgis` portal): 616 line features, 314 stations, interconnectors
+- [x] ROI live national (EirGrid dashboard region=ROI) next to NI line
+- [x] ROI outline (Tailte Éireann provinces, CC BY 4.0, dissolved) in Operator areas as ESB
+- [x] ESB PowerCheck outages wired (auth_header, parser, key guide). Key returns 401 so far: parser unverified
+- [ ] Optional: SEAI wind farms / hydro (CC BY 4.0)
+- [ ] Irish place names / Eircodes in search (OS Open Names is GB only)
+- [ ] ESB LV headroom (kVA) is in native_ids only; the LV panel table hides objects
+- Not available: ESB MV line routes, machine-readable queue (PDF only), LV monitoring

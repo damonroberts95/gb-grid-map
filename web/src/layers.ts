@@ -2,7 +2,7 @@
 // expressions on feature properties: no per-feature JS, no framework state.
 
 import type { ExpressionSpecification, GeoJSONSource, LayerSpecification, Map as MlMap, VectorTileSource } from 'maplibre-gl'
-import type { Manifest } from './api'
+import type { Manifest, PowerRoute } from './api'
 import { setExtrasSuppressed } from './extras'
 import { addShapeImages } from './shapes'
 import { type State } from './state'
@@ -10,7 +10,8 @@ import { type State } from './state'
 // keep in sync with src/gridmap/extra/dno_areas.py OP_COLOURS
 export const OP_COLOURS: Record<string, string> = {
   UKPN: '#0072B2', NPG: '#E69F00', ENW: '#CC79A7', SPEN: '#56B4E9', NGED: '#996633', SSEN: '#009E73',
-  NIE: '#999933', // Northern Ireland: no NESO licence area
+  NIE: '#999933', // Northern Ireland: area = ONS NI outline
+  ESB: '#882255', // Republic of Ireland: area = Tailte Éireann provinces, merged
 }
 
 // Point outlines by theme: dark rim on the light basemap, light rim on the dark one (contrast for every fill colour)
@@ -111,6 +112,22 @@ export function addLayers(map: MlMap, s: State) {
     filter: ['all', ['==', ['get', 'dir'], 'up'], ['==', ['get', 'how'], 'nearest']],
     paint: { 'line-color': C.hier, 'line-width': ['interpolate', ['linear'], ['zoom'], 6, 2.5, 12, 5],
       'line-dasharray': [1.5, 1.2] },
+  })
+  // power route of the selected item along published lines (solid, voltage colour) and straight jumps (dashed grey)
+  routeMap = map
+  map.addSource('route', { type: 'geojson', data: EMPTY })
+  map.addLayer({
+    id: 'route-jump', type: 'line', source: 'route', filter: ['==', ['get', 'kind'], 'jump'],
+    layout: { 'line-cap': 'round' },
+    paint: { 'line-color': '#8c8c8c', 'line-width': ['interpolate', ['linear'], ['zoom'], 6, 2, 12, 4],
+      'line-dasharray': [1.5, 1.5] },
+  })
+  map.addLayer({
+    id: 'route-line', type: 'line', source: 'route', filter: ['==', ['get', 'kind'], 'line'],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    // same voltage colours as the dno_lines layer (src/gridmap/extra/lines.py)
+    paint: { 'line-color': ['step', ['get', 'kv'], '#cc79a7', 30, '#009e9e', 100, '#2c7bb6'],
+      'line-width': ['interpolate', ['linear'], ['zoom'], 6, 3, 12, 6] },
   })
 
   // Substation type = shape (◆ GSP, ■ BSP, ● Primary, ◇ transmission GSP); colour = headroom.
@@ -263,13 +280,18 @@ export function applyState(map: MlMap, s: State) {
 export interface HierNode { site_id?: string; name?: string; kind?: string; lat: number | null; lon: number | null }
 
 /** Draw the selected item's connection hierarchy: `from` up through `chain` (nearest first), and down to `children`. */
+type HierFeat = { type: 'Feature'; properties: Record<string, string | number>; geometry: { type: 'LineString'; coordinates: [number, number][] } }
+let hierFeats: HierFeat[] = []
+let routeMap: MlMap | undefined
+
 export function setHierarchy(map: MlMap, from: [number, number] | null, chain: HierNode[], children: HierNode[], how = 'published') {
-  const feats: { type: 'Feature'; properties: Record<string, string>; geometry: { type: 'LineString'; coordinates: [number, number][] } }[] = []
+  const feats: HierFeat[] = []
   let prev = from
+  let i = 0
   for (const n of chain) {
     if (n.lat == null || n.lon == null) continue
     const cur: [number, number] = [n.lon, n.lat]
-    if (prev) feats.push({ type: 'Feature', properties: { dir: 'up', how: feats.length === 0 ? how : 'published' },
+    if (prev) feats.push({ type: 'Feature', properties: { dir: 'up', how: feats.length === 0 ? how : 'published', i: i++ },
       geometry: { type: 'LineString', coordinates: [prev, cur] } })
     prev = cur
   }
@@ -277,5 +299,17 @@ export function setHierarchy(map: MlMap, from: [number, number] | null, chain: H
     if (c.lat == null || c.lon == null) continue
     feats.push({ type: 'Feature', properties: { dir: 'down' }, geometry: { type: 'LineString', coordinates: [from, [c.lon, c.lat]] } })
   }
+  hierFeats = feats
   ;(map.getSource('hier') as GeoJSONSource | undefined)?.setData({ type: 'FeatureCollection', features: feats })
+  ;(map.getSource('route') as GeoJSONSource | undefined)?.setData(EMPTY)
+}
+
+/** Draw the selected item's power route (null clears it). The straight hierarchy links it covers are hidden. */
+export function setRoute(r: PowerRoute | null) {
+  const map = routeMap
+  if (!map) return
+  ;(map.getSource('route') as GeoJSONSource | undefined)?.setData(r ?? EMPTY)
+  const n = r?.features.length ? r.hops.length : 0
+  ;(map.getSource('hier') as GeoJSONSource | undefined)?.setData({ type: 'FeatureCollection',
+    features: hierFeats.filter((f) => f.properties.dir !== 'up' || Number(f.properties.i) >= n) })
 }

@@ -3,7 +3,7 @@
 import { hashGet, hashSet } from './dom'
 
 export type Mode = 'gen' | 'dem'
-export const OPERATORS = ['UKPN', 'NPG', 'ENW', 'SPEN', 'NGED', 'SSEN', 'NIE'] as const
+export const OPERATORS = ['UKPN', 'NPG', 'ENW', 'SPEN', 'NGED', 'SSEN', 'NIE', 'ESB'] as const
 // operators an old link's 'o' list could name; any operator added since starts on
 const LEGACY_OPS = ['UKPN', 'NPG', 'ENW', 'SPEN', 'NGED', 'SSEN']
 export const THRESHOLDS = [1, 2, 5, 10, 20] as const

@@ -197,7 +197,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
     out: dict[str, Path] = {}
     if cables:
         out["offshore_cables"] = tile(cables, t / "offshore_cables.pmtiles", "offshore_cables", 4, 12,
-                                      ["--drop-densest-as-needed", "--extend-zooms-if-still-dropping"])
+                                      ["--drop-densest-as-needed", "--extend-zooms-if-still-dropping", "--generate-ids"])
     if points:
         p = t / "landfalls.geojson"
         p.write_text(json.dumps({"type": "FeatureCollection", "features": points}, separators=(",", ":")))

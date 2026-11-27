@@ -1,0 +1,53 @@
+{
+ "escalationInfo": {},
+ "outageMessage": [
+  {
+   "outageId": "5952818",
+   "outageType": "Fault",
+   "point": {
+    "coordinates": "293235.97307400,378807.79075700"
+   },
+   "startTime": "8:44 PM, 26 Nov",
+   "estRestoreTime": "Not available - Update to follow",
+   "estRestoreFullDateTime": "Not available - Update to follow",
+   "postCode": "BT80 0",
+   "fullPostCodes": "BT80 0",
+   "numCustAffected": "3",
+   "statusMessage": "We\u2019ve located the fault on the network and repairs will begin as soon as possible.",
+   "causeMessage": "The fault is due to equipment failure.",
+   "updatedTimeStamp": "9:06 AM, 27 Nov"
+  },
+  {
+   "outageId": "5952851",
+   "outageType": "Fault",
+   "point": {
+    "coordinates": "347297.17784200,356675.75379100"
+   },
+   "startTime": "6:18 AM, 27 Nov",
+   "estRestoreTime": "9:30 AM, 27 Nov",
+   "estRestoreFullDateTime": "9:30 AM, 27 Nov 2026",
+   "postCode": "BT30 9",
+   "fullPostCodes": "BT30 9",
+   "numCustAffected": "1",
+   "statusMessage": "We have logged a fault for this area and will be assigning a repair team as soon as possible.",
+   "causeMessage": "",
+   "updatedTimeStamp": "9:06 AM, 27 Nov"
+  },
+  {
+   "outageId": "2026/35481",
+   "outageType": "Planned",
+   "point": {
+    "coordinates": "319860.92814800,406056.25223500"
+   },
+   "startTime": "8:28 AM, 27 Nov",
+   "estRestoreTime": "5:00 PM, 27 Nov",
+   "estRestoreFullDateTime": "5:00 PM, 27 Nov 2026",
+   "postCode": "BT42 4",
+   "fullPostCodes": "BT42 4",
+   "numCustAffected": "26",
+   "statusMessage": "We are carrying out essential planned maintenance to the electricity network in your area.",
+   "causeMessage": "",
+   "updatedTimeStamp": "9:06 AM, 27 Nov"
+  }
+ ]
+}

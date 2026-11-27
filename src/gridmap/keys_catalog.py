@@ -125,6 +125,20 @@ PROVIDERS: tuple[Provider, ...] = (
                  "Expires after 90 days. A new key kills the old one.",
                  "Your SSEN data portal login may work.")),
     Provider(
+        id="esb", name="ESB Networks PowerCheck (Ireland)",
+        unlocks="Live power cuts in Ireland.",
+        signup_url="https://powercheck.esbnetworks.ie/", optional=True,
+        steps=(
+            Step("Ask ESB Networks for a PowerCheck API subscription key.", "https://powercheck.esbnetworks.ie/",
+                 "PowerCheck"),
+            Step("Copy the subscription key. Paste it below."),
+        ),
+        keys=(KeyField("ESB_POWERCHECK_KEY", "Subscription key", ""),),
+        test={"kind": "esb", "base_url": "https://api.esb.ie/esbn/powercheck/v1.0/outages",
+              "call": "GET /esbn/powercheck/v1.0/outages with the key in the api-subscription-key header"},
+        success="HTTP 200 with a list of outages. A wrong or inactive key gives 401.",
+        gotchas=("A new subscription can take a while to become active.",)),
+    Provider(
         id="ocm", name="Open Charge Map",
         unlocks="EV charger locations.",
         signup_url="https://openchargemap.org/site/develop/api", optional=True,

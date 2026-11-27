@@ -31,6 +31,7 @@ LIVE = {"outage": "outages", "live_national": "national"}  # category -> feed na
 FAIL_RETRY = (600, 3600)  # a failing source is retried after clamp(cadence, 10 min, 1 h)
 NORMALISE_COOLDOWN = 900  # a failing adapter is retried after 15 min
 _normalise_failed: dict[str, float] = {}
+_routes_failed = 0.0  # power-route graph build: last failure time (same cooldown)
 
 StageCb = Callable[[str, str], None]
 
@@ -236,6 +237,17 @@ def refresh(*, force: bool = False, on_stage: StageCb | None = None, con: duckdb
                 say("build", f"{mod} FAILED: {err}")
         elif res["live"] and _has_live_extras():
             res["built"] = build.build_all(data_dir, only_live=True)["changed"]
+        # graphs for /api/route, after the map build: rebuilt when line snapshots or the code change
+        global _routes_failed
+        if data_dir == DATA_DIR and time.time() - _routes_failed > NORMALISE_COOLDOWN:
+            from . import routes
+            if routes.stale(data_dir):
+                say("build", "power route graphs")
+                try:
+                    routes.build(data_dir)
+                except Exception as e:  # noqa: BLE001 - routes are optional; never block the map
+                    _routes_failed = time.time()
+                    say("build", f"routes FAILED: {type(e).__name__}: {e}")
     finally:
         say("idle", "")
         if own:

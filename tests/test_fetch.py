@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import re
 from pathlib import Path
 
 import duckdb
@@ -259,3 +260,26 @@ def test_registry_is_valid():
     assert len(sources) > 100
     assert len({s.id for s in sources}) == len(sources)
     assert all(s.auth_env for s in sources if s.gated)
+
+
+def test_expand_params_today_uk_date():
+    from gridmap.fetch.http import expand_params
+    out = expand_params({"d": "{today:%d-%b-%Y} 00:00", "x": "plain"})
+    assert re.fullmatch(r"\d{2}-[A-Z][a-z]{2}-\d{4} 00:00", out["d"]) and out["x"] == "plain"
+
+
+def test_http_retry_empty_refetches_until_rows(tmp_path, monkeypatch):
+    from gridmap.fetch import http
+    monkeypatch.setattr(http, "RETRY_EMPTY_WAIT_S", 0)
+    url = "https://www.smartgriddashboard.com/api/chart/"
+    src = Source(id="eg", operator="OTHER", portal="http", base_url=url, format="json", rows_path="Rows",
+                 category="live_national", cadence="15m", licence="x", attribution="x", retry_empty=3)
+    with respx.mock:
+        route = respx.get(url.rstrip("/")).mock(side_effect=[httpx.Response(200, json={"Rows": []}),
+                                                 httpx.Response(200, json={"Rows": [{"Value": 1}]})])
+        r = status_of(run(tmp_path, [src]), "eg")
+    assert route.call_count == 2 and r["status"] == "ok" and r["rows"] == 1
+    with respx.mock:
+        respx.get(url.rstrip("/")).respond(json={"Rows": []})
+        r = status_of(run(tmp_path, [src], force=True), "eg")
+    assert r["status"] == "empty_or_gated"

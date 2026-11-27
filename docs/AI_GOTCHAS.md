@@ -263,3 +263,28 @@ re-check before calling anything done. Add an entry (with date) whenever a new m
 - **NGED monitor CSVs are 1.6 GB in all (299 resources, 10-minute long-format rows).** Never download them. `ckan` mode `latest` reads the newest rows with `datastore_search`. A ckan source with `mode: latest` skips the size cap on purpose.
 - **Sort NGED monitor datastore by `Timestamp desc`, not `_id desc`.** Row ids are not in time order at the tail, so the newest `_id` rows gave a partial reading (no feeders). Data ends mid April 2026: show the reading time in the UI.
 - **SSEN ring = NeRDA secondary with an LV current channel**, joined within 40 m. The NRN rides on the tile as `nrn`. Search-hit panels have no tile props, so they show no ring note and no button.
+- **EirGrid Smart Grid Dashboard needs the trailing slash: `/api/chart/`.** Without it the server sends 308 and the followed request returns empty `Rows`. `build_url` strips a trailing slash from `base_url`, so the sources use `path: "chart/"`. `retry_empty` and the reader's look-back to older snapshots stay as a safety net. `chartType=system` and `generation` return nothing for NI; use `demand/demandactual`.
+- **NIE Powercheck beats the NIE opendatasoft faults feed.** Powercheck has Irish Grid points per outage. When its snapshot is current, `nie_network_faults` (postcode sectors only) is skipped so cleared outages don't linger.
+- **Overhead line tiles need per-feature minzoom by voltage.** `--drop-densest-as-needed` alone thins dense DNOs (UKPN, SSEN 11 kV) at random, so zoomed-out views differ per DNO.
+
+## Power routes (2026-11-27)
+
+- **Touching line ends do not share exact coordinates.** SSEN segment ends are often 1-2 m apart and fall in
+  different 5 m snap cells, so a route showed dozens of 1 m "jumps". Bridges under 10 m (`routes.JOIN_M`) count as line.
+- **Hop band follows the lower end, not the upper.** Some primaries feed straight from a GSP (SSEN North, 33 kV
+  GSPs); picking the 132 kV graph because the parent is a GSP gave straight lines.
+- **DuckDB `USING SAMPLE` runs before WHERE.** `... WHERE operator = 'ENW' USING SAMPLE 30 ROWS` sampled the
+  whole table and then filtered, giving 0 rows. Sample a filtered subquery: `USING SAMPLE reservoir(30 ROWS)`.
+
+- **ESB heatmap XLSX name changes per release** (`customer-heatmap-download-july-2026.xlsx?sfvrsn=...`). Resolve it
+  from the page (`page_link` portal). The header is on row 2; footer rows carry "Report compiled dd/mm/yyyy". (2026-11-27)
+- **ESB Demand/Gen Available already include the parent constraint** (0 with "otherwise capacity available = X").
+  Use X only for the transformer's own utilisation, never as headroom. LV names are part-redacted and not unique. (2026-11-27)
+- **EirGrid TDP map: spans with committed works are only in layers 41/43**, not in 40/39. Reading 40 alone loses most
+  of the 400 kV network. Layer 7 has no OBJECTID, so do not order by it. (2026-11-27)
+- **Ireland is west of the old GB bbox (-8.7).** Validation bounds for ROI: lat 51.3-55.5, lon -10.8 to -5.9. `live._latlon`
+  is GB-only (lon >= -9); ROI points need `_ie_point`. (2026-11-27)
+- **EirGrid ROI demand/co2 return empty Rows on many calls.** Never treat one empty snapshot as "no data". (2026-11-27)
+
+## MapLibre: zoom expressions must be top level
+`['+', ['interpolate', ['linear'], ['zoom'], ...], 3]` is invalid. `addLayer` throws and the layer is silently missing. Put `['zoom']` only as the input of a top-level `interpolate` or `step`. Highlight layers by feature id also need tile ids: build line tiles with tippecanoe `--generate-ids`.

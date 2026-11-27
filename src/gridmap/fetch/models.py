@@ -11,9 +11,9 @@ import yaml
 
 REGISTRY_PATH = Path(__file__).resolve().parent.parent / "sources.yaml"
 
-OPERATORS = {"UKPN", "NPG", "ENW", "SPEN", "NGED", "SSEN", "NIE", "SSEN-T", "NESO", "ELEXON", "CARBON",
+OPERATORS = {"UKPN", "NPG", "ENW", "SPEN", "NGED", "SSEN", "NIE", "ESB", "EIRGRID", "SSEN-T", "NESO", "ELEXON", "CARBON",
              "DESNZ", "OSM", "OCM", "ONS", "OFGEM", "OTHER"}
-PORTALS = {"opendatasoft", "ckan", "http", "json_attachment", "govuk", "ssen_gql", "smart_agg", "ocm"}
+PORTALS = {"opendatasoft", "ckan", "http", "json_attachment", "govuk", "page_link", "arcgis", "ssen_gql", "smart_agg", "ocm"}
 CATEGORIES = {
     "headroom", "sites", "ltds_fault", "ltds_other", "ecr", "queue", "tec", "lv_sites",
     "lv_usage", "outage", "live_national", "dfes", "lct", "boundary", "flex",
@@ -36,11 +36,13 @@ class Source:
     path: str | None = None  # http: path appended to base_url
     params: dict[str, str] = field(default_factory=dict)  # http query params
     auth_env: str | None = None  # env var holding the API key (None = no key concept)
+    auth_header: str | None = None  # http: send the auth_env key in this request header (e.g. api-subscription-key)
     gated: bool = False  # known to need a key: skipped with needs_key when it is missing
     large: bool = False  # skipped unless --include-large
     format: str = "csv"  # ODS export format: csv | geojson | parquet; http: json | file
     max_mb: int | None = None  # per-source download cap override (default common.MAX_BYTES, 200 MB)
     timeout_s: int | None = None  # wall-clock cap override (default 15 min, 60 min when max_mb is set)
+    retry_empty: int = 0  # http json: refetch up to N times when rows_path gives no rows (flaky APIs)
     strict_rows: bool = True  # False: export rows may differ from catalog records_count (e.g. partly public datasets)
     keep: int | None = None  # raw snapshots to keep (default: 3 for cadence <= 1h, else 6)
     mode: str = "file"  # ckan: file | datastore

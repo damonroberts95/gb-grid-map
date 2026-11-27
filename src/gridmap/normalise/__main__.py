@@ -8,7 +8,7 @@ import sys
 import traceback
 
 ADAPTERS = {
-    "UKPN": "ukpn", "NPG": "npg", "ENW": "enw", "SPEN": "spen", "NGED": "nged", "SSEN": "ssen", "NIE": "nie", "NESO": "neso",
+    "UKPN": "ukpn", "NPG": "npg", "ENW": "enw", "SPEN": "spen", "NGED": "nged", "SSEN": "ssen", "NIE": "nie", "ESB": "esb", "NESO": "neso",
 }
 
 

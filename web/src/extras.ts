@@ -3,7 +3,7 @@
 // appear in the UI without frontend changes.
 
 import type { ExpressionSpecification, GeoJSONSource, LayerSpecification, Map as MlMap, VectorTileSource } from 'maplibre-gl'
-import { fmt, h, hashGet, hashSet } from './dom'
+import { day, fmt, h, hashGet, hashSet } from './dom'
 import { FRIENDLY_GROUP, FRIENDLY_TITLE, POPULAR } from './friendly'
 import { onChange, state } from './state'
 
@@ -102,8 +102,15 @@ function layerSpecs(m: ExtraMeta): LayerSpecification[] {
     ]
   }
   if (m.geom === 'line') {
-    return [{ ...common, id: `${src}_line`, type: 'line', layout: { ...common.layout, 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': colorExpr(m.color), 'line-width': sizeExpr(m.size, 1.2), 'line-opacity': m.opacity } } as LayerSpecification]
+    const round = { ...common.layout, 'line-cap': 'round', 'line-join': 'round' }
+    const none = ['==', ['id'], -1] as ExpressionSpecification
+    return [{ ...common, id: `${src}_line`, type: 'line', layout: round,
+      paint: { 'line-color': colorExpr(m.color), 'line-width': sizeExpr(m.size, 1.2), 'line-opacity': m.opacity } } as LayerSpecification,
+    // clicked line: a wide halo under a bright core, shown by filter on the tile feature id
+    { ...common, id: `${src}_hl_halo`, type: 'line', layout: round, filter: none,
+      paint: { 'line-color': '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 5, 10, 8, 15, 13], 'line-opacity': 0.9 } } as LayerSpecification,
+    { ...common, id: `${src}_hl`, type: 'line', layout: round, filter: none,
+      paint: { 'line-color': '#ff2bd6', 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 2.5, 10, 4, 15, 7] } } as LayerSpecification]
   }
   if (m.id.startsWith('lv_monitored')) {
     // overlay on LV dots: hollow ring so the underlying utilisation colour stays visible
@@ -191,6 +198,31 @@ export function clearExtras(map: MlMap) {
   for (const l of changeListeners) l()
 }
 
+/** Highlight one line feature (layer is its `x_<id>_line` layer), or clear every highlight with null. */
+export function highlightLine(map: MlMap, layer: string | null, id: string | number | undefined) {
+  for (const m of Object.values(metas)) {
+    if (m.geom !== 'line') continue
+    const src = `x_${m.id}`
+    const on = layer === `${src}_line` && id !== undefined && id !== null
+    const f = (on ? ['==', ['id'], id] : ['==', ['id'], -1]) as ExpressionSpecification
+    for (const l of [`${src}_hl_halo`, `${src}_hl`]) if (map.getLayer(l)) map.setFilter(l, f)
+  }
+}
+
+/** Every line and cable layer, switched together by the "Power lines" button. */
+const LINE_LAYERS = ['dno_lines', 'lv_overhead', 'power_lines', 'power_cables', 'offshore_cables', 'eirgrid_lines']
+
+function linesButton(map: MlMap): HTMLElement | null {
+  const ids = LINE_LAYERS.filter((id) => metas[id])
+  if (!ids.length) return null
+  const allOn = ids.every((id) => enabled.has(id))
+  return h('button', { type: 'button', class: 'linklike small', title: ids.map((id) => title(metas[id])).join('\n'),
+    onclick: () => {
+      for (const id of ids) setEnabled(map, id, !allOn)
+      for (const l of changeListeners) l()
+    } }, allOn ? 'Hide all power lines' : 'Show all power lines')
+}
+
 /** Hide/restore all extras without changing the user's choices (LV monitoring mode keeps only operator areas). */
 export function setExtrasSuppressed(map: MlMap, suppressed: boolean, keep: string[] = ['dno_areas']) {
   for (const m of Object.values(metas)) {
@@ -246,13 +278,13 @@ export function extrasPanel(map: MlMap): HTMLElement {
       // newcomers: a short list of the most useful layers (+ anything already switched on)
       const pick = all.filter((m) => POPULAR.includes(m.id) || enabled.has(m.id))
         .sort((a, b) => (POPULAR.indexOf(a.id) + 99) % 99 - (POPULAR.indexOf(b.id) + 99) % 99)
-      box.replaceChildren(...pick.map(item), toggleAll)
+      box.replaceChildren(linesButton(map) ?? '', ...pick.map(item), toggleAll)
       return
     }
     const groups = new Map<string, ExtraMeta[]>()
     for (const m of all) groups.set(m.group, [...(groups.get(m.group) ?? []), m])
     const ordered = [...groups.keys()].sort((a, b) => (GROUP_ORDER.indexOf(a) + 99) % 99 - (GROUP_ORDER.indexOf(b) + 99) % 99)
-    box.replaceChildren(...ordered.map((g) =>
+    box.replaceChildren(linesButton(map) ?? '', ...ordered.map((g) =>
       h('details', {
         class: 'xgroup', open: isOpen(g, groups.get(g) ?? []),
         ontoggle: (e: Event) => { openGroups.set(g, (e.currentTarget as HTMLDetailsElement).open) },
@@ -296,13 +328,20 @@ export function extraPopup(layerId: string, props: Record<string, unknown>): HTM
 interface NerdaFamily { v: number; unit: string; ts: string | null }
 interface NerdaLine { line: string; readings: Record<string, NerdaFamily> }
 
-/** "Live readings" button for NeRDA substations: fetches /api/nerda/<nrn> (can take ~30 s: one request per measurement). */
+/** Newest reading time, else the fetch time. */
+function readTime(d: { lines: NerdaLine[]; fetched: string }): string {
+  const ts = d.lines.flatMap((l) => Object.values(l.readings).map((r) => r.ts)).filter((x): x is string => !!x).sort().at(-1)
+  return ts ? `Readings to ${day(ts)}` : `Last 15 min, fetched ${day(d.fetched)}`
+}
+
+/** Live readings for a NeRDA substation, fetched as soon as it opens: /api/nerda/<nrn> (can take ~30 s: one
+ * request per measurement). The button fetches again. */
 export function nerdaReadings(nrn: string): HTMLElement {
   const out = h('div', { class: 'nerda-live' })
-  const btn = h('button', { type: 'button', class: 'btn' }, 'Live readings')
-  btn.onclick = async () => {
+  const btn = h('button', { type: 'button', class: 'btn' }, 'Refresh readings')
+  const load = async () => {
     btn.setAttribute('disabled', '')
-    out.replaceChildren(h('p', { class: 'muted small' }, 'Fetching (up to 30 s)…'))
+    out.replaceChildren(h('p', { class: 'muted small' }, 'Fetching live readings (up to 30 s)…'))
     try {
       const r = await fetch(`/api/nerda/${encodeURIComponent(nrn)}`)
       if (!r.ok) throw new Error(String(((await r.json()) as { error?: string }).error ?? r.status))
@@ -315,11 +354,13 @@ export function nerdaReadings(nrn: string): HTMLElement {
           h('thead', {}, h('tr', {}, h('th', {}, 'Feeder'), ...used.map(([, u]) => h('th', {}, u)))),
           h('tbody', {}, ...d.lines.map((l) => h('tr', {}, h('td', {}, l.line.split('_').pop() ?? l.line),
             ...used.map(([k]) => h('td', {}, l.readings[k] ? fmt(l.readings[k].v, k === 'PowerFactor' ? 2 : 1, '') : '–')))))),
-        h('div', { class: 'muted small' }, `Last 15 min, UTC ${d.fetched.slice(11, 16)}. Internal use only.`))
+        h('div', { class: 'muted small' }, `${readTime(d)}. Internal use only.`))
     } catch (e) {
       out.replaceChildren(h('p', { class: 'muted small' }, `Failed: ${(e as Error).message}`))
     }
     btn.removeAttribute('disabled')
   }
-  return h('div', {}, btn, out)
+  btn.onclick = load
+  void load()
+  return h('div', {}, h('h3', {}, 'Live readings'), out, btn)
 }

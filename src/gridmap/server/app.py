@@ -28,7 +28,7 @@ from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from .. import build
+from .. import build, routes
 from .. import refresh as refresh_mod
 from ..fetch.models import load_sources
 from ..fetch.store import DDL
@@ -128,7 +128,7 @@ class Index:
         return out
 
 
-DNOS = ("UKPN", "ENW", "NPG", "NGED", "SSEN", "SPEN", "NIE")
+DNOS = ("UKPN", "ENW", "NPG", "NGED", "SSEN", "SPEN", "NIE", "ESB")
 
 
 def _pct(n, d) -> float | None:
@@ -398,7 +398,7 @@ def create_app(data_dir: Path | None = None, scheduler: bool | None = None) -> F
             key = (site["operator"], site_id.split(":", 1)[-1].split("~")[0])
             faults += st.index.faults.get(key, [])
         proj = rows(cur, """SELECT p.project_uid, p.operator, p.site_name, p.status, p.technology, p.export_mw,
-                                   p.import_mw, p.storage_mw, p.connection_date, p.source_id
+                                   p.import_mw, p.storage_mw, p.connection_date, p.source_id, p.as_of
                             FROM queue_site qs JOIN queue_project p USING (project_uid) WHERE qs.site_id = ?
                             ORDER BY p.export_mw DESC NULLS LAST""", [site_id])
         by_status: dict[str, float] = {}
@@ -416,15 +416,8 @@ def create_app(data_dir: Path | None = None, scheduler: bool | None = None) -> F
         return {"site": site, "parent": parent, "chain": chain, "children": children, "assets": assets, "faults": faults,
                 "queue": {"by_status": by_status, "by_tech": by_tech, "projects": proj[:50]}, "sources": sources}
 
-    @app.get("/api/lv/{asset_uid:path}")
-    def lv_detail(asset_uid: str):
-        r = one("SELECT * FROM lv_site WHERE asset_uid = ?", [asset_uid])
-        if r is None:
-            return JSONResponse({"error": "unknown lv site"}, status_code=404)
-        try:
-            r["native_ids"] = json.loads(r["native_ids"]) if r.get("native_ids") else None
-        except ValueError:
-            pass
+    def lv_upstream(r: dict) -> tuple[str | None, str | None]:
+        """(primary site_id, 'published' | 'nearest') feeding an lv_site row."""
         up, how = None, None
         if st.index and r.get("upstream_primary"):
             up = st.index.primary_by_name.get((r["operator"], name_norm(r["upstream_primary"])))
@@ -437,11 +430,73 @@ def create_app(data_dir: Path | None = None, scheduler: bool | None = None) -> F
                        [r["operator"], r["lat"], r["lon"], r["lat"], r["lon"], r["lat"]])
             if near:
                 up, how = near["site_id"], "nearest"
+        return up, how
+
+    @app.get("/api/lv/{asset_uid:path}")
+    def lv_detail(asset_uid: str):
+        r = one("SELECT * FROM lv_site WHERE asset_uid = ?", [asset_uid])
+        if r is None:
+            return JSONResponse({"error": "unknown lv site"}, status_code=404)
+        try:
+            r["native_ids"] = json.loads(r["native_ids"]) if r.get("native_ids") else None
+        except ValueError:
+            pass
+        up, how = lv_upstream(r)
         chain = ancestors(up)
         from ..extra.lv_monitored import nged_reading
         ms, nrn = st.lv_mon.get(asset_uid, (None, None))
         return {**r, "upstream_site_id": up, "upstream_how": how, "chain": chain, "monitor": nged_reading(asset_uid),
                 "ms": ms, "nrn": nrn}
+
+    router = routes.Router(data_dir)
+    HOP_BANDS = {"LV": ("hv",), "PRIMARY": ("ehv", "hv"), "BSP": ("132", "ehv")}  # line bands by the lower end
+
+    @app.get("/api/route")
+    def power_route(lv: str = "", site: str = ""):
+        """Feed route up to the BSP along published overhead lines; straight jumps where no line data.
+        lv=<asset_uid>: LV site -> primary -> BSP. site=<site_id>: primary -> BSP, or BSP -> GSP."""
+        if lv:
+            r = one("SELECT asset_uid, operator, lat, lon FROM lv_site WHERE asset_uid = ?", [lv])
+            if r is None or r["lat"] is None:
+                return JSONResponse({"error": "unknown lv site"}, status_code=404)
+            cur = {"kind": "LV", "operator": r["operator"], "lat": r["lat"], "lon": r["lon"]}
+            nxt = lv_upstream(r)[0]
+        else:
+            cur = one("SELECT site_id, kind, operator, lat, lon, parent_site_id FROM site WHERE site_id = ?", [site])
+            if cur is None or cur["lat"] is None:
+                return JSONResponse({"error": "unknown site"}, status_code=404)
+            nxt = cur["parent_site_id"]
+        rank = {"LV": 0, "PRIMARY": 1, "BSP": 2, "GSP": 3}
+        feats, hops, seen = [], [], set()
+        line_m = jump_m = 0.0
+        while nxt and nxt not in seen and len(hops) < 3:
+            seen.add(nxt)
+            up = one("SELECT site_id, kind, operator, lat, lon, parent_site_id FROM site WHERE site_id = ?", [nxt])
+            if up is None:
+                break
+            if rank.get(up["kind"], 0) <= rank[cur["kind"]] or up["lat"] is None:
+                nxt = up["parent_site_id"]  # links that point sideways or down: skip to the next one up
+                continue
+            hop = f"{cur['kind']}-{up['kind']}".lower()  # lv-primary, primary-bsp, primary-gsp, bsp-gsp
+            op = cur["operator"] if cur["operator"] != "NESO" else up["operator"]
+            snap_a = 300.0 if cur["kind"] == "LV" else 800.0
+            segs = router.hop(op, HOP_BANDS[cur["kind"]], (cur["lon"], cur["lat"]), (up["lon"], up["lat"]),
+                              snap_a, 800.0)
+            for sg in segs:
+                feats.append({"type": "Feature", "properties": {"kind": sg["kind"], "kv": sg["kv"], "hop": hop,
+                                                                "op": op, "m": round(sg["m"])},
+                              "geometry": {"type": "LineString",
+                                           "coordinates": [[round(x, 5), round(y, 5)] for x, y in sg["coords"]]}})
+                if sg["kind"] == "line":
+                    line_m += sg["m"]
+                else:
+                    jump_m += sg["m"]
+            hops.append({"hop": hop, "to": up["site_id"]})
+            if up["kind"] in ("BSP", "GSP"):
+                break  # stop at the BSP (a selected BSP goes on to its GSP)
+            cur, nxt = up, up["parent_site_id"]
+        return {"type": "FeatureCollection", "features": feats, "hops": hops,
+                "summary": {"line_m": round(line_m), "jump_m": round(jump_m)}}
 
     @app.get("/api/search")
     def search(q: str = "", limit: int = Query(20, ge=1, le=100)):
@@ -573,6 +628,8 @@ def create_app(data_dir: Path | None = None, scheduler: bool | None = None) -> F
     def stats():
         return versioned("stats", compute_stats)
 
+    LEVEL_RANK = {"PRIMARY": 1, "BSP": 2, "GSP": 3}
+
     def compute_queue_sites() -> list[dict]:
         cur = st.cur()
         out: dict[str, dict] = {}
@@ -596,21 +653,56 @@ def create_app(data_dir: Path | None = None, scheduler: bool | None = None) -> F
             o["tec_built_mw"] += t["built"]
             o["scoping_mw"] += t["scoping"]
             o["projects"] += t["projects"]
+        # roll each site's queue up its parent chain: a BSP's "below" is everything queued at the primaries it feeds.
+        # Credit only the nearest ancestor of each higher kind (a few name-matched links point sideways or down,
+        # e.g. GSP under GSP or under a primary), so each level's totals count every site once.
+        meta = {r["site_id"]: r for r in rows(cur, "SELECT site_id, name, operator, kind, kv_max, lat, lon, "
+                                                   "parent_site_id FROM site")}
+        for o in out.values():
+            for k in ("below_queued_mw", "below_connected_mw", "below_scoping_mw", "below_projects"):
+                o.setdefault(k, 0)
+        for o in list(out.values()):
+            q, c, sc = o["queued_mw"] + o["tec_queued_mw"], o["connected_mw"] + o["tec_built_mw"], o["scoping_mw"]
+            pid, seen = (meta.get(o["site_id"]) or {}).get("parent_site_id"), {o["site_id"]}
+            rank = LEVEL_RANK.get(o["kind"], 9)
+            while pid and pid not in seen and (m := meta.get(pid)):
+                seen.add(pid)
+                if LEVEL_RANK.get(m["kind"], 0) <= rank:
+                    pid = m["parent_site_id"]
+                    continue
+                rank = LEVEL_RANK[m["kind"]]
+                a = out.setdefault(pid, {"site_id": pid, "name": m["name"], "op": m["operator"], "kind": m["kind"],
+                                         "kv": m["kv_max"], "lat": m["lat"], "lon": m["lon"], "queued_mw": 0.0,
+                                         "connected_mw": 0.0, "scoping_mw": 0.0, "tec_queued_mw": 0.0,
+                                         "tec_built_mw": 0.0, "projects": 0, "below_queued_mw": 0.0,
+                                         "below_connected_mw": 0.0, "below_scoping_mw": 0.0, "below_projects": 0})
+                a["below_queued_mw"] += q
+                a["below_connected_mw"] += c
+                a["below_scoping_mw"] += sc
+                a["below_projects"] += o["projects"]
+                pid = m["parent_site_id"]
         return list(out.values())
 
     @app.get("/api/queue")
-    def queue(op: str = "", limit: int = Query(100, ge=1, le=1000), scoping: bool = False):
+    def queue(op: str = "", level: str = "", limit: int = Query(100, ge=1, le=1000), scoping: bool = False):
         """Substations ranked by queued MW. queued = DNO accepted+offered + TEC (direct connection) consented /
-        under construction; scoping MW (DNO 'other' + TEC Scoping) is excluded from the ranking unless scoping=true."""
+        under construction; scoping MW (DNO 'other' + TEC Scoping) is excluded from the ranking unless scoping=true.
+        level=GSP|BSP|PRIMARY: only that kind, ranked by MW at the site plus everything below it (no double count
+        within one level). No level: every site, own MW only."""
         sites = versioned("queue_sites", compute_queue_sites)
+        level = level.upper()
         ranked = []
         for s in sites:
-            if op and s["op"] != op:
+            if (op and s["op"] != op) or (level and s["kind"] != level):
                 continue
-            q = s["queued_mw"] + s["tec_queued_mw"] + (s["scoping_mw"] if scoping else 0.0)
-            c = s["connected_mw"] + s["tec_built_mw"]
+            own = s["queued_mw"] + s["tec_queued_mw"] + (s["scoping_mw"] if scoping else 0.0)
+            below = (s["below_queued_mw"] + (s["below_scoping_mw"] if scoping else 0.0)) if level else 0.0
+            q = own + below
+            c = s["connected_mw"] + s["tec_built_mw"] + (s["below_connected_mw"] if level else 0.0)
             if q > 0:
-                ranked.append({**s, "total_queued_mw": round(q, 1), "total_connected_mw": round(c, 1)})
+                ranked.append({**s, "own_queued_mw": round(own, 1), "total_queued_mw": round(q, 1),
+                               "total_connected_mw": round(c, 1),
+                               "projects": s["projects"] + (s["below_projects"] if level else 0)})
         ranked.sort(key=lambda s: -s["total_queued_mw"])
 
         def tot(lst):
@@ -618,7 +710,7 @@ def create_app(data_dir: Path | None = None, scheduler: bool | None = None) -> F
                     "connected_gw": round(sum(s["total_connected_mw"] for s in lst) / 1000, 2),
                     "projects": sum(s["projects"] for s in lst), "sites": len(lst)}
 
-        return {"op": op or None, "limit": limit, "scoping": scoping, "totals": tot(ranked[:limit]),
+        return {"op": op or None, "level": level or None, "limit": limit, "scoping": scoping, "totals": tot(ranked[:limit]),
                 "totals_all": tot(ranked), "operators": sorted({s["op"] for s in sites if s["op"]}),
                 "tec_included": any(s["tec_queued_mw"] or s["tec_built_mw"] for s in sites),
                 "sites": [{k: (round(v, 1) if isinstance(v, float) and k.endswith("_mw") else v)

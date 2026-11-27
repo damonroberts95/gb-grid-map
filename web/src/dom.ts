@@ -35,6 +35,15 @@ export function ago(iso: string | null | undefined): string {
   return `${Math.round(s / 86400)} d ago`
 }
 
+/** "27 Nov 2026", or "27 Nov 2026 09:45" when the value has a time. Raw text if it is not a date. */
+export function day(iso: unknown): string {
+  if (typeof iso !== 'string' || !iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const date = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  return iso.length > 10 ? `${date} ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : date
+}
+
 export function debounce<A extends unknown[]>(fn: (...a: A) => void, ms: number) {
   let t: number | undefined
   return (...a: A) => {

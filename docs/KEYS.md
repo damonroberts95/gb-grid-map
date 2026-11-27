@@ -14,6 +14,7 @@ Keys live in `.env`. Set them on the **Keys** tab in the app. Without keys, lock
 | NIE Networks (Northern Ireland) | `NIE_API_KEY` | optional |
 | SSEN Transmission | `SSENT_API_KEY` | optional |
 | SSEN NeRDA (live substation monitoring) | `NERDA_USERNAME`, `NERDA_API_KEY` | optional |
+| ESB Networks PowerCheck (Ireland) | `ESB_POWERCHECK_KEY` | optional |
 | Open Charge Map | `OCM_API_KEY` | optional |
 
 ## UK Power Networks (UKPN)
@@ -179,6 +180,23 @@ Live readings, about 3,800 substations.
 - Needs both boxes.
 - Expires after 90 days. A new key kills the old one.
 - Your SSEN data portal login may work.
+
+## ESB Networks PowerCheck (Ireland)
+
+Live power cuts in Ireland.
+
+**Steps**
+
+1. Ask ESB Networks for a PowerCheck API subscription key. (PowerCheck: https://powercheck.esbnetworks.ie/)
+2. Copy the subscription key. Paste it below.
+
+**Variables:** `ESB_POWERCHECK_KEY`
+
+**Test call:** GET /esbn/powercheck/v1.0/outages with the key in the api-subscription-key header. Success: HTTP 200 with a list of outages. A wrong or inactive key gives 401.
+
+**Notes**
+
+- A new subscription can take a while to become active.
 
 ## Open Charge Map
 

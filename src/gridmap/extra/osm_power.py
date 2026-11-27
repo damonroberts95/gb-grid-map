@@ -159,7 +159,7 @@ def build(ctx: Ctx) -> dict[str, Path]:
             out[lid] = t / f"{lid}.pmtiles"
             subprocess.run([tool("tippecanoe"), "-q", "-f", "-o", str(out[lid]), "-l", lid, f"-Z{minz}", "-z13",
                             "--drop-densest-as-needed", "--extend-zooms-if-still-dropping", "--simplification=4",
-                            "--maximum-tile-bytes=150000", str(paths[kind])],
+                            "--maximum-tile-bytes=150000", "--generate-ids", str(paths[kind])],
                            check=True)
     with (t / "osmp.geojsonseq").open() as src:
         feats = list(substation_features(src))

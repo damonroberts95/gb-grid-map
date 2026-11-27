@@ -38,18 +38,31 @@ uv run pyinstaller packaging/gbgrid.spec --noconfirm --distpath dist --workpath 
 
 echo "== zip"
 cat > dist/README-FIRST.txt <<'TXT'
-GB Grid (Apple Silicon Macs only)
-=================================
+GB Grid (Mac with Apple Silicon: M1, M2, M3, M4 or later)
+==========================================================
 
+Check your Mac: Apple menu, About This Mac. "Chip" must say Apple M-something.
+Intel Macs are not supported.
+
+The app is not signed by Apple, so macOS blocks it the first time.
+Right-click, Open no longer works on macOS 15 and later. Do this instead.
+
+Install
+-------
 1. Unzip. Drag "GB Grid.app" to Applications.
+2. Double-click it. macOS says it "could not verify" the app. Click Done.
+3. Open System Settings, Privacy & Security. Scroll down to Security.
+   Next to "GB Grid was blocked", click Open Anyway. Enter your password.
+4. Click Open in the last prompt. You only do this once.
 
-2. First open: right-click "GB Grid.app", then Open, then Open.
-   Still blocked? System Settings, Privacy & Security, "Open Anyway".
-   Says damaged? Run this once in Terminal:
-       xattr -dr com.apple.quarantine "/Applications/GB Grid.app"
+Says "damaged", or no Open Anyway button? Open Terminal and paste:
+    xattr -dr com.apple.quarantine "/Applications/GB Grid.app"
+Then double-click the app again.
 
-3. First run takes 10-20 minutes and needs internet.
-   Later runs open straight to the map.
+First run
+---------
+It downloads the map and data. This takes 10-20 minutes and needs internet.
+Later runs open straight to the map. Updates install themselves.
 
 Notes
 -----
@@ -57,6 +70,7 @@ Notes
   (Private builds may already include keys. Do not share those publicly.)
 * Data folder: ~/Library/Application Support/GB Grid
   (data, map, logs/app.log, keys in ".env").
+* Problems: send logs/app.log from that folder.
 * Start over: quit, then delete that folder.
   To keep the 1.5 GB map, delete "data" except "data/basemap".
 * Uninstall: delete the app and that folder.

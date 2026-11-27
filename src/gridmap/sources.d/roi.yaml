@@ -1,0 +1,120 @@
+# Republic of Ireland: ESB Networks (DSO), EirGrid (TSO) and the ROI outline. See docs/sources/roi.md.
+# Project is non-commercial; sources without an open licence say so ("No licence stated" / website terms).
+sources:
+  - id: esb_heatmap
+    operator: ESB
+    portal: page_link
+    base_url: "https://www.esbnetworks.ie/our-services/tools---maps/generator-availability-capacity-map"
+    params: {pattern: 'customer-heatmap-download[^"]*\.xlsx'}
+    format: file
+    category: headroom
+    cadence: 7d
+    max_mb: 40
+    licence: "ESB Networks website terms"
+    attribution: "ESB Networks capacity heatmap. Used under the ESB Networks website terms. No open licence stated."
+    note: "Customer heatmap XLSX (~7 MB, ~46.5k rows: HV stations + MV/LV substations, WGS84). File name changes each release (e.g. ...-july-2026.xlsx): resolved from the page link on every fetch."
+  - id: esb_powercheck_outages
+    operator: ESB
+    portal: http
+    base_url: "https://api.esb.ie/esbn/powercheck/v1.0/outages"
+    format: json
+    auth_env: ESB_POWERCHECK_KEY
+    auth_header: api-subscription-key
+    gated: true
+    category: outage
+    cadence: 10m
+    licence: "ESB Networks API terms"
+    attribution: "ESB Networks PowerCheck API."
+    note: "Live faults and planned outages. Free subscription key from the ESB developer portal, sent in the api-subscription-key header."
+  - id: eirgrid_transmission
+    operator: EIRGRID
+    portal: arcgis
+    base_url: "https://services-eu1.arcgis.com/1VGs4Se8lewgdzfE/arcgis/rest/services/TDP_2024_Web_Map_PUBLIC/FeatureServer"
+    params: {layers: "4,6,7,38,39,40,41,42,43"}
+    category: lines
+    cadence: 30d
+    licence: "No licence stated"
+    attribution: "EirGrid Transmission Development Plan 2024 map. No licence stated."
+    note: "Stations (38), stations with committed works (42), overhead line spans (40, ~25k), cables (39), spans and cables with committed works (41, 43: not in 40/39), Celtic/Greenlink/EWIC interconnectors (4, 6, 7). Paged 2,000 at a time."
+  - id: tailte_roi_provinces
+    operator: OTHER
+    portal: http
+    base_url: "https://services-eu1.arcgis.com/FH5XCsx8rYXqnjF5/arcgis/rest/services/Province_Boundaries_Generalised_100m/FeatureServer/0/query"
+    params: {where: "1=1", outFields: "PROVINCE", outSR: "4326", f: geojson, maxAllowableOffset: "0.003", geometryPrecision: "5"}
+    format: json
+    rows_path: features
+    category: boundary
+    cadence: 30d
+    licence: "CC BY 4.0"
+    attribution: "Contains Tailte Éireann data, licensed under CC BY 4.0."
+    note: "Four provinces (generalised 100 m, served at ~300 m), merged into one Republic of Ireland outline (= ESB Networks area)."
+  - id: eirgrid_roi_wind
+    operator: OTHER
+    portal: http
+    base_url: "https://www.smartgriddashboard.com/api"
+    path: "chart/"
+    retry_empty: 4
+    format: json
+    rows_path: Rows
+    params: {region: ROI, chartType: wind, dateRange: day, dateFrom: "{today:%d-%b-%Y} 00:00", dateTo: "{today:%d-%b-%Y} 23:59", areas: windactual}
+    category: live_national
+    cadence: 15m
+    licence: "No licence stated"
+    attribution: "EirGrid Smart Grid Dashboard (Ireland). No licence stated."
+    note: "WIND_ACTUAL MW. Empty Rows now and then: readers fall back to an older snapshot."
+  - id: eirgrid_roi_solar
+    operator: OTHER
+    portal: http
+    base_url: "https://www.smartgriddashboard.com/api"
+    path: "chart/"
+    retry_empty: 4
+    format: json
+    rows_path: Rows
+    params: {region: ROI, chartType: solar, dateRange: day, dateFrom: "{today:%d-%b-%Y} 00:00", dateTo: "{today:%d-%b-%Y} 23:59", areas: solaractual}
+    category: live_national
+    cadence: 15m
+    licence: "No licence stated"
+    attribution: "EirGrid Smart Grid Dashboard (Ireland). No licence stated."
+    note: "SOLAR_ACTUAL MW. Empty Rows now and then: readers fall back to an older snapshot."
+  - id: eirgrid_roi_demand
+    operator: OTHER
+    portal: http
+    base_url: "https://www.smartgriddashboard.com/api"
+    path: "chart/"
+    retry_empty: 4
+    format: json
+    rows_path: Rows
+    params: {region: ROI, chartType: demand, dateRange: day, dateFrom: "{today:%d-%b-%Y} 00:00", dateTo: "{today:%d-%b-%Y} 23:59", areas: demandactual}
+    category: live_national
+    cadence: 15m
+    licence: "No licence stated"
+    attribution: "EirGrid Smart Grid Dashboard (Ireland). No licence stated."
+    note: "SYSTEM_DEMAND MW. Empty Rows now and then: readers fall back to an older snapshot."
+  - id: eirgrid_roi_interconnection
+    operator: OTHER
+    portal: http
+    base_url: "https://www.smartgriddashboard.com/api"
+    path: "chart/"
+    retry_empty: 4
+    format: json
+    rows_path: Rows
+    params: {region: ROI, chartType: interconnection, dateRange: day, dateFrom: "{today:%d-%b-%Y} 00:00", dateTo: "{today:%d-%b-%Y} 23:59", areas: interconnection}
+    category: live_national
+    cadence: 15m
+    licence: "No licence stated"
+    attribution: "EirGrid Smart Grid Dashboard (Ireland). No licence stated."
+    note: "INTER_EWIC, INTER_GRNLK and INTER_NET_ROI (= EWIC + Greenlink). Positive = import into Ireland. Empty Rows now and then: readers fall back to an older snapshot."
+  - id: eirgrid_roi_co2
+    operator: OTHER
+    portal: http
+    base_url: "https://www.smartgriddashboard.com/api"
+    path: "chart/"
+    retry_empty: 4
+    format: json
+    rows_path: Rows
+    params: {region: ROI, chartType: co2, dateRange: day, dateFrom: "{today:%d-%b-%Y} 00:00", dateTo: "{today:%d-%b-%Y} 23:59", areas: co2intensity}
+    category: live_national
+    cadence: 15m
+    licence: "No licence stated"
+    attribution: "EirGrid Smart Grid Dashboard (Ireland). No licence stated."
+    note: "CO2_INTENSITY in g/kWh. Empty Rows now and then: readers fall back to an older snapshot."

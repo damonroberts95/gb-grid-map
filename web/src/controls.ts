@@ -4,6 +4,7 @@ import { Marker, type Map as MlMap } from 'maplibre-gl'
 import { api, type SearchHit } from './api'
 import { debounce, h } from './dom'
 import { clearExtras, enabledExtras, extraTitle, extrasPanel, onExtrasChange } from './extras'
+import { satelliteOn } from './satellite'
 import { topbar } from './topbar'
 import { showHelp } from './help'
 import { term } from './glossary'
@@ -170,12 +171,26 @@ function search(map: MlMap, select: (hit: SearchHit) => void) {
       if ((e as Error).name !== 'AbortError') list.replaceChildren(h('li', { class: 'empty' }, 'Search failed'))
     }
   }, 120)
-  input.addEventListener('input', () => run(input.value))
+  input.addEventListener('input', () => {
+    // show at once that a search is under way; results replace this line
+    if (input.value.trim().length >= 2) list.replaceChildren(h('li', { class: 'empty searching' }, 'Searching…'))
+    run(input.value)
+  })
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && hits[0]) go(hits[0])
     if (e.key === 'Escape') list.replaceChildren()
   })
   return h('div', { class: 'search' }, input, list)
+}
+
+/** Satellite imagery on/off. Pressed state follows the map. */
+function satButton() {
+  const b = h('button', {
+    type: 'button', class: 'tb-btn', title: 'Satellite imagery (online)', 'aria-pressed': String(satelliteOn()),
+    onclick: () => window.dispatchEvent(new Event('gridmap:toggle-satellite')),
+  }, 'Satellite')
+  window.addEventListener('gridmap:satellite', () => b.setAttribute('aria-pressed', String(satelliteOn())))
+  return b
 }
 
 /** Collapsible sidebar section; open/closed remembered per browser. Optional header actions (e.g. Clear all). */
@@ -241,6 +256,7 @@ export function buildControls(map: MlMap, select: (hit: SearchHit) => void) {
       type: 'button', class: 'tb-btn', 'aria-label': 'Toggle dark mode', title: 'Toggle dark mode',
       onclick: () => window.dispatchEvent(new Event('gridmap:toggle-theme')),
     }, '◐'),
+    satButton(),
   ]))
   document.body.append(panel)
 }

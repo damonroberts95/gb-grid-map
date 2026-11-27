@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 import os
 import sys
+import threading
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -118,6 +119,13 @@ class Setup:
         return out
 
 
+def _upgrade_basemap(data_dir: Path) -> None:
+    try:
+        bootstrap.upgrade_basemap(data_dir)
+    except Exception as e:  # noqa: BLE001 - offline etc: keep the old map, try again next start
+        log.warning("basemap upgrade failed (old map kept): %s", e)
+
+
 def _wrap_scheduler(st: Any, setup: Setup) -> None:
     """Run the first-run basemap download in the scheduler thread, before the first refresh."""
     orig = st.run_scheduler
@@ -132,6 +140,8 @@ def _wrap_scheduler(st: Any, setup: Setup) -> None:
                 setup.error = f"{e} (will retry)"
                 st.stop.wait(30)
         setup.refresh_started = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+        if bootstrap.basemap_outdated(st.data_dir):  # bbox grew (e.g. Ireland): new map in the background, then swap
+            threading.Thread(target=_upgrade_basemap, args=(st.data_dir,), name="basemap-upgrade", daemon=True).start()
         orig()
 
     st.run_scheduler = run

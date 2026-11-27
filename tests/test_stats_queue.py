@@ -53,3 +53,17 @@ def test_stats_and_queue_on_tiny_db(tmp_path):
         assert c.get("/api/queue?limit=1").json()["sites"][0]["site_id"] == "UKPN:b"
         assert c.get("/api/queue?op=NPG").json()["sites"] == []
         assert c.get("/api/queue?scoping=true").json()["sites"][0]["site_id"] == "UKPN:c"  # 10 + 50 MW scoping
+
+
+def test_queue_level_rolls_up_sites_below(tmp_path):
+    with TestClient(create_app(_setup(tmp_path), scheduler=False)) as c:
+        own = {s["site_id"]: s for s in c.get("/api/queue").json()["sites"]}
+        bsp = c.get("/api/queue?level=bsp").json()
+        assert [s["site_id"] for s in bsp["sites"]] == ["UKPN:b"] and bsp["level"] == "BSP"
+        b = bsp["sites"][0]
+        assert b["own_queued_mw"] == 30.0 and b["total_queued_mw"] == 40.0  # its own 30 + primary UKPN:c's 10
+        assert b["projects"] == own["UKPN:b"]["projects"] + own["UKPN:c"]["projects"]
+        gsp = c.get("/api/queue?level=GSP").json()["sites"]
+        assert [(s["site_id"], s["own_queued_mw"], s["total_queued_mw"]) for s in gsp] == [("UKPN:a", 0.0, 40.0)]
+        assert [s["site_id"] for s in c.get("/api/queue?level=PRIMARY").json()["sites"]] == ["UKPN:c"]
+        assert c.get("/api/queue?level=BSP&scoping=true").json()["sites"][0]["total_queued_mw"] == 90.0

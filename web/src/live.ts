@@ -1,6 +1,6 @@
 // Live wiring: server-sent events (manifest swaps, live feeds, refresh status) + national strip.
 
-import { api, type Manifest } from './api'
+import { api, type Manifest, type National } from './api'
 import { $, ago, fmt, h } from './dom'
 
 interface Handlers {
@@ -82,6 +82,24 @@ export function setBuiltAt(iso: string | null) {
   paintStatus(true)
 }
 
+/** Interconnector flow text: positive = import into the region ('EWIC: 250 MW to IE'). */
+function link(name: string, mw: number | undefined, to: string): string | null {
+  if (mw == null) return null
+  const m = Math.round(Math.abs(mw))
+  return m === 0 ? `${name} idle` : `${name}: ${m} MW ${mw > 0 ? 'to' : 'from'} ${to}`
+}
+
+/** One compact line for the NI or Ireland figures (EirGrid dashboard). */
+function regionText(label: string, r: NonNullable<National['ni']> & NonNullable<National['roi']>, to: string): string {
+  const parts: (string | null)[] = []
+  if (r.demand_mw != null) parts.push(`demand ${Math.round(r.demand_mw)} MW`)
+  if (r.wind_mw != null) parts.push(`wind ${Math.round(r.wind_mw)}`)
+  if (r.solar_mw != null) parts.push(`solar ${Math.round(r.solar_mw)}`)
+  parts.push(link('Moyle', r.moyle_mw, to), link('EWIC', r.ewic_mw, to), link('Greenlink', r.greenlink_mw, to))
+  if (r.co2_g_kwh != null) parts.push(`${Math.round(r.co2_g_kwh)} g/kWh`)
+  return `${label}: ${parts.filter((x) => x).join(' · ')}`
+}
+
 export async function refreshNational() {
   const box = $('#national')
   if (!box || document.hidden) return
@@ -99,6 +117,8 @@ export async function refreshNational() {
           h('b', {}, fmt(n.carbon?.national ?? null, 0)), h('small', {}, ' gCO₂/kWh'))),
       ...(total ? [h('div', { class: 'mix muted small' },
         top.map((f) => `${f.fuel} ${Math.round((100 * f.mw) / total)}%`).join(' · '))] : []),
+      ...(n.ni ? [h('div', { class: 'mix muted small', title: 'Northern Ireland, EirGrid dashboard' }, regionText('NI', n.ni, 'NI'))] : []),
+      ...(n.roi ? [h('div', { class: 'mix muted small', title: 'Republic of Ireland, EirGrid dashboard' }, regionText('Ireland', n.roi, 'IE'))] : []),
     )
   } catch {
     box.replaceChildren(h('div', { class: 'muted small' }, 'No national data'))

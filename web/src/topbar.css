@@ -77,6 +77,12 @@
   border-color: var(--accent, #1f6feb);
 }
 
+.tb-btn[aria-pressed='true'] {
+  background: var(--accent, #1f6feb);
+  border-color: var(--accent, #1f6feb);
+  color: #fff;
+}
+
 @media (max-width: 640px) {
   .topbar {
     gap: 8px;

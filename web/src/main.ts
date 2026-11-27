@@ -9,7 +9,7 @@ import { hide, initDetail, onHierarchy, showLv, showSite } from './detail'
 import { h } from './dom'
 import { initGlossary } from './glossary'
 import { maybeShowWelcome } from './help'
-import { applyExtras, bindOperatorChips, extraLayerIds, extraPopup, resetExtras } from './extras'
+import { applyExtras, bindOperatorChips, extraLayerIds, extraPopup, highlightLine, resetExtras } from './extras'
 import { addShapeImages } from './shapes'
 import { addLayers, applyManifest, applyOutlines, applyState, refreshOutages, setHierarchy, type HierNode } from './layers'
 import { connectLive, refreshNational, setBuiltAt } from './live'
@@ -17,6 +17,7 @@ import { onChange, reset as resetState, state } from './state'
 import { gateOnSetup } from './setup'
 import { initUpdates } from './updates'
 import { nudgeKeys } from './keysnudge'
+import { applySatellite, toggleSatellite } from './satellite'
 import { applyThemeToDocument, basemap, INK, initialTheme, onTheme, setTheme, theme } from './theme'
 
 await gateOnSetup() // first run of the packaged app: show setup progress until data + basemap exist
@@ -49,7 +50,7 @@ const map = new MlMap({
   style,
   center: [-2.5, 54.5],
   zoom: 5.3,
-  maxBounds: [[-16, 46], [8, 64]], // loose: lets NI and Shetland sit mid-screen beside the panel
+  maxBounds: [[-16, 46], [8, 64]], // loose: lets Ireland and Shetland sit mid-screen beside the panel
   hash: 'map',
   attributionControl: { compact: true },
   fadeDuration: 0,
@@ -127,10 +128,14 @@ map.on('load', async () => {
     hide()
     resetState()
     resetExtras(map)
+    highlightLine(map, null, undefined)
     document.querySelectorAll('.maplibregl-popup').forEach((p) => p.remove())
     map.flyTo({ center: [-2.5, 54.5], zoom: 5.3, bearing: 0, pitch: 0 })
   })
   window.addEventListener('gridmap:toggle-theme', () => setTheme(map, theme() === 'dark' ? 'light' : 'dark'))
+  applySatellite(map)
+  onTheme(() => applySatellite(map)) // the theme swap rebuilds basemap layers: put imagery back under the labels
+  window.addEventListener('gridmap:toggle-satellite', () => toggleSatellite(map))
   onChange((s) => applyState(map, s))
 
   map.on('mousemove', 'sites', (e) => {
@@ -148,13 +153,21 @@ map.on('load', async () => {
   })
 
   map.on('click', (e) => {
-    const xl = extraLayerIds().filter((id) => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none')
     const vis = (id: string) => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none'
+    const xl = extraLayerIds().filter((id) => !id.includes('_hl') && vis(id))
     const hits = map.queryRenderedFeatures(e.point, { layers: ['sites', 'lv', 'outages', ...xl].filter((id) => vis(id)) })
     const site = hits.find((f) => f.layer.id === 'sites')
     const lv = hits.find((f) => f.layer.id === 'lv')
     const out = hits.find((f) => f.layer.id === 'outages')
-    const x = hits.find((f) => f.layer.id.startsWith('x_'))
+    // thin lines are hard to hit: look a few pixels around the click for them
+    const { x: px, y: py } = e.point
+    const lines = xl.filter((id) => map.getLayer(`${id.replace(/_line$/, '')}_hl`))
+    // order: points and lines under the cursor, lines near it, then areas (fills cover everything)
+    const area = (f: MapGeoJSONFeature) => /_(fill|casing)$/.test(f.layer.id) || f.geometry.type.endsWith('Polygon')
+    const x = hits.find((f) => f.layer.id.startsWith('x_') && !area(f)) ?? (lines.length
+      ? map.queryRenderedFeatures([[px - 5, py - 5], [px + 5, py + 5]], { layers: lines })[0] : undefined)
+      ?? hits.find((f) => f.layer.id.startsWith('x_'))
+    highlightLine(map, !site && !lv && !out && x ? x.layer.id : null, x?.id)
     if (site) {
       select({ source: 'sites', id: site.id as number })
       void showSite(String(site.properties.sid))
@@ -211,6 +224,7 @@ function outagePopup(f: MapGeoJSONFeature) {
         h('strong', {}, `${p.op ?? ''} ${p.kind === 'planned' ? 'planned work' : 'power cut'}`),
         h('div', {}, `Ref ${p.ref ?? '—'} · ${p.status ?? ''}`),
         p.cust ? h('div', {}, `${p.cust} customers affected`) : null,
+        p.area ? h('div', { class: 'muted' }, `Postcode area ${p.area} (approximate location)`) : null,
         p.start ? h('div', { class: 'muted' }, `Since ${new Date(String(p.start)).toLocaleString()}`) : null,
         p.etr ? h('div', { class: 'muted' }, `Expected back ${new Date(String(p.etr)).toLocaleString()}`) : null))
       .addTo(map)

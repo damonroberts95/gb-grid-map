@@ -70,6 +70,8 @@ Events: `manifest` (data = manifest JSON) when any layer changes; `live` (data =
 
 ## `GET /api/lv/{asset_uid}` — one LV site row + `upstream_site_id`, `upstream_how` ("published" | "nearest" = inferred nearest primary) and `chain` (feed path from that primary upwards) and `monitor` (NGED only: newest 10-minute monitor reading, else null).
 
+## `GET /api/route?lv=<asset_uid>` or `?site=<site_id>` — feed route up to the BSP (a selected BSP: to its GSP) along published overhead lines. GeoJSON FeatureCollection of LineStrings with properties `kind` ("line" | "jump" = straight, no line data), `kv` (line voltage, null for jumps), `hop` ("lv-primary", "primary-bsp", "primary-gsp", "bsp-gsp"), `op`, `m` (metres). Plus `hops` [{hop, to}] and `summary` {line_m, jump_m}. GSP: no features. Unknown id: 404. See docs/sources/lines.md.
+
 ## `GET /api/search?q=text&limit=20`
 Matches site names (and LV names when q >= 4 chars), then offline streets / places / postcodes. Returns
 `[{"type":"site"|"lv","id","name","op","kind","lat","lon"} | {"type":"place","id","name","op":null,"kind":"road"|"postcode"|"place","lat","lon","context"}]`.
